@@ -30,17 +30,17 @@ out_file = options.out_filename
 def write_fasta(dna_regions, ident, out_filename):
     with open(out_filename + '.fasta', 'w') as out_file:
         for dna_region, dna_region_ir in dna_regions.items():
-            ident = dna_region + ident # Add user ident onto name of dna regions
+            ir_ident = dna_region + ident # Add user ident onto name of dna regions
             for ir, ir_seq in dna_region_ir[3].items():
-                out_file.write('>' + ident + '|' + ir + '\n' + ir_seq + '\n')
+                out_file.write('>' + ir_ident + '|' + ir + '\n' + ir_seq + '\n')
 
 def write_gff(dna_regions, ident, out_filename):
     with open(out_filename + '.gff', 'w') as out:
         out.write("##gff-version\t3\n#\tIR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
         for dna_region, dna_region_ir in dna_regions.items():
-            ident = dna_region + ident
+            ir_ident = dna_region + ident
             for ir, ir_seq in dna_region_ir[3].items():
-                seq_id = ident + '|' + ir
+                seq_id = ir_ident + '|' + ir
                 length = len(ir_seq)
                 entry = (seq_id + '\tIR_Extractor\tDNA\t' + 'IR_Length(Extended):' + str(length) + '\n')
                 out.write(entry)
@@ -102,3 +102,4 @@ def comparator(fasta, gff, ident, minlen, exlen, gene_ident, out_filename):
 
 if __name__ == "__main__":
     comparator(**vars(options))
+
