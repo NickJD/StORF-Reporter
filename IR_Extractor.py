@@ -1,7 +1,7 @@
 import collections
 import argparse
 from datetime import date
-
+import gzip
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta',
                     help='FASTA file for Intergenic Region seq extraction')
@@ -45,32 +45,55 @@ def write_gff(dna_regions, ident, out_filename):
                 entry = (seq_id + '\tIR_Extractor\tDNA\t' + 'IR_Length(Extended):' + str(length) + '\n')
                 out.write(entry)
 
+def fasta_load(fasta_in):
+    global dna_regions
+    global dna_region_length
+    global first
+    for line in fasta_in:
+        line = line.strip()
+        if ">" in line and first == False:  # Check if first seq in file
+            dna_region_length = len(seq)
+            dna_regions.update({dna_region_id: (seq, str(dna_region_length), list())})
+            seq = ''
+            dna_region_id = line.split()[0].replace('>', '')
+        elif '>' in line:
+            seq = ''
+            dna_region_id = line.split()[0].replace('>', '')
+        else:
+            seq += str(line)
+            first = False
+    dna_region_length = len(seq)
+    dna_regions.update({dna_region_id: (seq, str(dna_region_length), list())})
+
+def gff_load(gff_in):
+    global dna_regions
+    for line in gff_in:         # Get gene locis from GFF - ID=Gene will also classify Pseudogenes as genes
+        line_data = line.split()
+        if line_data[0] in dna_regions and gene_ident in line:
+            pos = line_data[3] + '_' + line_data[4]
+            dna_regions[line_data[0]][-1].append(pos)
+
 def comparator(fasta, gff, ident, minlen, exlen, gene_ident, out_filename):
+    global dna_seq
+    global dna_gff
+    global dna_regions
+    global dna_region_length
+    global first
     dna_regions = collections.OrderedDict()
     first = True
-    with open(fasta, 'r') as dna_seq: # Get dna_region sequences
-        for line in dna_seq:
-            line = line.strip()
-            if ">" in line.strip() and first == False: # Check if first seq in file
-                dna_region_length = len(seq)
-                dna_regions.update({dna_region_id: (seq, str(dna_region_length), list())})
-                seq = ''
-                dna_region_id = line.split()[0].replace('>', '')
-            elif '>' in line:
-                seq = ''
-                dna_region_id = line.split()[0].replace('>', '')
-            else:
-                seq += str(line)
-                first = False
-        dna_region_length = len(seq)
-        dna_regions.update({dna_region_id: (seq, str(dna_region_length), list())})
 
-    with open(gff, 'r') as dna_gff: # Get gene locis from GFF - ID=Gene will also classify Pseudogenes as genes
-        for line in dna_gff:
-            line_data = line.split()
-            if line_data[0] in dna_regions and gene_ident in line:
-                pos = line_data[3] + '_' + line_data[4]
-                dna_regions[line_data[0]][-1].append(pos)
+    try: # Detect whether fasta/gff files are .gz or text and read accordingly
+        fasta_in = gzip.open(fasta,'rt')
+        fasta_load(fasta_in)
+    except:
+        fasta_in = open(fasta,'r')
+        fasta_load(fasta_in)
+    try:
+        gff_in = gzip.open(gff,'rt')
+        gff_load(gff_in)
+    except:
+        gff_in = open(gff,'r')
+        gff_load(gff_in)
 
     for key, value in dna_regions.items(): #Extract IRs from 1 dna_region at a time
         intergenic_regions = collections.OrderedDict()
