@@ -3,9 +3,10 @@ import argparse
 from datetime import date
 import gzip
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta',
+parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
                     help='FASTA file for Intergenic Region seq extraction')
-parser.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA')
+parser.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',
+                    required=True,)
 parser.add_argument('-ident', action='store', dest='ident', default='_IR',
                     help='Identifier given for Intergenic Region output sequences: Default "Input"_IR')
 parser.add_argument('-min_len', action='store', dest='minlen', default='30', type=int,
@@ -14,7 +15,7 @@ parser.add_argument('-ex_len', action='store', dest='exlen', default='50', type=
                     help='IR Extension Length: Default 50')
 parser.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene:',
                     help='Identifier used for extraction: Default = ID=gene:')
-parser.add_argument('-o', '--output_file', action='store', dest='out_filename',
+parser.add_argument('-o', '--output_file', action='store', dest='out_filename',required=True,
                     help='Output file name for Intergenic Regions to GFF and FASTA')
 
 options = parser.parse_args()
@@ -112,7 +113,7 @@ def comparator(fasta, gff, ident, minlen, exlen, gene_ident, out_filename):
                     intergenic_regions.update({inter_loci: inter_seq})
             if stop > inter_start:
                 inter_start = stop
-        if int(value[1]) - stop >= minlen: # Get IR at end of dna_region if longer than minlen
+        if (int(value[1]) - stop) >= minlen: # Get IR at end of dna_region if longer than minlen
             stop -= exlen
             inter_seq = seq[stop:int(value[1])]
             inter_loci = str(stop) + '_' + str(value[1])
