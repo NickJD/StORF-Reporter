@@ -1,6 +1,6 @@
 ##gff-version	3
 #	IR Extractor 
-#	Run Date:2020-06-01
+#	Run Date:2020-06-02
 Chromosome_IR|0_240	IR_Extractor	DNA	IR_Length(Extended):240
 Chromosome_IR|205_387	IR_Extractor	DNA	IR_Length(Extended):182
 Chromosome_IR|4970_5284	IR_Extractor	DNA	IR_Length(Extended):314
