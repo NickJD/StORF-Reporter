@@ -2,44 +2,21 @@ import collections
 import argparse
 from datetime import date
 import gzip
-parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
-                    help='FASTA file for Intergenic Region seq extraction')
-parser.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',
-                    required=True,)
-parser.add_argument('-ident', action='store', dest='ident', default='_IR',
-                    help='Identifier given for Intergenic Region output sequences: Default "Input"_IR')
-parser.add_argument('-min_len', action='store', dest='minlen', default='30', type=int,
-                    help='Minimum IR Length: Default 30')
-parser.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
-                    help='IR Extension Length: Default 50')
-parser.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene:',
-                    help='Identifier used for extraction: Default = ID=gene:')
-parser.add_argument('-o', '--output_file', action='store', dest='out_filename',required=True,
-                    help='Output file name for Intergenic Regions to GFF and FASTA')
 
-options = parser.parse_args()
-fasta = options.fasta
-gff = options.gff
-ident = options.ident
-minlen = options.minlen
-exlen = options.exlen
-gene_ident = options.gene_ident
-out_file = options.out_filename
 
 #Output FASTA and GFF separately using the same out_filename but with respective extensions
-def write_fasta(dna_regions, ident, out_filename):
-    with open(out_filename + '.fasta', 'w') as out_file:
+def write_fasta(dna_regions, options):
+    with open(options.out_prefix + '.fasta', 'w') as out_file:
         for dna_region, dna_region_ir in dna_regions.items():
-            ir_ident = dna_region + ident # Add user ident onto name of dna regions
+            ir_ident = dna_region + options.ident # Add user ident onto name of dna regions
             for ir, ir_seq in dna_region_ir[3].items():
                 out_file.write('>' + ir_ident + '|' + ir + '\n' + ir_seq + '\n')
 
-def write_gff(dna_regions, ident, out_filename):
-    with open(out_filename + '.gff', 'w') as out:
+def write_gff(dna_regions,options):
+    with open(options.out_prefix + '.gff', 'w') as out:
         out.write("##gff-version\t3\n#\tIR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
         for dna_region, dna_region_ir in dna_regions.items():
-            ir_ident = dna_region + ident
+            ir_ident = dna_region + options.ident
             for ir, ir_seq in dna_region_ir[3].items():
                 seq_id = ir_ident + '|' + ir
                 length = len(ir_seq)
@@ -70,11 +47,11 @@ def gff_load(gff_in):
     global dna_regions
     for line in gff_in:         # Get gene locis from GFF - ID=Gene will also classify Pseudogenes as genes
         line_data = line.split()
-        if line_data[0] in dna_regions and gene_ident in line:
+        if line_data[0] in dna_regions and options.gene_ident in line:
             pos = line_data[3] + '_' + line_data[4]
             dna_regions[line_data[0]][-1].append(pos)
 
-def comparator(fasta, gff, ident, minlen, exlen, gene_ident, out_filename):
+def comparator(options):
     global dna_seq
     global dna_gff
     global dna_regions
@@ -84,16 +61,16 @@ def comparator(fasta, gff, ident, minlen, exlen, gene_ident, out_filename):
     first = True
 
     try: # Detect whether fasta/gff files are .gz or text and read accordingly
-        fasta_in = gzip.open(fasta,'rt')
+        fasta_in = gzip.open(options.fasta,'rt')
         fasta_load(fasta_in)
     except:
-        fasta_in = open(fasta,'r')
+        fasta_in = open(options.fasta,'r')
         fasta_load(fasta_in)
     try:
-        gff_in = gzip.open(gff,'rt')
+        gff_in = gzip.open(options.gff,'rt')
         gff_load(gff_in)
     except:
-        gff_in = open(gff,'r')
+        gff_in = open(options.gff,'r')
         gff_load(gff_in)
 
     for key, value in dna_regions.items(): #Extract IRs from 1 dna_region at a time
@@ -105,25 +82,42 @@ def comparator(fasta, gff, ident, minlen, exlen, gene_ident, out_filename):
             seq = value[0]
             if start > inter_start:
                 length = start - inter_start
-                if length >= minlen:
-                    inter_start = max(inter_start - exlen, 0)
-                    start += exlen
+                if length >= options.minlen:
+                    inter_start = max(inter_start - options.exlen, 0)
+                    start += options.exlen
                     inter_seq = seq[inter_start:start]
                     inter_loci = str(inter_start) + '_' + str(start)
                     intergenic_regions.update({inter_loci: inter_seq})
             if stop > inter_start:
                 inter_start = stop
-        if (int(value[1]) - stop) >= minlen: # Get IR at end of dna_region if longer than minlen
-            stop -= exlen
+        if (int(value[1]) - stop) >= options.minlen: # Get IR at end of dna_region if longer than minlen
+            stop -= options.exlen
             inter_seq = seq[stop:int(value[1])]
             inter_loci = str(stop) + '_' + str(value[1])
             intergenic_regions.update({inter_loci: inter_seq})
 
         dna_regions.update({key: (value[0], value[1], value[2], intergenic_regions)})
 
-    write_fasta(dna_regions, ident, out_filename)
-    write_gff(dna_regions, ident, out_filename)
+    write_fasta(dna_regions, options)
+    write_gff(dna_regions, options)
 
 if __name__ == "__main__":
-    comparator(**vars(options))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
+                        help='FASTA file for Intergenic Region seq extraction')
+    parser.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',
+                        required=True, )
+    parser.add_argument('-ident', action='store', dest='ident', default='_IR',
+                        help='Identifier given for Intergenic Region output sequences: Default "Input"_IR')
+    parser.add_argument('-min_len', action='store', dest='minlen', default='30', type=int,
+                        help='Minimum IR Length: Default 30')
+    parser.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
+                        help='IR Extension Length: Default 50')
+    parser.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene:',
+                        help='Identifier used for extraction: Default = ID=gene:')
+    parser.add_argument('-o', '--output_prefix', action='store', dest='out_prefix', required=True,
+                        help='Output file prefix - Without filetype')
+
+    options = parser.parse_args()
+    comparator(options)
 
