@@ -2,6 +2,7 @@ import argparse
 from datetime import date
 import re
 import collections
+import gzip
 
 #################################
 def revCompIterative(watson): #Gets Reverse Complement
@@ -19,7 +20,7 @@ def tile_filtering(storfs): #Hard filtering
     if options.filtering == 'hard':
         storfs = sorted(storfs.items(), key=lambda storfs:storfs[1][3],reverse=True)
         ordered_by_length = collections.OrderedDict()
-        print("StORFs Ordered by Length: " + str(len(ordered_by_length)))
+        #print("StORFs Ordered by Length: " + str(len(ordered_by_length)))
         import time
         start = time.time()
         for tup in storfs:
@@ -54,9 +55,9 @@ def tile_filtering(storfs): #Hard filtering
                         j += 1
             length = len(ordered_by_length)
             i+=1
-        print("StORFs After Filtering: " + str(len(ordered_by_length)))
+        #print("StORFs After Filtering: " + str(len(ordered_by_length)))
         end = time.time()
-        print('Time taken for filtering: ', end - start)
+        #print('Time taken for filtering: ', end - start)
         storfs = collections.OrderedDict(ordered_by_length)
     return storfs
 
@@ -91,7 +92,7 @@ def write_gff(storfs,seq_id):
             out.write(entry)
 
 def write_fasta(storfs,seq_id):
-    storf_num = 0
+    storf_num = 0 # This requires a much more elegant solution.
     with open(options.output+'.fasta','a') as out:
         for k, v in storfs.items():
             strand = v[2]
@@ -104,18 +105,20 @@ def write_fasta(storfs,seq_id):
             if options.intergenic == True:
                 ir_start = start + int(storf_name.split('|')[1].split('_')[0])
                 ir_stop = stop + int(storf_name.split('|')[1].split('_')[1])
-                out.write(">"+str(seq_id)+'_'+str(storf_num)+"|"+str(ir_start) + strand + str(ir_stop) + "|Frame:"+str(frame)+"\n")
+                fa_id = (">"+str(seq_id)+'_'+str(storf_num)+"|"+str(ir_start) + strand + str(ir_stop) + "|Frame:"+str(frame)+"\n")
             elif options.intergenic == False:
-                out.write(">"+str(seq_id)+'_'+str(storf_num)+"|"+str(start) + strand + str(stop) + "|Frame:"+str(frame)+"\n")
+                fa_id = (">"+str(seq_id)+'_'+str(storf_num)+"|"+str(start) + strand + str(stop) + "|Frame:"+str(frame)+"\n")
+            out.write(fa_id)
+            out.write(sequence + '\n')
             if options.translate == True:
-                if "+" in strand:
-                    amino = translate_frameshifted(sequence[0:])
-                    out.write(amino + '\n')
-                if "-" in strand:
-                    amino = translate_frameshifted(sequence[0:])
-                    out.write(amino + '\n')
-            elif options.translate == False:
-                out.write(sequence+'\n')
+                with open(options.output + '_aa.fasta', 'a') as aa_out:
+                    aa_out.write(fa_id)
+                    if "+" in strand:
+                        amino = translate_frameshifted(sequence[0:])
+                        aa_out.write(amino + '\n')
+                    if "-" in strand:
+                        amino = translate_frameshifted(sequence[0:])
+                        aa_out.write(amino + '\n')
             storf_num += 1
 ###################
 gencode = {
@@ -133,8 +136,8 @@ gencode = {
       'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G',
       'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S',
       'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
-      'TAC':'Y', 'TAT':'Y', 'TAA':'', 'TAG':'',
-      'TGC':'C', 'TGT':'C', 'TGA':'', 'TGG':'W'}
+      'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*',
+      'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W'}
 ############################
 
 def find_storfs(stops,sequence,storfs,frames_covered,counter,lengths,strand):
@@ -254,10 +257,27 @@ def STORF(sequence): #Main Function
         storfs = collections.OrderedDict(sorted(storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
         write_fasta(storfs, sequence_id)
         write_gff(storfs, sequence_id)
-    else:
-        print("No StOFS Found")
+    #else:
+    #    print("No StOFS Found")
 
-
+def fasta_load(fasta_in):
+    global sequence_name
+    global seq
+    global first
+    for line in fasta_in:
+        line = line.strip()
+        if '#' in line:
+            continue
+        elif ">" in line and first == False:
+            sequences.update({sequence_name: seq})
+            seq = ''
+            sequence_name = line
+        elif '>' in line:
+            seq = ''
+            sequence_name = line
+        else:
+            seq += str(line)
+            first = False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='StORF Run Parameters.')
@@ -288,28 +308,24 @@ if __name__ == "__main__":
     parser.add_argument('-o', action="store", dest='output', required=True,
                         help='Output file prefix - Without filetype')
     options = parser.parse_args()
-
+    global sequence_name
+    global seq
+    global first
     with open(options.output + '.gff', 'w') as out:
         out.write("##gff-version\t3\n#\tSTORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
         out.write("##Original File: " + options.fasta + '\n')
+    open(options.output+'.fasta', 'w').close() # Empty fasta out
+    if options.translate == True:
+        open(options.output + '_aa.fasta', 'w').close()  # Empty fasta out
     sequences = collections.OrderedDict()
-    First = True
-    file = open(options.fasta, "r")
-    print(file.name)
-    for line in file:
-        line = line.strip()
-        if '#' in line:
-            continue
-        elif ">" in line and First == False:
-            sequences.update({sequence_name: seq})
-            seq = ''
-            sequence_name = line
-        elif '>' in line:
-            seq = ''
-            sequence_name = line
-        else:
-            seq += str(line)
-            First = False
+    first = True
+    try: # Detect whether fasta files are .gz or text and read accordingly
+        fasta_in = gzip.open(options.fasta,'rt')
+        fasta_load(fasta_in)
+    except:
+        fasta_in = open(options.fasta,'r')
+        fasta_load(fasta_in)
+    print(fasta_in.name)
     sequences.update({sequence_name: seq})
     for sequence_id, sequence in sequences.items():
         if len(sequence) >= options.min_orf:
