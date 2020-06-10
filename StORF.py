@@ -19,7 +19,7 @@ def tile_filtering(storfs): #Hard filtering
     if options.filtering == 'hard':
         storfs = sorted(storfs.items(), key=lambda storfs:storfs[1][3],reverse=True)
         ordered_by_length = collections.OrderedDict()
-        print("StORFS Ordered by Length: " + str(len(ordered_by_length)))
+        print("StORFs Ordered by Length: " + str(len(ordered_by_length)))
         import time
         start = time.time()
         for tup in storfs:
@@ -47,7 +47,6 @@ def tile_filtering(storfs): #Hard filtering
                     x = set(range(start_x,stop_x+1))
                     y = set(range(start_y,stop_y+1))
                     overlap = len(x.intersection(y))
-                    print(overlap)
                     if overlap >= 50: # Change ehere
                         ordered_by_length.pop(j)
                         length = len(ordered_by_length)
@@ -292,6 +291,7 @@ if __name__ == "__main__":
 
     with open(options.output + '.gff', 'w') as out:
         out.write("##gff-version\t3\n#\tSTORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+        out.write("##Original File: " + options.fasta + '\n')
     sequences = collections.OrderedDict()
     First = True
     file = open(options.fasta, "r")

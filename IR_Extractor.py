@@ -15,6 +15,7 @@ def write_fasta(dna_regions, options):
 def write_gff(dna_regions,options):
     with open(options.out_prefix + '.gff', 'w') as out:
         out.write("##gff-version\t3\n#\tIR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
+        out.write("##Original File: " + options.fasta + '\n')
         for dna_region, dna_region_ir in dna_regions.items():
             ir_ident = dna_region + options.ident
             for ir, ir_seq in dna_region_ir[3].items():

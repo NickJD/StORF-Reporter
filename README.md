@@ -1,8 +1,8 @@
 # Intergenic-Region-Extractor and StORF
 Python3 script to extract Intergenic Regions from DNA sequences uses FASTA and GFF files as input.
 
-To Run: python3 IR_Extractor.py -h
-
+For Help: python3 IR_Extractor.py -h  
+Example: python2 IR_Extractor.py -f genomes/E-coli.fa -gff genomes/E-coli.gff -o genomes/E-coli_IR
 ```python
 usage: IR_Extractor.py [-h] -f FASTA -gff GFF [-ident IDENT] [-min_len MINLEN]
                        [-ex_len EXLEN] [-gene_ident GENE_IDENT] -o OUT_PREFIX
@@ -24,8 +24,8 @@ optional arguments:
 ```
 
 Python3 script to detect Stop - Stop Codon ORFs from Fasta sequences.  
-To Run: python3 StORF.py -h
-
+For Help: python3 StORF.py -h  
+Example: python3 StORF.py -seq E-coli_IR.fa -o E-coli_IR_Storf
 ```python
 usage: StORF.py [-h] -seq FASTA [-ir {True,False}] [-wc {True,False}]
                 [-ps {True,False}] [-filt [{none,soft,hard}]]
