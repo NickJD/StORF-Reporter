@@ -25,9 +25,8 @@ def write_gff(dna_regions,options):
                 out.write(entry)
 
 def fasta_load(fasta_in):
-    global dna_regions
-    global dna_region_length
-    global first
+    first = True
+    dna_regions = collections.OrderedDict()
     for line in fasta_in:
         line = line.strip()
         if ">" in line and first == False:  # Check if first seq in file
@@ -43,36 +42,28 @@ def fasta_load(fasta_in):
             first = False
     dna_region_length = len(seq)
     dna_regions.update({dna_region_id: (seq, str(dna_region_length), list())})
+    return dna_regions
 
-def gff_load(gff_in):
-    global dna_regions
+def gff_load(gff_in,dna_regions):
     for line in gff_in:         # Get gene locis from GFF - ID=Gene will also classify Pseudogenes as genes
         line_data = line.split()
         if line_data[0] in dna_regions and options.gene_ident in line:
             pos = line_data[3] + '_' + line_data[4]
             dna_regions[line_data[0]][-1].append(pos)
-
+    return dna_regions
 def comparator(options):
-    global dna_seq
-    global dna_gff
-    global dna_regions
-    global dna_region_length
-    global first
-    dna_regions = collections.OrderedDict()
-    first = True
-
     try: # Detect whether fasta/gff files are .gz or text and read accordingly
         fasta_in = gzip.open(options.fasta,'rt')
-        fasta_load(fasta_in)
+        dna_regions = fasta_load(fasta_in)
     except:
         fasta_in = open(options.fasta,'r')
-        fasta_load(fasta_in)
+        dna_regions = fasta_load(fasta_in)
     try:
         gff_in = gzip.open(options.gff,'rt')
-        gff_load(gff_in)
+        dna_regions = gff_load(gff_in,dna_regions)
     except:
         gff_in = open(options.gff,'r')
-        gff_load(gff_in)
+        dna_regions = gff_load(gff_in,dna_regions)
 
     for key, value in dna_regions.items(): #Extract IRs from 1 dna_region at a time
         intergenic_regions = collections.OrderedDict()
