@@ -31,7 +31,9 @@ usage: StORF.py [-h] -seq FASTA [-ir {True,False}] [-wc {True,False}]
                 [-ps {True,False}] [-filt [{none,soft,hard}]]
                 [-aa {True,False}] [-minorf MIN_ORF] [-maxorf MAX_ORF]
                 [-codons STOP_CODONS] [-olap OVERLAP_NT] [-gff {True,False}]
-                -o OUTPUT
+                -o OUTPUT [-gz {True,False}]
+
+StORF Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -53,5 +55,7 @@ optional arguments:
                         can overlap another StORF.
   -gff {True,False}     Default - True: StORF Output a GFF file
   -o OUTPUT             Output file prefix - Without filetype
+  -gz {True,False}      Default - False: Output as .gz
+
 
 ```
