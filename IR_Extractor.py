@@ -4,25 +4,33 @@ from datetime import date
 import gzip
 
 
-#Output FASTA and GFF separately using the same out_filename but with respective extensions
+#Output FASTA and GFF separately using the same out_filename but with respective extensions - gz output optional
 def write_fasta(dna_regions, options):
-    with open(options.out_prefix + '.fasta', 'w') as out_file:
-        for dna_region, dna_region_ir in dna_regions.items():
-            ir_ident = dna_region + options.ident # Add user ident onto name of dna regions
-            for ir, ir_seq in dna_region_ir[3].items():
-                out_file.write('>' + ir_ident + '|' + ir + '\n' + ir_seq + '\n')
+    if options.gz == False:
+        out =  open(options.out_prefix + '.fasta','w', newline='\n', encoding='utf-8')
+    elif options.gz == True:
+        out = gzip.open(options.out_prefix + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+    for dna_region, dna_region_ir in dna_regions.items():
+        ir_ident = dna_region + options.ident # Add user ident onto name of dna regions
+        for ir, ir_seq in dna_region_ir[3].items():
+            out.write('>' + ir_ident + '|' + ir + '\n' + ir_seq + '\n')
+    out.close()
 
 def write_gff(dna_regions,options):
-    with open(options.out_prefix + '.gff', 'w') as out:
-        out.write("##gff-version\t3\n#\tIR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
-        out.write("##Original File: " + options.fasta + '\n')
-        for dna_region, dna_region_ir in dna_regions.items():
-            ir_ident = dna_region + options.ident
-            for ir, ir_seq in dna_region_ir[3].items():
-                seq_id = ir_ident + '|' + ir
-                length = len(ir_seq)
-                entry = (seq_id + '\tIR_Extractor\tDNA\t' + 'IR_Length(Extended):' + str(length) + '\n')
-                out.write(entry)
+    if options.gz == False:
+        out =  open(options.out_prefix + '.gff','w', newline='\n', encoding='utf-8')
+    elif options.gz == True:
+        out = gzip.open(options.out_prefix + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
+    out.write("##gff-version\t3\n#\tIR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
+    out.write("##Original File: " + options.fasta + '\n')
+    for dna_region, dna_region_ir in dna_regions.items():
+        ir_ident = dna_region + options.ident
+        for ir, ir_seq in dna_region_ir[3].items():
+            length = len(ir_seq)
+            ir_pos = ir.replace('_','\t')
+            entry = (dna_region + '\tIR_Extractor\tintergenic_region\t' + ir_pos + '\t.\t.\t.\tID='+ir_ident+'_'+ir+';Note=IR_Length(Extended):' + str(length) + '\n')
+            out.write(entry)
+    out.close()
 
 def fasta_load(fasta_in):
     first = True
@@ -45,7 +53,7 @@ def fasta_load(fasta_in):
     return dna_regions
 
 def gff_load(gff_in,dna_regions):
-    for line in gff_in:         # Get gene locis from GFF - ID=Gene will also classify Pseudogenes as genes
+    for line in gff_in:         # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
         line_data = line.split()
         if line_data[0] in dna_regions and options.gene_ident in line:
             pos = line_data[3] + '_' + line_data[4]
@@ -109,6 +117,8 @@ if __name__ == "__main__":
                         help='Identifier used for extraction: Default = ID=gene:')
     parser.add_argument('-o', '--output_prefix', action='store', dest='out_prefix', required=True,
                         help='Output file prefix - Without filetype')
+    parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
+                        help='Default - False: Output as .gz')
 
     options = parser.parse_args()
     comparator(options)

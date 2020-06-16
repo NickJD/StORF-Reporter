@@ -67,9 +67,9 @@ def translate_frameshifted(sequence):
 
 def write_gff(storfs,seq_id):
     if options.gz == False:
-        out =  open(options.output+'.gff','a')
+        out_gff =  open(options.out_prefix+'.gff','a', newline='\n', encoding='utf-8')
     elif options.gz == True:
-        out = gzip.open(options.output + '.gff.gz', 'at')
+        out_gff = gzip.open(options.out_prefix + '.gff.gz', 'at', newline='\n', encoding='utf-8')
     for k, v in storfs.items():
         sequence = v[0]
         start_stop = sequence[0:3]
@@ -84,7 +84,7 @@ def write_gff(storfs,seq_id):
         length = stop - start
         if options.intergenic == True:
             ir_start = start + int(storf_name.split('|')[1].split('_')[0])
-            ir_stop = stop + int(storf_name.split('|')[1].split('_')[1])
+            ir_stop = stop + int(storf_name.split('|')[1].split('_')[0])
             entry = (native_seq + '\tStORF\tORF\t' + str(ir_start) + '\t' + str(ir_stop) + '\t.\t' + v[
                 2] + '\t.\tID=' + storf_name + ':IR_Position=' + str(start) + '_' + str(stop) + ':Length=' + str(
                 length) + ':Frame=' + str(frame)+  ':Start_Stop='+start_stop+':End_Stop='+end_stop+ '\n')
@@ -92,18 +92,18 @@ def write_gff(storfs,seq_id):
             entry = (native_seq + '\tStORF\tORF\t' + str(start) + '\t' + str(stop) + '\t.\t' + v[
                 2] + '\t.\tID=' + storf_name + ':Length=' + str(
                 length) + ':Frame=' + str(frame) +':Start_Stop='+start_stop+':End_Stop='+end_stop+'\n')
-        out.write(entry)
+        out_gff.write(entry)
 
 def write_fasta(storfs,seq_id):
     storf_num = 0 # This requires a much more elegant solution.
     if options.gz == False:
-        out =  open(options.output+'.fasta','a')
+        out_fasta =  open(options.out_prefix+'.fasta','a', newline='\n', encoding='utf-8')
         if options.translate == True:
-            aa_out = open(options.output + '_aa.fasta', 'a')
+            out_fasta_aa = open(options.out_prefix + '_aa.fasta', 'a', newline='\n', encoding='utf-8')
     elif options.gz == True:
-        out = gzip.open(options.output + '.fasta.gz', 'at')
+        out_fasta = gzip.open(options.out_prefix + '.fasta.gz', 'at', newline='\n', encoding='utf-8')
         if options.translate == True:
-            aa_out = gzip.open(options.output + '_aa.fasta.gz', 'at')
+            out_fasta_aa = gzip.open(options.out_prefix + '_aa.fasta.gz', 'at', newline='\n', encoding='utf-8')
     for k, v in storfs.items():
         strand = v[2]
         sequence = v[0]
@@ -114,20 +114,20 @@ def write_fasta(storfs,seq_id):
         storf_name = seq_id+ '_' + str(list(storfs.keys()).index(k))
         if options.intergenic == True:
             ir_start = start + int(storf_name.split('|')[1].split('_')[0])
-            ir_stop = stop + int(storf_name.split('|')[1].split('_')[1])
+            ir_stop = stop + int(storf_name.split('|')[1].split('_')[0])
             fa_id = (">"+str(seq_id)+'_'+str(storf_num)+"|"+str(ir_start) + strand + str(ir_stop) + "|Frame:"+str(frame)+"\n")
         elif options.intergenic == False:
             fa_id = (">"+str(seq_id)+'_'+str(storf_num)+"|"+str(start) + strand + str(stop) + "|Frame:"+str(frame)+"\n")
-        out.write(fa_id)
-        out.write(sequence + '\n')
+        out_fasta.write(fa_id)
+        out_fasta.write(sequence + '\n')
         if options.translate == True:
-            aa_out.write(fa_id)
+            out_fasta_aa.write(fa_id)
             if "+" in strand:
                 amino = translate_frameshifted(sequence[0:])
-                aa_out.write(amino + '\n')
+                out_fasta_aa.write(amino + '\n')
             if "-" in strand:
                 amino = translate_frameshifted(sequence[0:])
-                aa_out.write(amino + '\n')
+                out_fasta_aa.write(amino + '\n')
         storf_num += 1
 ###################
 gencode = {
@@ -309,25 +309,29 @@ if __name__ == "__main__":
                         help='Default - 20: Maximum number of nt of a StORF which can overlap another StORF.')
     parser.add_argument('-gff', action='store', dest='gff', default='True', type=eval, choices=[True, False],
                         help='Default - True: StORF Output a GFF file')
-    parser.add_argument('-o', action="store", dest='output', required=True,
+    parser.add_argument('-o', action="store", dest='out_prefix', required=True,
                         help='Output file prefix - Without filetype')
     parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
     options = parser.parse_args()
-    if options.gz == False: # Clears fasta and gff files if not empty
-        gff_clear = '.gff'
-        fasta_clear = '.fasta'
+    if options.gz == False: # Clear fasta and gff files if not empty - Needs an elegant solution
+        out_gff = open(options.out_prefix + '.gff', 'w', newline='\n', encoding='utf-8')
+        out_gff.write("##gff-version\t3\n#\tSTORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+        out_gff.write("##Original File: " + options.fasta + '\n')
+        out_gff.close()
+        out_fasta = open(options.output_prefix+'.fasta', 'w', newline='\n', encoding='utf-8').close()
+        if options.translate == True:
+            out_fasta_aa = open(options.out_prefix + '_aa.fasta', 'w', newline='\n', encoding='utf-8').close()
     elif options.gz == True:
-        gff_clear = '.gff.gz'
-        fasta_clear = '.fasta.gz'
-    with open(options.output + gff_clear, 'w') as out:
-        out.write("##gff-version\t3\n#\tSTORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
-        out.write("##Original File: " + options.fasta + '\n')
-    open(options.output+fasta_clear, 'w').close() # Empty fasta out
-    if options.translate == True:
-        open(options.output + '_aa'+fasta_clear, 'w').close()  # Empty fasta out
-    sequences = collections.OrderedDict()
+        out_gff = gzip.open(options.out_prefix + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
+        out_gff.write("##gff-version\t3\n#\tSTORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+        out_gff.write("##Original File: " + options.fasta + '\n')
+        out_gff.close()
+        out_fasta = gzip.open(options.out_prefix+'.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
+        if options.translate == True:
+            out_fasta_aa = gzip.open(options.out_prefix + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
 
+    sequences = collections.OrderedDict()
     try: # Detect whether fasta files are .gz or text and read accordingly
         fasta_in = gzip.open(options.fasta,'rt')
         sequence_name,seq = fasta_load(fasta_in)
