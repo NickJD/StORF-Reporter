@@ -59,6 +59,7 @@ def gff_load(gff_in,dna_regions):
             pos = line_data[3] + '_' + line_data[4]
             dna_regions[line_data[0]][-1].append(pos)
     return dna_regions
+
 def comparator(options):
     try: # Detect whether fasta/gff files are .gz or text and read accordingly
         fasta_in = gzip.open(options.fasta,'rt')

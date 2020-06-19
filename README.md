@@ -3,9 +3,9 @@
 Two Python3 scripts which extracts intergenic regions and then (St)ORFs using Stop-Stop codons.
 
 To run, you need: (/genomes contain all needed files for demo)  
-*-Input FASTA file  
-*-Input GFF file with predicted ORFs   
-*Python 3 and the two scripts; IR_Extractor.py and StORF.py
+* Input FASTA file  
+* Input GFF file with predicted ORFs   
+* Python 3 and the two scripts; IR_Extractor.py and StORF.py
 
 # IR_Extractor.py
 Python3 script to extract Intergenic Regions from DNA sequences uses FASTA and GFF files as input.

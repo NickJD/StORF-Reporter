@@ -319,7 +319,7 @@ if __name__ == "__main__":
         out_gff.write("##gff-version\t3\n#\tSTORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
         out_gff.write("##Original File: " + options.fasta + '\n')
         out_gff.close()
-        out_fasta = open(options.output_prefix+'.fasta', 'w', newline='\n', encoding='utf-8').close()
+        out_fasta = open(options.out_prefix +'.fasta', 'w', newline='\n', encoding='utf-8').close()
         if options.translate == True:
             out_fasta_aa = open(options.out_prefix + '_aa.fasta', 'w', newline='\n', encoding='utf-8').close()
     elif options.gz == True:
@@ -327,7 +327,7 @@ if __name__ == "__main__":
         out_gff.write("##gff-version\t3\n#\tSTORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
         out_gff.write("##Original File: " + options.fasta + '\n')
         out_gff.close()
-        out_fasta = gzip.open(options.out_prefix+'.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
+        out_fasta = gzip.open(options.out_prefix +'.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
         if options.translate == True:
             out_fasta_aa = gzip.open(options.out_prefix + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
 
