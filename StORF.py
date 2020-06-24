@@ -6,13 +6,23 @@ import gzip
 
 #################################
 def revCompIterative(watson): #Gets Reverse Complement
-    complements = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C', 'N': 'N'}
+    complements = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C', 'N': 'N',
+                   'R': 'Y', 'Y': 'R', 'S': 'S', 'W': 'W', 'K': 'M',
+                   'M': 'K', 'V': 'B', 'B': 'V', 'H': 'D', 'D': 'H'}
     watson = watson.upper()
     watsonrev = watson[::-1]
     crick = ""
     for nt in watsonrev:
-        crick += complements[nt]
+        try:
+            crick += complements[nt]
+        except KeyError:
+            crick += nt
     return crick
+
+def cut_seq(wc_seq):
+    while len(wc_seq) % 3 != 0:
+        wc_seq = wc_seq[:-1] # keep removing char
+    return wc_seq
 
 def tile_filtering(storfs): #Hard filtering
     storfs = collections.OrderedDict(sorted(storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
@@ -22,10 +32,10 @@ def tile_filtering(storfs): #Hard filtering
         ordered_by_length = collections.OrderedDict()
         #print("StORFs Ordered by Length: " + str(len(ordered_by_length)))
         import time
-        start = time.time()
+        #start = time.time()
         for tup in storfs:
             ordered_by_length.update({tup[0]:tup[1]})
-        ############## - For each STORF, remove all smaller overlapping STORFs according to filtering rules
+        ############## - For each StORF, remove all smaller overlapping STORFs according to filtering rules
         length = len(ordered_by_length)
         i = 0
         ordered_by_length = list(ordered_by_length.items())
@@ -56,12 +66,12 @@ def tile_filtering(storfs): #Hard filtering
             length = len(ordered_by_length)
             i+=1
         #print("StORFs After Filtering: " + str(len(ordered_by_length)))
-        end = time.time()
+        #end = time.time()
         #print('Time taken for filtering: ', end - start)
         storfs = collections.OrderedDict(ordered_by_length)
     return storfs
 
-def translate_frameshifted(sequence):
+def translate_frame(sequence):
     translate = ''.join([gencode.get(sequence[3 * i:3 * i + 3], 'X') for i in range(len(sequence) // 3)])
     return translate
 
@@ -78,6 +88,7 @@ def write_gff(storfs,seq_id):
         start = int(pos[0])
         stop = int(pos[1])
         frame = int(v[1])
+        type = v[4]
         seq_id = seq_id.split()[0].replace('>','')
         native_seq = seq_id.split('_IR')[0]
         storf_name = seq_id + '_' + str(list(storfs.keys()).index(k))
@@ -87,22 +98,28 @@ def write_gff(storfs,seq_id):
             ir_stop = stop + int(storf_name.split('|')[1].split('_')[0])
             entry = (native_seq + '\tStORF\tORF\t' + str(ir_start) + '\t' + str(ir_stop) + '\t.\t' + v[
                 2] + '\t.\tID=' + storf_name + ':IR_Position=' + str(start) + '_' + str(stop) + ':Length=' + str(
-                length) + ':Frame=' + str(frame)+  ':Start_Stop='+start_stop+':End_Stop='+end_stop+ '\n')
+                length) + ':Frame=' + str(frame)+  ':Start_Stop='+start_stop+':End_Stop='+end_stop+ ':StORF_Type=' + type +'\n')
         elif options.intergenic == False:
             entry = (native_seq + '\tStORF\tORF\t' + str(start) + '\t' + str(stop) + '\t.\t' + v[
                 2] + '\t.\tID=' + storf_name + ':Length=' + str(
-                length) + ':Frame=' + str(frame) +':Start_Stop='+start_stop+':End_Stop='+end_stop+'\n')
+                length) + ':Frame=' + str(frame) +':Start_Stop='+start_stop+':End_Stop='+end_stop+ ':StORF_Type=' + type +'\n')
         out_gff.write(entry)
 
 def write_fasta(storfs,seq_id):
     storf_num = 0 # This requires a much more elegant solution.
-    if options.gz == False:
-        out_fasta =  open(options.out_prefix+'.fasta','a', newline='\n', encoding='utf-8')
-        if options.translate == True:
+    if options.aa_only == False:
+        if options.gz == False:
+            out_fasta =  open(options.out_prefix+'.fasta','a', newline='\n', encoding='utf-8')
+            if options.translate == True:
+                out_fasta_aa = open(options.out_prefix + '_aa.fasta', 'a', newline='\n', encoding='utf-8')
+        elif options.gz == True:
+            out_fasta = gzip.open(options.out_prefix + '.fasta.gz', 'at', newline='\n', encoding='utf-8')
+            if options.translate == True:
+                out_fasta_aa = gzip.open(options.out_prefix + '_aa.fasta.gz', 'at', newline='\n', encoding='utf-8')
+    if options.aa_only == True:
+        if options.gz == False:
             out_fasta_aa = open(options.out_prefix + '_aa.fasta', 'a', newline='\n', encoding='utf-8')
-    elif options.gz == True:
-        out_fasta = gzip.open(options.out_prefix + '.fasta.gz', 'at', newline='\n', encoding='utf-8')
-        if options.translate == True:
+        elif options.gz == True:
             out_fasta_aa = gzip.open(options.out_prefix + '_aa.fasta.gz', 'at', newline='\n', encoding='utf-8')
     for k, v in storfs.items():
         strand = v[2]
@@ -118,15 +135,16 @@ def write_fasta(storfs,seq_id):
             fa_id = (">"+str(seq_id)+'_'+str(storf_num)+"|"+str(ir_start) + strand + str(ir_stop) + "|Frame:"+str(frame)+"\n")
         elif options.intergenic == False:
             fa_id = (">"+str(seq_id)+'_'+str(storf_num)+"|"+str(start) + strand + str(stop) + "|Frame:"+str(frame)+"\n")
-        out_fasta.write(fa_id)
-        out_fasta.write(sequence + '\n')
-        if options.translate == True:
+        if options.aa_only == False:
+            out_fasta.write(fa_id)
+            out_fasta.write(sequence + '\n')
+        if options.translate == True or options.aa_only == True:
             out_fasta_aa.write(fa_id)
             if "+" in strand:
-                amino = translate_frameshifted(sequence[0:])
+                amino = translate_frame(sequence[0:])
                 out_fasta_aa.write(amino + '\n')
             if "-" in strand:
-                amino = translate_frameshifted(sequence[0:])
+                amino = translate_frame(sequence[0:])
                 out_fasta_aa.write(amino + '\n')
         storf_num += 1
 ###################
@@ -157,9 +175,9 @@ def find_storfs(stops,sequence,storfs,frames_covered,counter,lengths,strand):
     for stop in stops:  # Finds Stop-Stop#
         seen_stops.append(stop)
         if strand == '+':
-            frame = (stop % 3) + 1  # check
+            frame = (stop % 3) + 1
         elif strand == '-':
-            frame = (stop % 3) + 4  # check
+            frame = (stop % 3) + 4
         frames_covered.update({frame: 1})
         for next_stop in stops[counter + 1:]:
             length = abs(next_stop - stop)
@@ -167,7 +185,7 @@ def find_storfs(stops,sequence,storfs,frames_covered,counter,lengths,strand):
                     if length >= options.min_orf and length <= options.max_orf:
                         if options.filtering == 'none': # This could be made more efficient
                             seq = sequence[stop:next_stop + 3]
-                            storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length]})
+                            storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF']})
                             lengths.append(length)
 
                         elif first == False:
@@ -177,7 +195,7 @@ def find_storfs(stops,sequence,storfs,frames_covered,counter,lengths,strand):
                             storf_overlap = len(prev_storf.intersection(storf))
                             if storf_overlap <= options.overlap_nt:
                                 seq = sequence[stop:next_stop + 3]
-                                storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length]})
+                                storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF']})
                                 seen_stops.append(next_stop)
                                 prev_storf = storf
                                 prev_stop = stop
@@ -190,7 +208,7 @@ def find_storfs(stops,sequence,storfs,frames_covered,counter,lengths,strand):
                                 if length > prevlength:
                                     storfs.popitem()
                                     seq = sequence[stop:next_stop + 3]
-                                    storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length]})
+                                    storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF']})
                                     seen_stops.append(next_stop)
                                     prev_storf = storf
                                     prev_stop = stop
@@ -205,10 +223,10 @@ def find_storfs(stops,sequence,storfs,frames_covered,counter,lengths,strand):
                             if options.partial_storf == True: # upstream partial StORF
                                 if stop > options.min_orf:
                                     seq = sequence[0:stop + 3] #Start of seq to first stop identified
-                                    storfs.update({",".join([str(0), str(stop)]): [seq, str(frame), strand, stop]})
+                                    storfs.update({",".join([str(0), str(stop)]): [seq, str(frame), strand, stop,'Stop-ORF']})
                             seq = sequence[stop:next_stop + 3]
                             length = next_stop - stop
-                            storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length]})
+                            storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF']})
                             seen_stops.append(next_stop)
                             prev_storf = set(range(stop, next_stop + 4))
                             prev_stop = stop
@@ -222,9 +240,13 @@ def find_storfs(stops,sequence,storfs,frames_covered,counter,lengths,strand):
                         break
         counter +=1
     if options.partial_storf == True:  # downstream partial StORF - Last Stop to end of sequence
-        if (len(sequence) - stop) > options.min_orf:
-            seq = sequence[stop:len(sequence)]  # Start of seq to first stop identified
-            storfs.update({",".join([str(stop), str(len(sequence))]): [seq, str(frame), strand, stop]})
+        try:
+            if (len(sequence) - stop) > options.min_orf:
+                seq = sequence[stop:len(sequence)]  # Start of seq to first stop identified
+                storfs.update({",".join([str(stop), str(len(sequence))]): [seq, str(frame), strand, stop,'Partial-StORF']})
+                frames_covered.update({frame: 1})
+        except UnboundLocalError:
+            print("") # Another Non-Elegant Solution
     return storfs,frames_covered,counter,lengths
 
 def STORF(sequence): #Main Function
@@ -249,19 +271,24 @@ def STORF(sequence): #Main Function
     storfs,frames_covered,counter,lengths = find_storfs(stops,sequence_rev,storfs,frames_covered,counter,lengths,'-')
     #Potential run-through StORFs
     if options.whole_contig == True:
-        for strand,frame in frames_covered.values():
-            if frame == 0:
-                if strand <4:
-                   storfs.update({",".join([str(0), str(len(sequence))]): [sequence, str(frame), '+', 0]})
+        for frame,present in frames_covered.items():
+            if present == 0:
+                if frame <4:
+                    wc_seq = sequence[frame-1:]
+                    wc_seq = cut_seq(wc_seq)
+                    storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '+', len(sequence),'Run-Through-StORF']})
                 else:
-                    storfs.update({",".join([str(0), str(len(sequence))]): [sequence, str(frame), '-', 0]})
+                    wc_seq = sequence_rev[frame-4:]
+                    wc_seq = cut_seq(wc_seq)
+                    storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '-', len(sequence_rev),'Run-Through-StORF']})
     #Check if there are StORFs to report
     if bool(storfs):
         storfs = tile_filtering(storfs)
         # Reorder by start position
         storfs = collections.OrderedDict(sorted(storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
         write_fasta(storfs, sequence_id)
-        write_gff(storfs, sequence_id)
+        if options.aa_only == False:
+            write_gff(storfs, sequence_id)
     #else:
     #    print("No StOFS Found")
 
@@ -299,6 +326,8 @@ if __name__ == "__main__":
                              'and hard for both-strand longest-first tiling')
     parser.add_argument('-aa', action="store", dest='translate', default='False', type=eval, choices=[True, False],
                         help='Default - False: Report StORFs as amino acid sequences')
+    parser.add_argument('-aa_only', action="store", dest='aa_only', default='False', type=eval, choices=[True, False],
+                        help='Default - False: Only output Amino Acid output')
     parser.add_argument('-minorf', action="store", dest='min_orf', default=100, type=int,
                         help='Default - 100: Minimum StORF size in nt')
     parser.add_argument('-maxorf', action="store", dest='max_orf', default=99999, type=int,
@@ -315,20 +344,26 @@ if __name__ == "__main__":
                         help='Default - False: Output as .gz')
     options = parser.parse_args()
     if options.gz == False: # Clear fasta and gff files if not empty - Needs an elegant solution
-        out_gff = open(options.out_prefix + '.gff', 'w', newline='\n', encoding='utf-8')
-        out_gff.write("##gff-version\t3\n#\tSTORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
-        out_gff.write("##Original File: " + options.fasta + '\n')
-        out_gff.close()
-        out_fasta = open(options.out_prefix +'.fasta', 'w', newline='\n', encoding='utf-8').close()
-        if options.translate == True:
+        if options.aa_only == False:
+            out_gff = open(options.out_prefix + '.gff', 'w', newline='\n', encoding='utf-8')
+            out_gff.write("##gff-version\t3\n#\tStORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+            out_gff.write("##Original File: " + options.fasta + '\n')
+            out_gff.close()
+            out_fasta = open(options.out_prefix +'.fasta', 'w', newline='\n', encoding='utf-8').close()
+            if options.translate == True:
+                out_fasta_aa = open(options.out_prefix + '_aa.fasta', 'w', newline='\n', encoding='utf-8').close()
+        elif options.aa_only == True:
             out_fasta_aa = open(options.out_prefix + '_aa.fasta', 'w', newline='\n', encoding='utf-8').close()
     elif options.gz == True:
-        out_gff = gzip.open(options.out_prefix + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
-        out_gff.write("##gff-version\t3\n#\tSTORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
-        out_gff.write("##Original File: " + options.fasta + '\n')
-        out_gff.close()
-        out_fasta = gzip.open(options.out_prefix +'.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
-        if options.translate == True:
+        if options.aa_only == False:
+            out_gff = gzip.open(options.out_prefix + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
+            out_gff.write("##gff-version\t3\n#\tStORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+            out_gff.write("##Original File: " + options.fasta + '\n')
+            out_gff.close()
+            out_fasta = gzip.open(options.out_prefix +'.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
+            if options.translate == True:
+                out_fasta_aa = gzip.open(options.out_prefix + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
+        elif options.aa_only == True:
             out_fasta_aa = gzip.open(options.out_prefix + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
 
     sequences = collections.OrderedDict()

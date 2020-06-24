@@ -41,9 +41,9 @@ Example: python3 StORF.py -seq genomes/E-coli_IR.fa.gz -o genomes/E-coli_IR_Stor
 ```python
 usage: StORF.py [-h] -seq FASTA [-ir {True,False}] [-wc {True,False}]
                 [-ps {True,False}] [-filt [{none,soft,hard}]]
-                [-aa {True,False}] [-minorf MIN_ORF] [-maxorf MAX_ORF]
-                [-codons STOP_CODONS] [-olap OVERLAP_NT] [-gff {True,False}]
-                -o OUT_PREFIX [-gz {True,False}]
+                [-aa {True,False}] [-aa_only {True,False}] [-minorf MIN_ORF]
+                [-maxorf MAX_ORF] [-codons STOP_CODONS] [-olap OVERLAP_NT]
+                [-gff {True,False}] -o OUT_PREFIX [-gz {True,False}]
 
 StORF Run Parameters.
 
@@ -60,6 +60,8 @@ optional arguments:
                         recommended, soft for single strand filtering and hard
                         for both-strand longest-first tiling
   -aa {True,False}      Default - False: Report StORFs as amino acid sequences
+  -aa_only {True,False}
+                        Default - False: Only output Amino Acid output
   -minorf MIN_ORF       Default - 100: Minimum StORF size in nt
   -maxorf MAX_ORF       Default - 99999: Maximum StORF size in nt
   -codons STOP_CODONS   Default - ("TAG,TGA,TAA"): List Stop Codons to use
@@ -68,6 +70,7 @@ optional arguments:
   -gff {True,False}     Default - True: StORF Output a GFF file
   -o OUT_PREFIX         Output file prefix - Without filetype
   -gz {True,False}      Default - False: Output as .gz
+
 
 
 ```
