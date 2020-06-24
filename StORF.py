@@ -19,9 +19,12 @@ def revCompIterative(watson): #Gets Reverse Complement
             crick += nt
     return crick
 
-def cut_seq(wc_seq):
+def cut_seq(wc_seq,end):
     while len(wc_seq) % 3 != 0:
-        wc_seq = wc_seq[:-1] # keep removing char
+        if '+' in end:
+            wc_seq = wc_seq[:-1] # keep removing char
+        elif '-' in end:
+            wc_seq = wc_seq[1:]  # keep removing char
     return wc_seq
 
 def tile_filtering(storfs): #Hard filtering
@@ -221,9 +224,11 @@ def find_storfs(stops,sequence,storfs,frames_covered,counter,lengths,strand):
                                 break
                         elif first == True:
                             if options.partial_storf == True: # upstream partial StORF
-                                if stop > options.min_orf:
+                                if stop > options.min_orf and frames_covered[frame] != 1:
                                     seq = sequence[0:stop + 3] #Start of seq to first stop identified
-                                    storfs.update({",".join([str(0), str(stop)]): [seq, str(frame), strand, stop,'Stop-ORF']})
+                                    ps_seq = cut_seq(seq, '-')
+                                    storfs.update({",".join([str(0), str(stop)]): [ps_seq, str(frame), strand, stop,'Partial-StORF']})
+
                             seq = sequence[stop:next_stop + 3]
                             length = next_stop - stop
                             storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF']})
@@ -243,8 +248,8 @@ def find_storfs(stops,sequence,storfs,frames_covered,counter,lengths,strand):
         try:
             if (len(sequence) - stop) > options.min_orf:
                 seq = sequence[stop:len(sequence)]  # Start of seq to first stop identified
-                storfs.update({",".join([str(stop), str(len(sequence))]): [seq, str(frame), strand, stop,'Partial-StORF']})
-                frames_covered.update({frame: 1})
+                ps_seq = cut_seq(seq, '+')
+                storfs.update({",".join([str(stop), str(len(sequence))]): [ps_seq, str(frame), strand, stop,'Partial-StORF']})
         except UnboundLocalError:
             print("") # Another Non-Elegant Solution
     return storfs,frames_covered,counter,lengths
@@ -275,11 +280,11 @@ def STORF(sequence): #Main Function
             if present == 0:
                 if frame <4:
                     wc_seq = sequence[frame-1:]
-                    wc_seq = cut_seq(wc_seq)
+                    wc_seq = cut_seq(wc_seq,'+')
                     storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '+', len(sequence),'Run-Through-StORF']})
                 else:
                     wc_seq = sequence_rev[frame-4:]
-                    wc_seq = cut_seq(wc_seq)
+                    wc_seq = cut_seq(wc_seq,'+')
                     storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '-', len(sequence_rev),'Run-Through-StORF']})
     #Check if there are StORFs to report
     if bool(storfs):
