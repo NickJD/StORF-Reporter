@@ -37,19 +37,19 @@ def fasta_load(fasta_in):
     dna_regions = collections.OrderedDict()
     for line in fasta_in:
         line = line.strip()
-        if ">" in line and first == False:  # Check if first seq in file
+        if line.startswith('>') and first == False:  # Check if first seq in file
             dna_region_length = len(seq)
-            dna_regions.update({dna_region_id: (seq, str(dna_region_length), list())})
+            dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
             seq = ''
             dna_region_id = line.split()[0].replace('>', '')
-        elif '>' in line:
+        elif line.startswith('>'):
             seq = ''
             dna_region_id = line.split()[0].replace('>', '')
         else:
             seq += str(line)
             first = False
     dna_region_length = len(seq)
-    dna_regions.update({dna_region_id: (seq, str(dna_region_length), list())})
+    dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
     return dna_regions
 
 def gff_load(gff_in,dna_regions):
@@ -57,7 +57,7 @@ def gff_load(gff_in,dna_regions):
         line_data = line.split()
         if line_data[0] in dna_regions and options.gene_ident in line:
             pos = line_data[3] + '_' + line_data[4]
-            dna_regions[line_data[0]][-1].append(pos)
+            dna_regions[line_data[0]][2].append(pos) # This will add to list
     return dna_regions
 
 def comparator(options):
@@ -74,13 +74,12 @@ def comparator(options):
         gff_in = open(options.gff,'r')
         dna_regions = gff_load(gff_in,dna_regions)
 
-    for key, value in dna_regions.items(): #Extract IRs from 1 dna_region at a time
+    for (key,(seq,seq_length,posns,irs))  in dna_regions.items(): #Extract IRs from 1 dna_region at a time
         intergenic_regions = collections.OrderedDict()
         inter_start = 0
-        for pos in value[2]: # Iterate over GFF loci and measure flanking regions for potential IRs
+        for pos in posns: # Iterate over GFF loci and measure flanking regions for potential IRs
             start = int(pos.split('_')[0])
             stop = int(pos.split('_')[1])
-            seq = value[0]
             if start > inter_start:
                 length = start - inter_start
                 if length >= options.minlen:
@@ -91,14 +90,12 @@ def comparator(options):
                     intergenic_regions.update({inter_loci: inter_seq})
             if stop > inter_start:
                 inter_start = stop
-        if (int(value[1]) - stop) >= options.minlen: # Get IR at end of dna_region if longer than minlen
+        if (seq_length - stop) >= options.minlen: # Get IR at end of dna_region if longer than minlen
             stop -= options.exlen
-            inter_seq = seq[stop:int(value[1])]
-            inter_loci = str(stop) + '_' + str(value[1])
+            inter_seq = seq[stop:seq_length]
+            inter_loci = str(stop) + '_' + str(seq_length)
             intergenic_regions.update({inter_loci: inter_seq})
-
-        dna_regions.update({key: (value[0], value[1], value[2], intergenic_regions)})
-
+        dna_regions.update({key: (seq, seq_length, posns, intergenic_regions)})
     write_fasta(dna_regions, options)
     write_gff(dna_regions, options)
 

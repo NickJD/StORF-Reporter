@@ -11,7 +11,7 @@ To run, you need: (/genomes contain all needed files for demo)
 Python3 script to extract Intergenic Regions from DNA sequences uses FASTA and GFF files as input.
 
 For Help: python3 IR_Extractor.py -h  
-Example: python3 IR_Extractor.py -f genomes/E-coli.fa -gff genomes/E-coli.gff -o genomes/E-coli_IR -gz True
+Example: python3 IR_Extractor.py -f genomes/E-coli.fasta.gz -gff genomes/E-coli.gff -o genomes/E-coli_IR -gz True
 ```python
 usage: IR_Extractor.py [-h] -f FASTA -gff GFF [-ident IDENT] [-min_len MINLEN]
                        [-ex_len EXLEN] [-gene_ident GENE_IDENT] -o OUT_PREFIX
@@ -37,7 +37,7 @@ optional arguments:
 Python3 script to extract Stop - Stop Codon (St)ORFs from Fasta sequences.  
 
 For Help: python3 StORF.py -h  
-Example: python3 StORF.py -seq genomes/E-coli_IR.fa.gz -o genomes/E-coli_IR_Storf -gz True
+Example: python3 StORF.py -seq genomes/E-coli_IR.fasta.gz -o genomes/E-coli_IR_StORF -gz True
 ```python
 usage: StORF.py [-h] -seq FASTA [-ir {True,False}] [-wc {True,False}]
                 [-ps {True,False}] [-filt [{none,soft,hard}]]
@@ -61,7 +61,7 @@ optional arguments:
                         for both-strand longest-first tiling
   -aa {True,False}      Default - False: Report StORFs as amino acid sequences
   -aa_only {True,False}
-                        Default - False: Only output Amino Acid output
+                        Default - False: Only output Amino Acid Fasta
   -minorf MIN_ORF       Default - 100: Minimum StORF size in nt
   -maxorf MAX_ORF       Default - 99999: Maximum StORF size in nt
   -codons STOP_CODONS   Default - ("TAG,TGA,TAA"): List Stop Codons to use
