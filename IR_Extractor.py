@@ -1,6 +1,7 @@
-import collections
 import argparse
+import collections
 from datetime import date
+
 import gzip
 
 
