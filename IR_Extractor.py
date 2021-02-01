@@ -13,8 +13,9 @@ def write_fasta(dna_regions, options):
         out = gzip.open(options.out_prefix + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
     for dna_region, dna_region_ir in dna_regions.items():
         ir_ident = dna_region + options.ident # Add user ident onto name of dna regions
-        for ir, ir_seq in dna_region_ir[3].items():
-            out.write('>' + ir_ident + '|' + ir + '\n' + ir_seq + '\n')
+        if dna_region_ir[3]:
+            for ir, ir_seq in dna_region_ir[3].items():
+                out.write('>' + ir_ident + '|' + ir + '\n' + ir_seq + '\n')
     out.close()
 
 def write_gff(dna_regions,options):
@@ -26,11 +27,12 @@ def write_gff(dna_regions,options):
     out.write("##Original File: " + options.fasta + '\n')
     for dna_region, dna_region_ir in dna_regions.items():
         ir_ident = dna_region + options.ident
-        for ir, ir_seq in dna_region_ir[3].items():
-            length = len(ir_seq)
-            ir_pos = ir.replace('_','\t')
-            entry = (dna_region + '\tIR_Extractor\tintergenic_region\t' + ir_pos + '\t.\t.\t.\tID='+ir_ident+'_'+ir+';Note=IR_Length(Extended):' + str(length) + '\n')
-            out.write(entry)
+        if dna_region_ir[3]:
+            for ir, ir_seq in dna_region_ir[3].items():
+                length = len(ir_seq)
+                ir_pos = ir.replace('_','\t')
+                entry = (dna_region + '\tIR_Extractor\tintergenic_region\t' + ir_pos + '\t.\t.\t.\tID='+ir_ident+'_'+ir+';Note=IR_Length(Extended):' + str(length) + '\n')
+                out.write(entry)
     out.close()
 
 def fasta_load(fasta_in):
@@ -54,7 +56,9 @@ def fasta_load(fasta_in):
     return dna_regions
 
 def gff_load(gff_in,dna_regions):
-    for line in gff_in:         # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
+    for line in gff_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
+        #temp
+        line = line.replace('NZ_','')
         line_data = line.split()
         if line_data[0] in dna_regions and options.gene_ident in line:
             pos = line_data[3] + '_' + line_data[4]
@@ -91,12 +95,22 @@ def comparator(options):
                     intergenic_regions.update({inter_loci: inter_seq})
             if stop > inter_start:
                 inter_start = stop
-        if (seq_length - stop) >= options.minlen: # Get IR at end of dna_region if longer than minlen
-            stop -= options.exlen
-            inter_seq = seq[stop:seq_length]
-            inter_loci = str(stop) + '_' + str(seq_length)
-            intergenic_regions.update({inter_loci: inter_seq})
+        try:
+            if (seq_length - stop) >= options.minlen: # Get IR at end of dna_region if longer than minlen
+                stop -= options.exlen
+                inter_seq = seq[stop:seq_length]
+                inter_loci = str(stop) + '_' + str(seq_length)
+                intergenic_regions.update({inter_loci: inter_seq})
+        except UnboundLocalError:
+            pass
         dna_regions.update({key: (seq, seq_length, posns, intergenic_regions)})
+        # if intergenic_regions:
+        #     dna_regions.update({key: (seq, seq_length, posns, intergenic_regions)})
+        # else:
+        #     del dna_regions[key]
+
+
+
     write_fasta(dna_regions, options)
     write_gff(dna_regions, options)
 
@@ -112,8 +126,8 @@ if __name__ == "__main__":
                         help='Minimum IR Length: Default 30')
     parser.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
                         help='IR Extension Length: Default 50')
-    parser.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene:',
-                        help='Identifier used for extraction: Default = ID=gene:')
+    parser.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene',
+                        help='Identifier used for extraction: Default = ID=gene')
     parser.add_argument('-o', '--output_prefix', action='store', dest='out_prefix', required=True,
                         help='Output file prefix - Without filetype')
     parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
