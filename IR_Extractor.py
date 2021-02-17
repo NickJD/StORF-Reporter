@@ -60,9 +60,18 @@ def gff_load(gff_in,dna_regions):
         #temp
         line = line.replace('NZ_','')
         line_data = line.split()
-        if line_data[0] in dna_regions and options.gene_ident in line:
-            pos = line_data[3] + '_' + line_data[4]
-            dna_regions[line_data[0]][2].append(pos) # This will add to list
+        if 'ID=gene' in options.gene_ident:
+            if line_data[0] in dna_regions and options.gene_ident in line_data[8]:
+                pos = line_data[3] + '_' + line_data[4]
+                dna_regions[line_data[0]][2].append(pos) # This will add to list
+        else:
+            gene_types = options.gene_ident.split(',')
+            if line_data[0] in dna_regions:
+                if any(gene_type in line_data[2] for gene_type in gene_types):
+                    print(line_data[2])
+                    pos = line_data[3] + '_' + line_data[4]
+                    dna_regions[line_data[0]][2].append(pos) # This will add to list
+
     return dna_regions
 
 def comparator(options):
@@ -127,7 +136,7 @@ if __name__ == "__main__":
     parser.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
                         help='IR Extension Length: Default 50')
     parser.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene',
-                        help='Identifier used for extraction: Default = ID=gene')
+                        help='Identifier used for extraction of "genic" regions ("CDS,rRNA,tRNA"): Default for Ensembl_Bacteria = "ID=gene"')
     parser.add_argument('-o', '--output_prefix', action='store', dest='out_prefix', required=True,
                         help='Output file prefix - Without filetype')
     parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
