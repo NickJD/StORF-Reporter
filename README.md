@@ -40,16 +40,14 @@ Python3 script to extract Stop - Stop Codon (St)ORFs from Fasta sequences.
 For Help: python3 StORF.py -h  
 Example: python3 StORF.py -seq genomes/E-coli_IR.fasta.gz -o genomes/E-coli_IR_StORF -gz True
 ```python
-usage: StORF.py [-h] -seq FASTA [-ir {True,False}] [-wc {True,False}] 
-                    [-ps {True,False}] [-filt [{none,soft,hard}]] [-aa {True,False}] [-con_storfs {True,False}] 
-                    [-aa_only {True,False}] [-con_only {True,False}] [-stop_ident {True,False}] [-minorf MIN_ORF] 
-                    [-maxorf MAX_ORF] [-codons STOP_CODONS] [-olap OVERLAP_NT] [-gff {True,False}] -o OUT_PREFIX 
-                    [-gz {True,False}]
+usage: StORF.py [-h] -seq SEQ [-ir {True,False}] [-wc {True,False}] [-ps {True,False}] [-filt [{none,soft,hard}]] [-aa {True,False}] [-con_storfs {True,False}] [-aa_only {True,False}] [-con_only {True,False}] [-stop_ident {True,False}] [-minorf MIN_ORF] [-maxorf MAX_ORF] [-codons STOP_CODONS] [-olap OVERLAP_NT] [-gff {True,False}] [-o OUT_PREFIX]
+                [-gz {True,False}] [-v {True,False}]
 
+StORF Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -seq FASTA            Input Sequence File
+  -seq SEQ              Input Sequence File
   -ir {True,False}      Default - Treat input as Intergenic: Use "-ir False" for standard fasta
   -wc {True,False}      Default - False: StORFs reported across entire sequence
   -ps {True,False}      Default - False: Partial StORFs reported
@@ -67,11 +65,11 @@ optional arguments:
   -minorf MIN_ORF       Default - 100: Minimum StORF size in nt
   -maxorf MAX_ORF       Default - 99999: Maximum StORF size in nt
   -codons STOP_CODONS   Default - ("TAG,TGA,TAA"): List Stop Codons to use
-  -olap OVERLAP_NT      Default - 20: Maximum number of nt of a StORF which can overlap another StORF.
+  -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which can overlap another StORF.
   -gff {True,False}     Default - True: StORF Output a GFF file
-  -o OUT_PREFIX         Output file prefix - Without filetype
+  -o OUT_PREFIX         Default - False/Same as input name: Output filename prefix - Without filetype
   -gz {True,False}      Default - False: Output as .gz
-
+  -v {True,False}       Default - False: Print out runtime status
 
 
 
