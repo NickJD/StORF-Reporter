@@ -4,20 +4,6 @@ import argparse
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='StORF Run Parameters.')
     parser.add_argument('-seq', action="store", dest='fasta', required=True,
