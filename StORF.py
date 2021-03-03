@@ -408,7 +408,7 @@ if __name__ == "__main__":
     if options.out_prefix:
         prefix = options.out_prefix
     else:
-        prefix = options.seq.split('.')[0] + "_StORF"
+        prefix = options.seq.split('.')[0] + "_StORF-R"
     if not options.gz: # Clear fasta and gff files if not empty - Needs an elegant solution
         if not options.aa_only:
             out_gff = open(prefix + '.gff', 'w', newline='\n', encoding='utf-8')
