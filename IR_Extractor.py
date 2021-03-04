@@ -145,3 +145,4 @@ if __name__ == "__main__":
     options = parser.parse_args()
     comparator(options)
 
+    # Contig name could have a ';' which will mess up later on in StORF-R
