@@ -98,16 +98,16 @@ def write_gff(storfs,seq_id):
         ir_name = seq_id.replace('|',':') +  '_' + str(list(storfs.keys()).index(pos))
         length = len(sequence)
         if options.intergenic == True:
-            gff_start = str(start + int(ir_name.split(':')[1].split('-')[0]))
-            gff_stop = str(stop + int(ir_name.split(':')[1].split('-')[0]))
+            gff_start = str(start + int(ir_name.split(':')[-1].split('-')[0]))
+            gff_stop = str(stop + int(ir_name.split(':')[-1].split('-')[0]))
             if strand == '+':
                 frame = (int(gff_stop) % 3) + 1
             elif strand == '-':
                 frame = (int(gff_stop) % 3) + 4
         storf_name = native_seq+':'+gff_start+'-'+gff_stop
         entry = (native_seq + '\tStORF\tORF\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
-                     '\t.\tID=' + storf_name + ';IR='+ir_name+';IR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(length) +
-                 ';Frame=' + str(frame) + ';IR_Frame=' + str(ir_frame)+
+                     '\t.\tID=' + storf_name + ';UR='+ir_name+';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(length) +
+                 ';Frame=' + str(frame) + ';UR_Frame=' + str(ir_frame)+
                      ';Start_Stop='+start_stop+';End_Stop='+end_stop+ ';StORF_Type=' + storf_Type +'\n')
         #elif options.intergenic == False:
         #    entry = (native_seq + '\tStORF\tORF\t' + str(start) + '\t' + str(stop) + '\t.\t' + data[2] +
@@ -149,14 +149,17 @@ def write_fasta(storfs,seq_id):  # Some Lines commented out for BetaRun of ConSt
         if options.intergenic == True:
             original_Pos = []
             for ir_pos in pos:
-                original_Pos.append(str(int(ir_pos) + int(seq_id.split('|')[1].split('-')[0])))
+                try:
+                    original_Pos.append(str(int(ir_pos) + int(seq_id.split('|')[-1].split('-')[0])))#used to be [1] not -1
+                except ValueError:
+                    print(seq_id)
             if strand == '+':
                 frame = (int(original_Pos[-1]) % 3) + 1
             elif strand == '-':
                 frame = (int(original_Pos[-1]) % 3) + 4
-            fa_id = (">"+str(storf_name)+":" + '-'.join(original_Pos)  + '|' + ir_name + "|IR_Stop_Locations:"  + '-'.join(pos) +
+            fa_id = (">"+str(storf_name)+":" + '-'.join(original_Pos)  + '|' + ir_name + "|UR_Stop_Locations:"  + '-'.join(pos) +
                      '|Length:'+str(length) + '|Frame:' + str(frame) +
-                     '|IR_Frame:'+str(ir_frame)+'|Start_Stop='+start_stop+'|End_Stop='+end_stop+'|StORF_Type:'+storf_Type+"\n")
+                     '|UR_Frame:'+str(ir_frame)+'|Start_Stop='+start_stop+'|End_Stop='+end_stop+'|StORF_Type:'+storf_Type+"\n")
         elif options.intergenic == False:
             fa_id = (">"+str(storf_name)+"|"+str(start) + strand + str(stop) + "|Frame:"+str(frame)+'|Start_Stop='+start_stop+
                      '|End_Stop='+end_stop+'|StORF_Type:'+storf_Type+"\n")
@@ -343,7 +346,7 @@ def STORF(sequence): #Main Function
                     storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '-', len(sequence_rev),'Run-Through-StORF']})
 
     #Check if there are StORFs to report
-    if options.con_storfs == False:
+    if options.con_storfs == False and options.con_only == False:
         if bool(storfs):
             all_StORFs = tile_filtering(storfs)
             # Reorder by start position
@@ -410,12 +413,12 @@ if __name__ == "__main__":
                         help='Default - False: Only output Amino Acid Fasta')
     parser.add_argument('-con_only', action="store", dest='con_only', default=False, type=eval, choices=[True, False],
                         help='Default - False: Only output Consecutive StORFs')
-    parser.add_argument('-stop_ident', action="store", dest='stop_ident', default=False, type=eval, choices=[True, False],
+    parser.add_argument('-stop_ident', action="store", dest='stop_ident', default=True, type=eval, choices=[True, False],
                         help='Default - True: Identify Stop Codon positions with \'*\'')
     parser.add_argument('-minorf', action="store", dest='min_orf', default=100, type=int,
                         help='Default - 100: Minimum StORF size in nt')
-    parser.add_argument('-maxorf', action="store", dest='max_orf', default=99999, type=int,
-                        help='Default - 99999: Maximum StORF size in nt')
+    parser.add_argument('-maxorf', action="store", dest='max_orf', default=50000, type=int,
+                        help='Default - 50kb: Maximum StORF size in nt')
     parser.add_argument('-codons', action="store", dest='stop_codons', default="TAG,TGA,TAA",
                         help='Default - (\'TAG,TGA,TAA\'): List Stop Codons to use')
     parser.add_argument('-olap', action="store", dest='overlap_nt', default=50, type=int,
