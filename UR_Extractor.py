@@ -63,7 +63,7 @@ def gff_load(gff_in,dna_regions):
         line_data = line.split()
         if line.startswith('\n'): # Not to crash on empty lines in GFF
             continue
-        elif 'ID=gene' in options.gene_ident:
+        elif options.gene_ident == 'ID=gene':
             if line_data[0] in dna_regions and options.gene_ident in line_data[8]:
                 pos = line_data[3] + '_' + line_data[4]
                 dna_regions[line_data[0]][2].append(pos) # This will add to list
