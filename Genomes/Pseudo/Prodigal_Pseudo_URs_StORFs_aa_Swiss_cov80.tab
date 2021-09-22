@@ -1,0 +1,5 @@
+Chromosome-UR:3154478-3154655|Chromosome-UR:3154459-3154834_0|UR_Stop_Locations:19-196|Length:177|Frame:6|UR_Frame:5|Start_Stop=TGA|End_Stop=TGA|StORF_Type:Stop-ORF	sp|Q48D57|RL36_PSE14	100	38	0	0	21	58	1	38	2.66e-21	80.1
+Chromosome-UR:3823077-3823518|Chromosome-UR:3822744-3823571_2|UR_Stop_Locations:333-774|Length:441|Frame:4|UR_Frame:4|Start_Stop=TAA|End_Stop=TGA|StORF_Type:Stop-ORF	sp|P12376|COPC_PSEUB	77.4	124	28	0	23	146	3	126	7.54e-62	189
+Chromosome-UR:3829966-3830404|Chromosome-UR:3829824-3830484_0|UR_Stop_Locations:142-580|Length:438|Frame:5|UR_Frame:5|Start_Stop=TAG|End_Stop=TAG|StORF_Type:Stop-ORF	sp|Q8GLP8|FLGB_AERHY	46.8	139	64	5	9	145	1	131	1.58e-28	104
+Chromosome-UR:3879159-3879417|Chromosome-UR:3879128-3879469_0|UR_Stop_Locations:31-289|Length:258|Frame:4|UR_Frame:5|Start_Stop=TAG|End_Stop=TAA|StORF_Type:Stop-ORF	sp|Q3K427|YIDD_PSEPF	98.8	81	1	0	5	85	1	81	5.00e-60	180
+Chromosome-UR:4867536-4867971|Chromosome-UR:4867533-4868424_0|UR_Stop_Locations:3-438|Length:435|Frame:1|UR_Frame:1|Start_Stop=TGA|End_Stop=TAA|StORF_Type:Stop-ORF	sp|P95577|SECG_PSEU2	90.7	107	9	1	18	124	1	106	6.05e-56	174

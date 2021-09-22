@@ -159,3 +159,4 @@ if __name__ == "__main__":
     extractor(options)
 
     # Contig name could have a ';' which will mess up later on in StORF-R
+    # UR output should state original non extended
