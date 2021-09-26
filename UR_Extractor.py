@@ -137,11 +137,11 @@ def extractor(options):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
-                        help='FASTA file for Intergenic Region seq extraction')
+                        help='FASTA file for Unannotated Region seq extraction')
     parser.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',
                         required=True)
     parser.add_argument('-ident', action='store', dest='ident', default='_UR',
-                        help='Identifier given for Intergenic Region output sequences: Default "Input"_UR')
+                        help='Identifier given for Unannotated Region output sequences: Default "Input"_UR')
     parser.add_argument('-min_len', action='store', dest='minlen', default='30', type=int,
                         help='Minimum UR Length: Default 30')
     parser.add_argument('-max_len', action='store', dest='maxlen', default='100000', type=int,

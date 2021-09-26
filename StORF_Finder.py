@@ -97,7 +97,7 @@ def write_gff(storfs,seq_id):
         native_seq = seq_id.split('|')[0]
         ir_name = seq_id.replace('|',':') +  '_' + str(list(storfs.keys()).index(pos))
         length = len(sequence)
-        if options.intergenic == True:
+        if options.unannotated == True:
             gff_start = str(start + int(ir_name.split(':')[-1].split('-')[0]))
             gff_stop = str(stop + int(ir_name.split(':')[-1].split('-')[0]))
             if strand == '+':
@@ -146,7 +146,7 @@ def write_fasta(storfs,seq_id):  # Some Lines commented out for BetaRun of ConSt
         storf_name = seq_id.split('|')[0]
         ir_name = seq_id.replace('|', ':') + '_' + str(list(storfs.keys()).index(pos))
         pos = pos.split(',')
-        if options.intergenic == True:
+        if options.unannotated == True:
             original_Pos = []
             for ir_pos in pos:
                 try:
@@ -395,8 +395,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='StORF Run Parameters.')
     parser.add_argument('-seq', action="store", dest='seq', required=True,
                         help='Input Sequence File')
-    parser.add_argument('-ir', dest='intergenic', action='store', default=True, type=eval, choices=[True, False],
-                        help='Default - Treat input as Intergenic: Use "-ir False" for standard fasta')
+    parser.add_argument('-ua', dest='unannotated', action='store', default=True, type=eval, choices=[True, False],
+                        help='Default - Treat input as Unannotated: Use "-ua False" for standard fasta')
     parser.add_argument('-wc', action="store", dest='whole_contig', default=False, type=eval, choices=[True, False],
                         help='Default - False: StORFs reported across entire sequence')
     parser.add_argument('-ps', action="store", dest='partial_storf', default=False, type=eval, choices=[True, False],
