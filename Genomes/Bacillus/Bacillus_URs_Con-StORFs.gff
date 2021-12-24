@@ -1,7 +1,7 @@
 ##gff-version	3
 #	StORF Stop - Stop ORF Predictions
-#	Run Date:2021-09-24
-##Original File: ./Genomes/Bacillus/Bacillus_URs.fasta
+#	Run Date:2021-10-21
+##Original File: /home/nick/Git/StORF-Reporter/Genomes/Bacillus/Bacillus_URs.fasta
 Chromosome-UR	StORF	ORF	20523	20808	.	-	.	ID=Chromosome-UR:20523-20808;UR=Chromosome-UR:20507-20929_0;UR_Stop_Locations=16-145-301;Length=285;Frame=4;UR_Frame=5;Start_Stop=TGA;End_Stop=TAG;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	69976	70216	.	-	.	ID=Chromosome-UR:69976-70216;UR=Chromosome-UR:69961-70230_0;UR_Stop_Locations=15-123-255;Length=240;Frame=5;UR_Frame=4;Start_Stop=TGA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	160514	160814	.	+	.	ID=Chromosome-UR:160514-160814;UR=Chromosome-UR:160492-160940_0;UR_Stop_Locations=22-214-322;Length=300;Frame=3;UR_Frame=2;Start_Stop=TAA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
@@ -12,7 +12,7 @@ Chromosome-UR	StORF	ORF	257570	257786	.	+	.	ID=Chromosome-UR:257570-257786;UR=Ch
 Chromosome-UR	StORF	ORF	311864	312137	.	+	.	ID=Chromosome-UR:311864-312137;UR=Chromosome-UR:311768-312206_0;UR_Stop_Locations=96-267-369;Length=273;Frame=3;UR_Frame=1;Start_Stop=TGA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	320719	320995	.	+	.	ID=Chromosome-UR:320719-320995;UR=Chromosome-UR:320649-321060_0;UR_Stop_Locations=70-235-346;Length=276;Frame=2;UR_Frame=2;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	430226	430520	.	-	.	ID=Chromosome-UR:430226-430520;UR=Chromosome-UR:430031-430669_0;UR_Stop_Locations=195-318-489;Length=294;Frame=6;UR_Frame=4;Start_Stop=TGA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
-Chromosome-UR	StORF	ORF	474252	474684	.	-	.	ID=Chromosome-UR:474252-474684;UR=Chromosome-UR:474171-474777_0;UR_Stop_Locations=81-285-405-513;Length=435;Frame=4;UR_Frame=4;Start_Stop=TAA;End_Stop=TAG;StORF_Type=Con-Stop-ORF
+Chromosome-UR	StORF	ORF	474252	474684	.	-	.	ID=Chromosome-UR:474252-474684;UR=Chromosome-UR:474171-474777_0;UR_Stop_Locations=81-285-402-513;Length=435;Frame=4;UR_Frame=4;Start_Stop=TAA;End_Stop=TAG;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	535318	535687	.	+	.	ID=Chromosome-UR:535318-535687;UR=Chromosome-UR:535162-535845_0;UR_Stop_Locations=156-384-525;Length=369;Frame=2;UR_Frame=1;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	536766	537063	.	-	.	ID=Chromosome-UR:536766-537063;UR=Chromosome-UR:536632-537157_0;UR_Stop_Locations=134-260-431;Length=297;Frame=4;UR_Frame=6;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	540022	540319	.	-	.	ID=Chromosome-UR:540022-540319;UR=Chromosome-UR:539796-540464_0;UR_Stop_Locations=226-346-523;Length=297;Frame=5;UR_Frame=5;Start_Stop=TAA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
@@ -27,10 +27,10 @@ Chromosome-UR	StORF	ORF	1016963	1017269	.	+	.	ID=Chromosome-UR:1016963-1017269;U
 Chromosome-UR	StORF	ORF	1020163	1020535	.	+	.	ID=Chromosome-UR:1020163-1020535;UR=Chromosome-UR:1020058-1020603_0;UR_Stop_Locations=105-375-477;Length=372;Frame=2;UR_Frame=1;Start_Stop=TAA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1028461	1028752	.	+	.	ID=Chromosome-UR:1028461-1028752;UR=Chromosome-UR:1028438-1028805_0;UR_Stop_Locations=23-194-314;Length=291;Frame=2;UR_Frame=3;Start_Stop=TAA;End_Stop=TAG;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1052390	1052606	.	+	.	ID=Chromosome-UR:1052390-1052606;UR=Chromosome-UR:1052137-1052725_0;UR_Stop_Locations=253-361-469;Length=216;Frame=3;UR_Frame=2;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
-Chromosome-UR	StORF	ORF	1080777	1081101	.	-	.	ID=Chromosome-UR:1080777-1081101;UR=Chromosome-UR:1080753-1081288_0;UR_Stop_Locations=24-141-246-348;Length=327;Frame=4;UR_Frame=4;Start_Stop=TGA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
+Chromosome-UR	StORF	ORF	1080777	1081101	.	-	.	ID=Chromosome-UR:1080777-1081101;UR=Chromosome-UR:1080753-1081288_0;UR_Stop_Locations=24-141-243-348;Length=327;Frame=4;UR_Frame=4;Start_Stop=TGA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1100964	1101285	.	+	.	ID=Chromosome-UR:1100964-1101285;UR=Chromosome-UR:1100598-1101483_0;UR_Stop_Locations=366-489-687;Length=321;Frame=1;UR_Frame=1;Start_Stop=TGA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1126230	1127334	.	-	.	ID=Chromosome-UR:1126230-1127334;UR=Chromosome-UR:1126205-1127529_0;UR_Stop_Locations=25-190-1129;Length=1104;Frame=4;UR_Frame=5;Start_Stop=TAA;End_Stop=TAG;StORF_Type=Con-Stop-ORF
-Chromosome-UR	StORF	ORF	1205136	1205652	.	+	.	ID=Chromosome-UR:1205136-1205652;UR=Chromosome-UR:1204909-1206043_0;UR_Stop_Locations=227-365-548-743;Length=519;Frame=1;UR_Frame=3;Start_Stop=TGA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
+Chromosome-UR	StORF	ORF	1205136	1205652	.	+	.	ID=Chromosome-UR:1205136-1205652;UR=Chromosome-UR:1204909-1206043_0;UR_Stop_Locations=227-365-545-743;Length=519;Frame=1;UR_Frame=3;Start_Stop=TGA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1245498	1245750	.	+	.	ID=Chromosome-UR:1245498-1245750;UR=Chromosome-UR:1245265-1245916_0;UR_Stop_Locations=233-383-485;Length=252;Frame=1;UR_Frame=3;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1259900	1260149	.	-	.	ID=Chromosome-UR:1259900-1260149;UR=Chromosome-UR:1259777-1260155_0;UR_Stop_Locations=123-243-372;Length=249;Frame=6;UR_Frame=4;Start_Stop=TGA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1264357	1264576	.	-	.	ID=Chromosome-UR:1264357-1264576;UR=Chromosome-UR:1264286-1264583_0;UR_Stop_Locations=71-176-290;Length=219;Frame=5;UR_Frame=6;Start_Stop=TAA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
@@ -48,7 +48,7 @@ Chromosome-UR	StORF	ORF	1844610	1845015	.	-	.	ID=Chromosome-UR:1844610-1845015;U
 Chromosome-UR	StORF	ORF	1850026	1850293	.	-	.	ID=Chromosome-UR:1850026-1850293;UR=Chromosome-UR:1849926-1850359_0;UR_Stop_Locations=100-244-367;Length=267;Frame=5;UR_Frame=5;Start_Stop=TGA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1864497	1864716	.	-	.	ID=Chromosome-UR:1864497-1864716;UR=Chromosome-UR:1864383-1864818_0;UR_Stop_Locations=114-228-333;Length=219;Frame=4;UR_Frame=4;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1880786	1881062	.	+	.	ID=Chromosome-UR:1880786-1881062;UR=Chromosome-UR:1880680-1881241_0;UR_Stop_Locations=106-280-382;Length=276;Frame=3;UR_Frame=2;Start_Stop=TAA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
-Chromosome-UR	StORF	ORF	1927235	1927682	.	+	.	ID=Chromosome-UR:1927235-1927682;UR=Chromosome-UR:1927215-1927907_0;UR_Stop_Locations=20-131-365-467;Length=450;Frame=3;UR_Frame=3;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
+Chromosome-UR	StORF	ORF	1927235	1927682	.	+	.	ID=Chromosome-UR:1927235-1927682;UR=Chromosome-UR:1927215-1927907_0;UR_Stop_Locations=20-131-362-467;Length=450;Frame=3;UR_Frame=3;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1993993	1994308	.	+	.	ID=Chromosome-UR:1993993-1994308;UR=Chromosome-UR:1993946-1994419_0;UR_Stop_Locations=47-209-362;Length=315;Frame=2;UR_Frame=3;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	1997310	1997637	.	-	.	ID=Chromosome-UR:1997310-1997637;UR=Chromosome-UR:1997258-1997683_0;UR_Stop_Locations=52-262-379;Length=327;Frame=4;UR_Frame=5;Start_Stop=TAA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	2023723	2023942	.	+	.	ID=Chromosome-UR:2023723-2023942;UR=Chromosome-UR:2023723-2024045_0;UR_Stop_Locations=0-114-219;Length=219;Frame=2;UR_Frame=1;Start_Stop=TAA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
@@ -89,11 +89,11 @@ Chromosome-UR	StORF	ORF	3750470	3750704	.	-	.	ID=Chromosome-UR:3750470-3750704;U
 Chromosome-UR	StORF	ORF	3753989	3754226	.	+	.	ID=Chromosome-UR:3753989-3754226;UR=Chromosome-UR:3753903-3754286_0;UR_Stop_Locations=86-200-323;Length=237;Frame=3;UR_Frame=3;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	3779232	3779571	.	+	.	ID=Chromosome-UR:3779232-3779571;UR=Chromosome-UR:3779164-3779878_0;UR_Stop_Locations=68-287-407;Length=339;Frame=1;UR_Frame=3;Start_Stop=TAA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	3816302	3816590	.	-	.	ID=Chromosome-UR:3816302-3816590;UR=Chromosome-UR:3816266-3816835_0;UR_Stop_Locations=36-147-324;Length=288;Frame=6;UR_Frame=4;Start_Stop=TAG;End_Stop=TGA;StORF_Type=Con-Stop-ORF
-Chromosome-UR	StORF	ORF	3823844	3824240	.	+	.	ID=Chromosome-UR:3823844-3824240;UR=Chromosome-UR:3823810-3824525_0;UR_Stop_Locations=34-142-283-430;Length=399;Frame=3;UR_Frame=2;Start_Stop=TGA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
+Chromosome-UR	StORF	ORF	3823844	3824240	.	+	.	ID=Chromosome-UR:3823844-3824240;UR=Chromosome-UR:3823810-3824525_0;UR_Stop_Locations=34-142-280-430;Length=399;Frame=3;UR_Frame=2;Start_Stop=TGA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	3840111	3840432	.	-	.	ID=Chromosome-UR:3840111-3840432;UR=Chromosome-UR:3840073-3840469_0;UR_Stop_Locations=38-158-359;Length=321;Frame=4;UR_Frame=6;Start_Stop=TAA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	3863141	3863381	.	+	.	ID=Chromosome-UR:3863141-3863381;UR=Chromosome-UR:3863109-3863592_0;UR_Stop_Locations=32-152-272;Length=240;Frame=3;UR_Frame=3;Start_Stop=TAA;End_Stop=TAG;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	3950295	3950559	.	+	.	ID=Chromosome-UR:3950295-3950559;UR=Chromosome-UR:3950234-3950678_0;UR_Stop_Locations=61-217-325;Length=264;Frame=1;UR_Frame=2;Start_Stop=TGA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
-Chromosome-UR	StORF	ORF	3968770	3969163	.	+	.	ID=Chromosome-UR:3968770-3969163;UR=Chromosome-UR:3968742-3969196_0;UR_Stop_Locations=28-151-274-421;Length=396;Frame=2;UR_Frame=2;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
+Chromosome-UR	StORF	ORF	3968770	3969163	.	+	.	ID=Chromosome-UR:3968770-3969163;UR=Chromosome-UR:3968742-3969196_0;UR_Stop_Locations=28-151-271-421;Length=396;Frame=2;UR_Frame=2;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	3974720	3975005	.	+	.	ID=Chromosome-UR:3974720-3975005;UR=Chromosome-UR:3974687-3975052_0;UR_Stop_Locations=33-195-318;Length=285;Frame=3;UR_Frame=1;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	3999394	3999619	.	+	.	ID=Chromosome-UR:3999394-3999619;UR=Chromosome-UR:3999372-4000600_0;UR_Stop_Locations=22-145-247;Length=225;Frame=2;UR_Frame=2;Start_Stop=TGA;End_Stop=TGA;StORF_Type=Con-Stop-ORF
 Chromosome-UR	StORF	ORF	4014669	4015014	.	+	.	ID=Chromosome-UR:4014669-4015014;UR=Chromosome-UR:4014560-4015167_0;UR_Stop_Locations=109-322-454;Length=345;Frame=1;UR_Frame=2;Start_Stop=TAA;End_Stop=TAA;StORF_Type=Con-Stop-ORF

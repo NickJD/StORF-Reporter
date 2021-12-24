@@ -23,6 +23,19 @@ def revCompIterative(watson): #Gets Reverse Complement
             ns_nt[nt] +=1
     return crick
 
+######## REWRTIE THIS!! - Might only be the stop which is the first constorfs end.
+def prev_con_StORF_CHECKER(prev_con_StORF,sequence):
+    last_stop_str = int(prev_con_StORF.split(',')[-1])
+    seq = sequence[last_stop_str:last_stop_str + 3]
+    if not any(seq in s for s in options.stop_codons.split(',')):
+        last_stop = int(last_stop_str) - 3
+        last_stop = str(last_stop)
+        prev_con_StORF = prev_con_StORF.replace(str(last_stop_str), last_stop)
+        seq = sequence[int(last_stop):int(last_stop) + 3]
+
+    return prev_con_StORF
+
+#########
 def cut_seq(wc_seq,end):
     while len(wc_seq) % 3 != 0:
         if '+' in end:
@@ -214,7 +227,7 @@ gencode = {
       'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W'}
 ############################
 
-def find_storfs(stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,strand):
+def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,strand):
     first = True
     con_StORF_tracker = ''
     next_stops = []
@@ -244,6 +257,9 @@ def find_storfs(stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,
                                 seq_start = int(prev_con_StORF.split(',')[0])
                                 seq = sequence[seq_start:next_stop + 3]
                                 length = next_stop - seq_start
+                                ############# Fix the +3 issue for last but now internal stop position
+                                prev_con_StORF = prev_con_StORF_CHECKER(prev_con_StORF,sequence)
+                                ############ Fixed
                                 con_StORF_Pos = prev_con_StORF+','+str(next_stop)
                                 con_StORFs.popitem()
                                 con_StORFs.update({con_StORF_Pos: [seq, str(frame), strand, length,'Con-Stop-ORF']})
@@ -323,7 +339,7 @@ def STORF(sequence): #Main Function
     con_StORFs = OrderedDict()
     counter = 0
     lengths = []
-    storfs,con_StORFs,frames_covered,counter,lengths = find_storfs(stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,'+')
+    storfs,con_StORFs,frames_covered,counter,lengths = find_storfs("positive",stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,'+')
     ###### Reversed
     sequence_rev = revCompIterative(sequence)
     stops = []
@@ -331,7 +347,7 @@ def STORF(sequence): #Main Function
         stops += [match.start() for match in re.finditer(re.escape(stop_codon), sequence_rev)]
     stops.sort()
     counter = 0
-    storfs,con_StORFs,frames_covered,counter,lengths = find_storfs(stops,sequence_rev,storfs,con_StORFs,frames_covered,counter,lengths,'-')
+    storfs,con_StORFs,frames_covered,counter,lengths = find_storfs("negative",stops,sequence_rev,storfs,con_StORFs,frames_covered,counter,lengths,'-')
     #Potential run-through StORFs
     if options.whole_contig:
         for frame,present in frames_covered.items():
