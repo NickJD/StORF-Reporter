@@ -47,42 +47,41 @@ def cut_seq(wc_seq,end):
 def tile_filtering(storfs): #Hard filtering
     storfs = OrderedDict(sorted(storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
     ################ - Order largest first filtering
-    if options.filtering == 'hard': #
-        storfs = sorted(storfs.items(), key=lambda storfs:storfs[1][3],reverse=True)
-        ordered_by_length = OrderedDict()
-        for tup in storfs:
-            ordered_by_length.update({tup[0]:tup[1]}) # -1 for last?
-        ############## - For each StORF, remove all smaller overlapping STORFs according to filtering rules
-        length = len(ordered_by_length)
-        i = 0
-        ordered_by_length = list(ordered_by_length.items())
-        while i < length:
-            pos_x, data_x = ordered_by_length[i]
-            start_x = int(pos_x.split(',')[0])
-            stop_x = int(pos_x.split(',')[-1])
-            j = i+1
-            while j < length:
-                pos_y, data_y = ordered_by_length[j]
-                start_y = int(pos_y.split(',')[0])
-                stop_y = int(pos_y.split(',')[-1])
-                if start_y >= stop_x or  stop_y <= start_x:
-                    j+=1
-                    continue  # Not caught up yet / too far
-                elif start_y >= start_x and stop_y <= stop_x:
+    storfs = sorted(storfs.items(), key=lambda storfs:storfs[1][3],reverse=True)
+    ordered_by_length = OrderedDict()
+    for tup in storfs:
+        ordered_by_length.update({tup[0]:tup[1]}) # -1 for last?
+    ############## - For each StORF, remove all smaller overlapping STORFs according to filtering rules
+    length = len(ordered_by_length)
+    i = 0
+    ordered_by_length = list(ordered_by_length.items())
+    while i < length:
+        pos_x, data_x = ordered_by_length[i]
+        start_x = int(pos_x.split(',')[0])
+        stop_x = int(pos_x.split(',')[-1])
+        j = i+1
+        while j < length:
+            pos_y, data_y = ordered_by_length[j]
+            start_y = int(pos_y.split(',')[0])
+            stop_y = int(pos_y.split(',')[-1])
+            if start_y >= stop_x or  stop_y <= start_x:
+                j+=1
+                continue  # Not caught up yet / too far
+            elif start_y >= start_x and stop_y <= stop_x:
+                ordered_by_length.pop(j)
+                length = len(ordered_by_length)
+            else: # +1 needed for stop codon
+                x = set(range(start_x,stop_x+1))
+                y = set(range(start_y,stop_y+1))
+                overlap = len(x.intersection(y))
+                if overlap >= options.overlap_nt:
                     ordered_by_length.pop(j)
                     length = len(ordered_by_length)
-                else: # +1 needed for stop codon
-                    x = set(range(start_x,stop_x+1))
-                    y = set(range(start_y,stop_y+1))
-                    overlap = len(x.intersection(y))
-                    if overlap >= options.overlap_nt:
-                        ordered_by_length.pop(j)
-                        length = len(ordered_by_length)
-                    else:
-                        j += 1
-            length = len(ordered_by_length)
-            i+=1
-        storfs = OrderedDict(ordered_by_length)
+                else:
+                    j += 1
+        length = len(ordered_by_length)
+        i+=1
+    storfs = OrderedDict(ordered_by_length)
     return storfs
 
 def translate_frame(sequence):
@@ -99,6 +98,7 @@ def write_gff(storfs,seq_id):
     for pos, data in storfs.items():
         sequence = data[0]
         strand = data[2]
+        idx = data[5]
         start_stop = sequence[0:3]
         end_stop = sequence[-3:]
         pos_ = pos.split(',')
@@ -108,7 +108,7 @@ def write_gff(storfs,seq_id):
         storf_Type = data[4]
         seq_id = seq_id.split()[0].replace('>','')
         native_seq = seq_id.split('|')[0]
-        ir_name = seq_id.replace('|',':') +  '_' + str(list(storfs.keys()).index(pos))
+        ir_name = seq_id.replace('|',':') +  '_' + str(idx)
         length = len(sequence)
         if options.unannotated == True:
             gff_start = str(start + int(ir_name.split(':')[-1].split('-')[0]))
@@ -149,6 +149,7 @@ def write_fasta(storfs,seq_id):  # Some Lines commented out for BetaRun of ConSt
     for pos, data in storfs.items():
         strand = data[2]
         sequence = data[0]
+        idx = data[5]
         start_stop = sequence[0:3]
         end_stop = sequence[-3:]
         length = len(sequence)
@@ -157,7 +158,7 @@ def write_fasta(storfs,seq_id):  # Some Lines commented out for BetaRun of ConSt
         start = int(pos.split(',')[0])
         stop = int(pos.split(',')[-1])
         storf_name = seq_id.split('|')[0]
-        ir_name = seq_id.replace('|', ':') + '_' + str(list(storfs.keys()).index(pos))
+        ir_name = seq_id.replace('|', ':') + '_' + str(idx)
         pos = pos.split(',')
         if options.unannotated == True:
             original_Pos = []
@@ -227,13 +228,15 @@ gencode = {
       'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W'}
 ############################
 
-def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,strand):
+def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,strand,StORF_idx,Con_StORF_idx):
     first = True
     con_StORF_tracker = ''
     next_stops = []
     start_stops = []
     seen_stops = []
     for stop in stops:  # Finds Stop-Stop#
+        if 114 == stop:
+            print("ff")
         seen_stops.append(stop)
         if strand == '+':
             frame = (stop % 3) + 1
@@ -250,7 +253,8 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
                                 seq = sequence[prev_stop:next_stop + 3]
                                 length = next_stop - prev_stop
                                 con_StORF_Pos = ",".join([str(prev_stop), str(stop+3), str(next_stop+3)])
-                                con_StORFs.update({con_StORF_Pos: [seq, str(frame), strand, length,'Con-Stop-ORF']})
+                                con_StORFs.update({con_StORF_Pos: [seq, str(frame), strand, length,'Con-Stop-ORF',Con_StORF_idx]})
+                                Con_StORF_idx +=1
                             elif stop == con_StORF_tracker:
                                 con_StORF_tracker = next_stop
                                 prev_con_StORF = next(reversed(con_StORFs.keys())) #Get last key
@@ -261,12 +265,15 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
                                 prev_con_StORF = prev_con_StORF_CHECKER(prev_con_StORF,sequence)
                                 ############ Fixed
                                 con_StORF_Pos = prev_con_StORF+','+str(next_stop)
-                                con_StORFs.popitem()
-                                con_StORFs.update({con_StORF_Pos: [seq, str(frame), strand, length,'Con-Stop-ORF']})
+                                if options.filtering == 'hard':
+                                    con_StORFs.popitem()
+                                con_StORFs.update({con_StORF_Pos: [seq, str(frame), strand, length,'Con-Stop-ORF',Con_StORF_idx]})
+                                Con_StORF_idx +=1
 
                         if options.filtering == 'none': # This could be made more efficient
                             seq = sequence[stop:next_stop + 3]
-                            storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF']})
+                            storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF',StORF_idx]})
+                            StORF_idx +=1
                             lengths.append(length)
                         elif not first:
                             if stop > prev_stop and next_stop < prev_next_stop:
@@ -275,7 +282,8 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
                             storf_overlap = len(prev_storf.intersection(storf))
                             if storf_overlap <= options.overlap_nt:
                                 seq = sequence[stop:next_stop + 3]
-                                storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF']})
+                                storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF',StORF_idx]})
+                                StORF_idx +=1
                                 seen_stops.append(next_stop)
                                 prev_storf = storf
                                 prev_stop = stop
@@ -283,11 +291,14 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
                                 next_stops.append(next_stop)
                                 start_stops.append(stop)
                                 prevlength = prev_next_stop - prev_stop
-                            elif storf_overlap >= options.overlap_nt:  # and length > prevlength:
+                            elif storf_overlap >= options.overlap_nt and options.filtering == 'hard':  # and length > prevlength:
                                 if length > prevlength:
                                     storfs.popitem()
                                     seq = sequence[stop:next_stop + 3]
-                                    storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF']})
+                                    storfs.update({",".join([str(stop), str(next_stop + 3)]): [seq, str(frame), strand,
+                                                                                               length, 'Stop-ORF',
+                                                                                               StORF_idx]})
+                                    StORF_idx +=1
                                     seen_stops.append(next_stop)
                                     prev_storf = storf
                                     prev_stop = stop
@@ -295,17 +306,30 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
                                     next_stops.append(next_stop)
                                     start_stops.append(stop)
                                     prevlength = prev_next_stop - prev_stop
-                            else:
-                                pass
+                            else: # If filtering is none or soft, we do not remove overlapping StORFs on the same strand
+                                seq = sequence[stop:next_stop + 3]
+                                storfs.update({",".join([str(stop), str(next_stop + 3)]): [seq, str(frame), strand,
+                                                                                           length, 'Stop-ORF',
+                                                                                           StORF_idx]})
+                                StORF_idx += 1
+                                seen_stops.append(next_stop)
+                                prev_storf = storf
+                                prev_stop = stop
+                                prev_next_stop = next_stop
+                                next_stops.append(next_stop)
+                                start_stops.append(stop)
+                                prevlength = prev_next_stop - prev_stop
                         elif first:
                             if options.partial_storf: # upstream partial StORF
                                 if stop > options.min_orf and frames_covered[frame] != 1:
                                     seq = sequence[0:stop + 3] #Start of seq to first stop identified
                                     ps_seq = cut_seq(seq, '-')
-                                    storfs.update({",".join([str(0), str(stop)]): [ps_seq, str(frame), strand, stop,'Partial-StORF']})
+                                    storfs.update({",".join([str(0), str(stop)]): [ps_seq, str(frame), strand, stop,'Partial-StORF',StORF_idx]})
+                                    StORF_idx +=1
                             seq = sequence[stop:next_stop + 3]
                             length = next_stop - stop
-                            storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF']})
+                            storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'Stop-ORF',StORF_idx]})
+                            StORF_idx +=1
                             seen_stops.append(next_stop)
                             prev_storf = set(range(stop, next_stop + 4))
                             prev_stop = stop
@@ -322,10 +346,11 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
             if (len(sequence) - stop) > options.min_orf:
                 seq = sequence[stop:len(sequence)]  # Start of seq to first stop identified
                 ps_seq = cut_seq(seq, '+')
-                storfs.update({",".join([str(stop), str(len(sequence))]): [ps_seq, str(frame), strand, stop,'Partial-StORF']})
+                storfs.update({",".join([str(stop), str(len(sequence))]): [ps_seq, str(frame), strand, stop,'Partial-StORF',StORF_idx]})
+                StORF_idx +=1
         except UnboundLocalError:
             pass
-    return storfs,con_StORFs,frames_covered,counter,lengths
+    return storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx
 
 def STORF(sequence): #Main Function
     stops = []
@@ -339,7 +364,9 @@ def STORF(sequence): #Main Function
     con_StORFs = OrderedDict()
     counter = 0
     lengths = []
-    storfs,con_StORFs,frames_covered,counter,lengths = find_storfs("positive",stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,'+')
+    StORF_idx = 0
+    Con_StORF_idx = 0
+    storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("positive",stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,'+',StORF_idx,Con_StORF_idx)
     ###### Reversed
     sequence_rev = revCompIterative(sequence)
     stops = []
@@ -347,7 +374,7 @@ def STORF(sequence): #Main Function
         stops += [match.start() for match in re.finditer(re.escape(stop_codon), sequence_rev)]
     stops.sort()
     counter = 0
-    storfs,con_StORFs,frames_covered,counter,lengths = find_storfs("negative",stops,sequence_rev,storfs,con_StORFs,frames_covered,counter,lengths,'-')
+    storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("negative",stops,sequence_rev,storfs,con_StORFs,frames_covered,counter,lengths,'-',StORF_idx,Con_StORF_idx)
     #Potential run-through StORFs
     if options.whole_contig:
         for frame,present in frames_covered.items():
@@ -355,11 +382,13 @@ def STORF(sequence): #Main Function
                 if frame <4:
                     wc_seq = sequence[frame-1:]
                     wc_seq = cut_seq(wc_seq,'+')
-                    storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '+', len(sequence),'Run-Through-StORF']})
+                    storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '+', len(sequence),'Run-Through-StORF',StORF_idx]})
+                    StORF_idx +=1
                 else:
                     wc_seq = sequence_rev[frame-4:]
                     wc_seq = cut_seq(wc_seq,'+')
-                    storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '-', len(sequence_rev),'Run-Through-StORF']})
+                    storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '-', len(sequence_rev),'Run-Through-StORF',StORF_idx]})
+                    StORF_idx +=1
 
     #Check if there are StORFs to report
     if options.con_storfs == False and options.con_only == False:
@@ -417,10 +446,10 @@ if __name__ == "__main__":
                         help='Default - False: StORFs reported across entire sequence')
     parser.add_argument('-ps', action="store", dest='partial_storf', default=False, type=eval, choices=[True, False],
                         help='Default - False: Partial StORFs reported')
-    parser.add_argument('-filt', action='store', dest='filtering', default='hard', const='hard', nargs='?',
+    parser.add_argument('-filt', action='store', dest='filtering', default='soft', const='soft', nargs='?',
                         choices=['none', 'soft', 'hard'],
-                        help='Default - Hard: Filtering level none is not recommended, soft for single strand filtering '
-                             'and hard for both-strand longest-first tiling')
+                        help='Default - "soft": Filtering level "none" is not recommended, "soft" for filtering StORFs on both strands together, '
+                             'and "hard" for filtering StORFs for each strand independantly and then again between the two strands')
     parser.add_argument('-aa', action="store", dest='translate', default=False, type=eval, choices=[True, False],
                         help='Default - False: Report StORFs as amino acid sequences')
     parser.add_argument('-con_storfs', action="store", dest='con_storfs', default=False, type=eval, choices=[True, False],
@@ -489,6 +518,8 @@ if __name__ == "__main__":
         print(fasta_in.name)
 
     for sequence_id, sequence in sequences.items():
+        if ">Chromosome_UR|193866_194258" in sequence_id:
+            print("Here1")
         if len(sequence) >= options.min_orf:
             STORF(sequence)
 
