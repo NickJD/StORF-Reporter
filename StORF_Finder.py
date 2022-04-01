@@ -235,8 +235,6 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
     start_stops = []
     seen_stops = []
     for stop in stops:  # Finds Stop-Stop#
-        if 114 == stop:
-            print("ff")
         seen_stops.append(stop)
         if strand == '+':
             frame = (stop % 3) + 1
@@ -438,18 +436,18 @@ def fasta_load(fasta_in):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='StORF Run Parameters.')
-    parser.add_argument('-seq', action="store", dest='seq', required=True,
-                        help='Input Sequence File')
+    parser.add_argument('-f', action="store", dest='fasta', required=True,
+                        help='Input FASTA File')
     parser.add_argument('-ua', dest='unannotated', action='store', default=True, type=eval, choices=[True, False],
                         help='Default - Treat input as Unannotated: Use "-ua False" for standard fasta')
     parser.add_argument('-wc', action="store", dest='whole_contig', default=False, type=eval, choices=[True, False],
                         help='Default - False: StORFs reported across entire sequence')
     parser.add_argument('-ps', action="store", dest='partial_storf', default=False, type=eval, choices=[True, False],
                         help='Default - False: Partial StORFs reported')
-    parser.add_argument('-filt', action='store', dest='filtering', default='soft', const='soft', nargs='?',
+    parser.add_argument('-filt', action='store', dest='filtering', default='hard', const='hard', nargs='?',
                         choices=['none', 'soft', 'hard'],
-                        help='Default - "soft": Filtering level "none" is not recommended, "soft" for filtering StORFs on both strands together, '
-                             'and "hard" for filtering StORFs for each strand independantly and then again between the two strands')
+                        help='Default - "hard": Filtering level "none" is not recommended, "soft" for single strand filtering '
+                             'and hard for both-strand longest-first tiling')
     parser.add_argument('-aa', action="store", dest='translate', default=False, type=eval, choices=[True, False],
                         help='Default - False: Report StORFs as amino acid sequences')
     parser.add_argument('-con_storfs', action="store", dest='con_storfs', default=False, type=eval, choices=[True, False],
@@ -483,12 +481,12 @@ if __name__ == "__main__":
     if options.out_prefix:
         prefix = options.out_prefix
     else:
-        prefix = options.seq.split('.')[0] + "_StORF-R"
+        prefix = options.fasta.split('.')[0] + "_StORF-R"
     if not options.gz: # Clear fasta and gff files if no    t empty - Needs an elegant solution
         if not options.aa_only:
             out_gff = open(prefix + '.gff', 'w', newline='\n', encoding='utf-8')
             out_gff.write("##gff-version\t3\n#\tStORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
-            out_gff.write("##Original File: " + options.seq + '\n')
+            out_gff.write("##Original File: " + options.fasta + '\n')
             out_gff.close()
             out_fasta = open(prefix +'.fasta', 'w', newline='\n', encoding='utf-8').close()
             if options.translate:
@@ -499,7 +497,7 @@ if __name__ == "__main__":
         if not options.aa_only:
             out_gff = gzip.open(prefix + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
             out_gff.write("##gff-version\t3\n#\tStORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
-            out_gff.write("##Original File: " + options.seq + '\n')
+            out_gff.write("##Original File: " + options.fasta + '\n')
             out_gff.close()
             out_fasta = gzip.open(prefix +'.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
             if options.translate:
@@ -509,17 +507,15 @@ if __name__ == "__main__":
 
     sequences = OrderedDict()
     try: # Detect whether fasta files are .gz or text and read accordingly
-        fasta_in = gzip.open(options.seq,'rt')
+        fasta_in = gzip.open(options.fasta,'rt')
         fasta_load(fasta_in)
     except:
-        fasta_in = open(options.seq,'r')
+        fasta_in = open(options.fasta,'r')
         fasta_load(fasta_in)
     if options.verbose == True:
         print(fasta_in.name)
 
     for sequence_id, sequence in sequences.items():
-        if ">Chromosome_UR|193866_194258" in sequence_id:
-            print("Here1")
         if len(sequence) >= options.min_orf:
             STORF(sequence)
 

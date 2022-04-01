@@ -7,10 +7,12 @@ import gzip
 
 #Output FASTA and GFF separately using the same out_filename but with respective extensions - gz output optional
 def write_fasta(dna_regions, options):
+    if options.out_file == None:
+        options.out_file = options.fasta.split('.')[0]
     if options.gz == False:
-        out =  open(options.out_prefix + '.fasta','w', newline='\n', encoding='utf-8')
+        out =  open(options.out_file + '_UR.fasta','w', newline='\n', encoding='utf-8')
     elif options.gz == True:
-        out = gzip.open(options.out_prefix + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+        out = gzip.open(options.out_file + '_UR.fasta.gz', 'wt', newline='\n', encoding='utf-8')
     for dna_region, dna_region_ir in dna_regions.items():
         ir_ident = dna_region + options.ident # Add user ident onto name of dna regions
         if dna_region_ir[3]:
@@ -19,10 +21,12 @@ def write_fasta(dna_regions, options):
     out.close()
 
 def write_gff(dna_regions,options):
+    if options.out_file == None:
+        options.out_file = options.fasta.split('.')[0]
     if options.gz == False:
-        out =  open(options.out_prefix + '.gff','w', newline='\n', encoding='utf-8')
+        out =  open(options.out_file + '_UR.gff','w', newline='\n', encoding='utf-8')
     elif options.gz == True:
-        out = gzip.open(options.out_prefix + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
+        out = gzip.open(options.out_file + '_UR.gff.gz', 'wt', newline='\n', encoding='utf-8')
     out.write("##gff-version\t3\n#\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
     out.write("##Original File: " + options.fasta + '\n')
     for dna_region, dna_region_ir in dna_regions.items():
@@ -72,7 +76,8 @@ def gff_load(gff_in,dna_regions):
             try:
                 if line_data[0] in dna_regions:
                     if any(gene_type in line_data[2] for gene_type in gene_types): # line[2] for normalrun
-                        print(line_data[2])
+                        if options.verbose == True:
+                            print(line_data[2])
                         pos = line_data[3] + '_' + line_data[4]
                         dna_regions[line_data[0]][2].append(pos) # This will add to list
             except IndexError:
@@ -150,10 +155,12 @@ if __name__ == "__main__":
                         help='UR Extension Length: Default 50')
     parser.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene',
                         help='Identifier used for extraction of "genic" regions "CDS,rRNA,tRNA": Default for Ensembl_Bacteria = "ID=gene"')
-    parser.add_argument('-o', '--output_prefix', action='store', dest='out_prefix', required=True,
-                        help='Output file prefix - Without filetype')
+    parser.add_argument('-o', '--output_file', action='store', dest='out_file', required=False,
+                        help='Output file - Without filetype - default appends "_UR" to end of input fasta')
     parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
+    parser.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
+                        help='Default - False: Print out runtime status')
 
     options = parser.parse_args()
     extractor(options)
