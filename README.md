@@ -1,4 +1,4 @@
-# StORF-Reporter
+# StORF-Reporter - Preprint: https://www.biorxiv.org/content/10.1101/2022.03.31.486628v1
 
 Two Python3 scripts which extracts unannotated regions and then (St)ORFs using Stop-Stop codons.
 
@@ -42,7 +42,7 @@ Python3 script to extract Stop - Stop Codon (St)ORFs from Fasta sequences.
 For Help: python3 StORF_Finder.py -h  
 Example: python3 StORF_Finder.py -seq genomes/E-coli_UR.fasta.gz -o genomes/E-coli_UR_StORF -gz True
 ```python
-usage: StORF_Finder.py [-h] -seq SEQ [-ua {True,False}] [-wc {True,False}]
+usage: StORF_Finder.py [-h] -f FASTA [-ua {True,False}] [-wc {True,False}]
                        [-ps {True,False}] [-filt [{none,soft,hard}]]
                        [-aa {True,False}] [-con_storfs {True,False}]
                        [-aa_only {True,False}] [-con_only {True,False}]
@@ -55,7 +55,7 @@ StORF Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -seq SEQ              Input Sequence File
+  -f FASTA              Input FASTA File
   -ua {True,False}      Default - Treat input as Unannotated: Use "-ua False"
                         for standard fasta
   -wc {True,False}      Default - False: StORFs reported across entire
