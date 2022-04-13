@@ -1,4 +1,5 @@
 import argparse
+import collections
 import re
 from collections import defaultdict, OrderedDict
 from datetime import date
@@ -24,7 +25,7 @@ def revCompIterative(watson): #Gets Reverse Complement
     return crick
 
 ######## REWRTIE THIS!! - Might only be the stop which is the first constorfs end.
-def prev_con_StORF_CHECKER(prev_con_StORF,sequence):
+def prev_con_StORF_CHECKER(prev_con_StORF,sequence,options):
     last_stop_str = int(prev_con_StORF.split(',')[-1])
     seq = sequence[last_stop_str:last_stop_str + 3]
     if not any(seq in s for s in options.stop_codons.split(',')):
@@ -44,7 +45,7 @@ def cut_seq(wc_seq,end):
             wc_seq = wc_seq[1:]  # keep removing char
     return wc_seq
 
-def tile_filtering(storfs): #Hard filtering
+def tile_filtering(storfs,options): #Hard filtering
     storfs = OrderedDict(sorted(storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
     ################ - Order largest first filtering
     storfs = sorted(storfs.items(), key=lambda storfs:storfs[1][3],reverse=True)
@@ -89,8 +90,8 @@ def translate_frame(sequence):
     return translate
 
 def write_gff(storfs,seq_id):
-    seq_id = seq_id.replace('_', '-') # Might not be needed after IR-E rewrite
-    seq_id = seq_id.replace('-IR','_IR')
+    #seq_id = seq_id.replace('_', '-') # Might not be needed after IR-E rewrite
+    #seq_id = seq_id.replace('-IR','_IR')
     if options.gz == False:
         out_gff =  open(prefix+'.gff','a', newline='\n', encoding='utf-8')
     elif options.gz == True:
@@ -130,8 +131,8 @@ def write_gff(storfs,seq_id):
 def write_fasta(storfs,seq_id):  # Some Lines commented out for BetaRun of ConStORF
     storf_num = 0 # This requires a much more elegant solution.
     seq_id = seq_id.split()[0].replace('>', '')
-    seq_id = seq_id.replace('_', '-') # Might not be needed after IR-E rewrite
-    seq_id = seq_id.replace('-IR', '_IR')
+    # seq_id = seq_id.replace('_', '-') # Might not be needed after IR-E rewrite
+    # seq_id = seq_id.replace('-IR', '_IR')
     if options.aa_only == False:
         if options.gz == False:
             out_fasta =  open(prefix+'.fasta','a', newline='\n', encoding='utf-8')
@@ -228,7 +229,7 @@ gencode = {
       'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W'}
 ############################
 
-def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,strand,StORF_idx,Con_StORF_idx):
+def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,strand,StORF_idx,Con_StORF_idx,options):
     first = True
     con_StORF_tracker = ''
     next_stops = []
@@ -260,7 +261,7 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
                                 seq = sequence[seq_start:next_stop + 3]
                                 length = next_stop - seq_start
                                 ############# Fix the +3 issue for last but now internal stop position
-                                prev_con_StORF = prev_con_StORF_CHECKER(prev_con_StORF,sequence)
+                                prev_con_StORF = prev_con_StORF_CHECKER(prev_con_StORF,sequence,options)
                                 ############ Fixed
                                 con_StORF_Pos = prev_con_StORF+','+str(next_stop)
                                 if options.filtering == 'hard':
@@ -350,7 +351,7 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
             pass
     return storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx
 
-def STORF(sequence): #Main Function
+def STORF(sequence,options): #Main Function
     stops = []
     frames_covered = OrderedDict()
     for x in range (1,7):
@@ -364,7 +365,7 @@ def STORF(sequence): #Main Function
     lengths = []
     StORF_idx = 0
     Con_StORF_idx = 0
-    storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("positive",stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,'+',StORF_idx,Con_StORF_idx)
+    storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("positive",stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,'+',StORF_idx,Con_StORF_idx,options)
     ###### Reversed
     sequence_rev = revCompIterative(sequence)
     stops = []
@@ -372,7 +373,7 @@ def STORF(sequence): #Main Function
         stops += [match.start() for match in re.finditer(re.escape(stop_codon), sequence_rev)]
     stops.sort()
     counter = 0
-    storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("negative",stops,sequence_rev,storfs,con_StORFs,frames_covered,counter,lengths,'-',StORF_idx,Con_StORF_idx)
+    storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("negative",stops,sequence_rev,storfs,con_StORFs,frames_covered,counter,lengths,'-',StORF_idx,Con_StORF_idx,options)
     #Potential run-through StORFs
     if options.whole_contig:
         for frame,present in frames_covered.items():
@@ -391,25 +392,36 @@ def STORF(sequence): #Main Function
     #Check if there are StORFs to report
     if options.con_storfs == False and options.con_only == False:
         if bool(storfs):
-            all_StORFs = tile_filtering(storfs)
+            all_StORFs = tile_filtering(storfs,options)
             # Reorder by start position
             all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
+            if options.reporter == True:
+                return all_StORFs
+
             write_fasta(all_StORFs, sequence_id)
             if not options.aa_only:
                 write_gff(all_StORFs, sequence_id)
     elif options.con_only == False:
         all_StORFs = {**storfs, **con_StORFs}
         if bool(all_StORFs):
-            all_StORFs = tile_filtering(all_StORFs)
+            all_StORFs = tile_filtering(all_StORFs,options)
             # Reorder by start position
             all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
+            #### reporter  -
+            if options.reporter == True:
+                return all_StORFs
+
             write_fasta(all_StORFs, sequence_id)
             if not options.aa_only:
                 write_gff(all_StORFs, sequence_id)
     elif options.con_only == True and bool(con_StORFs):
-        con_StORFs = tile_filtering(con_StORFs)
+        con_StORFs = tile_filtering(con_StORFs,options)
         # Reorder by start position
         con_StORFs = OrderedDict(sorted(con_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
+        #### reporter  -
+        if options.reporter == True:
+            return con_StORFs
+
         write_fasta(con_StORFs, sequence_id)
         if not options.aa_only:
             write_gff(con_StORFs, sequence_id)
@@ -434,8 +446,25 @@ def fasta_load(fasta_in):
             first = False
     sequences.update({sequence_name: seq})
 
+
+def StORF_Reported(URs,options):
+    Reporter_StORFs = collections.OrderedDict()
+    for sequence_id, sequences in URs.items():
+        print(sequence_id)
+        sequences = sequences[3]
+        for sequence in sequences:
+            if len(sequences[sequence]) >= options.min_orf:
+                StORFs = STORF(sequences[sequence],options)
+                Reporter_StORFs.update({sequence:StORFs})
+    return sequence_id,Reporter_StORFs
+
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='StORF Run Parameters.')
+    parser.add_argument('-reporter', action="store", dest='reporter', default=False, required=False,
+                        help=argparse.SUPPRESS)
     parser.add_argument('-f', action="store", dest='fasta', required=True,
                         help='Input FASTA File')
     parser.add_argument('-ua', dest='unannotated', action='store', default=True, type=eval, choices=[True, False],
@@ -476,6 +505,8 @@ if __name__ == "__main__":
                         help='Default - False: Output as .gz')
     parser.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
                         help='Default - False: Print out runtime status')
+    parser.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
+                        help=argparse.SUPPRESS)
     options = parser.parse_args()
     ns_nt = defaultdict  # Used to Record non-standard nucleotides
     if options.out_prefix:
@@ -506,16 +537,17 @@ if __name__ == "__main__":
             out_fasta_aa = gzip.open(prefix + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8').close()
 
     sequences = OrderedDict()
-    try: # Detect whether fasta files are .gz or text and read accordingly
-        fasta_in = gzip.open(options.fasta,'rt')
-        fasta_load(fasta_in)
-    except:
-        fasta_in = open(options.fasta,'r')
-        fasta_load(fasta_in)
-    if options.verbose == True:
-        print(fasta_in.name)
+    if options.reporter == False:
+        try: # Detect whether fasta files are .gz or text and read accordingly
+            fasta_in = gzip.open(options.fasta,'rt')
+            fasta_load(fasta_in)
+        except:
+            fasta_in = open(options.fasta,'r')
+            fasta_load(fasta_in)
+        if options.verbose == True:
+            print(fasta_in.name)
 
     for sequence_id, sequence in sequences.items():
         if len(sequence) >= options.min_orf:
-            STORF(sequence)
+            STORF(sequence,options)
 

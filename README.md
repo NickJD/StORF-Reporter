@@ -2,6 +2,8 @@
 
 Two Python3 scripts which extracts unannotated regions and then (St)ORFs using Stop-Stop codons.
 
+# NO Need to clone repo (Currently contains testing data) - Just download UR_Extractor.py and StORF-Finder.py for now.
+
 To run, you need: (/genomes contain all needed files for demo)  
 * Input FASTA file  
 * Input GFF file with predicted ORFs   

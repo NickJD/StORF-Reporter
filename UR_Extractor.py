@@ -1,7 +1,6 @@
 import argparse
 import collections
 from datetime import date
-
 import gzip
 
 
@@ -59,11 +58,9 @@ def fasta_load(fasta_in):
     dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
     return dna_regions
 
-def gff_load(gff_in,dna_regions):
+def gff_load(options,gff_in,dna_regions):
     #Will code in different versions for different types of GFF3 files (Prodigal,Ensembl etc)
     for line in gff_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
-        #temp
-        #line = line.replace('NZ_','')
         line_data = line.split()
         if line.startswith('\n'): # Not to crash on empty lines in GFF
             continue
@@ -79,7 +76,8 @@ def gff_load(gff_in,dna_regions):
                         if options.verbose == True:
                             print(line_data[2])
                         pos = line_data[3] + '_' + line_data[4]
-                        dna_regions[line_data[0]][2].append(pos) # This will add to list
+                        if pos not in dna_regions[line_data[0]][2]:
+                            dna_regions[line_data[0]][2].append(pos) # This will add to list
             except IndexError:
                 continue
 
@@ -94,10 +92,10 @@ def extractor(options):
         dna_regions = fasta_load(fasta_in)
     try:
         gff_in = gzip.open(options.gff,'rt')
-        dna_regions = gff_load(gff_in,dna_regions)
+        dna_regions = gff_load(options,gff_in,dna_regions)
     except:
         gff_in = open(options.gff,'r')
-        dna_regions = gff_load(gff_in,dna_regions)
+        dna_regions = gff_load(options,gff_in,dna_regions)
 
     for (key,(seq,seq_length,posns,irs))  in dna_regions.items(): #Extract IRs from 1 dna_region at a time
         intergenic_regions = collections.OrderedDict()
@@ -135,10 +133,11 @@ def extractor(options):
         #     del dna_regions[key]
 
 
-
-    write_fasta(dna_regions, options)
-    write_gff(dna_regions, options)
-
+    if options.nout == False:
+        write_fasta(dna_regions, options)
+        write_gff(dna_regions, options)
+    else:
+        return dna_regions
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
@@ -154,13 +153,15 @@ if __name__ == "__main__":
     parser.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
                         help='UR Extension Length: Default 50')
     parser.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene',
-                        help='Identifier used for extraction of "genic" regions "CDS,rRNA,tRNA": Default for Ensembl_Bacteria = "ID=gene"')
+                        help='Identifier used for extraction of "unannotated" regions "CDS,rRNA,tRNA": Default for Ensembl_Bacteria = "ID=gene"')
     parser.add_argument('-o', '--output_file', action='store', dest='out_file', required=False,
                         help='Output file - Without filetype - default appends "_UR" to end of input fasta')
     parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
     parser.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
                         help='Default - False: Print out runtime status')
+    parser.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
+                        help=argparse.SUPPRESS)
 
     options = parser.parse_args()
     extractor(options)
