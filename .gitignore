@@ -2,6 +2,7 @@
 prodigal/
 ensembl/
 swiss/
+__pycache__/
 
 1045010.61_IR.fasta
 
@@ -10,3 +11,6 @@ swiss/
 1045010.61.fna
 
 1045010.61.PATRIC.gff
+
+.idea
+
