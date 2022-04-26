@@ -49,7 +49,7 @@ def load_results(Con_StORF_Stops,results_input):
     Con_StORFs = collections.OrderedDict()
     for line in results_in:
         line = line.split('\t')
-        try: # This is where I can connect the blast output and the DNA Con-StORF internal codons data...
+        try: # This is where I can connect the blast output and the DNA Con-StORF-Reporter internal codons data...
             codon_stop_info = Con_StORF_Stops[line[0]]
             stops = line[0].split('UR_Stop_Locations:')[1].split('|')[0].split('-')
             stops = [int(x) for x in stops] # Yes very stupid

@@ -12,11 +12,11 @@ def write_fasta(dna_regions, options):
         out =  open(options.out_file + '_UR.fasta','w', newline='\n', encoding='utf-8')
     elif options.gz == True:
         out = gzip.open(options.out_file + '_UR.fasta.gz', 'wt', newline='\n', encoding='utf-8')
-    for dna_region, dna_region_ir in dna_regions.items():
-        ir_ident = dna_region + options.ident # Add user ident onto name of dna regions
-        if dna_region_ir[3]:
-            for ir, ir_seq in dna_region_ir[3].items():
-                out.write('>' + ir_ident + '|' + ir + '\n' + ir_seq + '\n')
+    for dna_region, dna_region_ur in dna_regions.items():
+        ur_ident = dna_region + options.ident # Add user ident onto name of dna regions
+        if dna_region_ur[3]:
+            for ir, ur_seq in dna_region_ur[3].items():
+                out.write('>' + ur_ident + '|' + ir + '\n' + ur_seq + '\n')
     out.close()
 
 def write_gff(dna_regions,options):
@@ -28,13 +28,13 @@ def write_gff(dna_regions,options):
         out = gzip.open(options.out_file + '_UR.gff.gz', 'wt', newline='\n', encoding='utf-8')
     out.write("##gff-version\t3\n#\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
     out.write("##Original File: " + options.fasta + '\n')
-    for dna_region, dna_region_ir in dna_regions.items():
-        ir_ident = dna_region + options.ident
-        if dna_region_ir[3]:
-            for ir, ir_seq in dna_region_ir[3].items():
-                length = len(ir_seq)
-                ir_pos = ir.replace('_','\t')
-                entry = (dna_region + '\tUR_Extractor\tunannotated_region\t' + ir_pos + '\t.\t.\t.\tID='+ir_ident+'_'+ir+';Note=UR_Length(Extended):' + str(length) + '\n')
+    for dna_region, dna_region_ur in dna_regions.items():
+        ur_ident = dna_region + options.ident
+        if dna_region_ur[3]:
+            for ir, ur_seq in dna_region_ur[3].items():
+                length = len(ur_seq)
+                ur_pos = ir.replace('_','\t')
+                entry = (dna_region + '\tUR_Extractor\tunannotated_region\t' + ur_pos + '\t.\t.\t.\tID='+ur_ident+'_'+ir+';Note=UR_Length(Extended):' + str(length) + '\n')
                 out.write(entry)
     out.close()
 
@@ -166,5 +166,5 @@ if __name__ == "__main__":
     options = parser.parse_args()
     extractor(options)
 
-    # Contig name could have a ';' which will mess up later on in StORF-R
+    # Contig name could have a ';' which will mess up later on in StORF-Reporter-R
     # UR output should state original non extended
