@@ -126,7 +126,8 @@ def StORF_Filler(sequence_id,options,all_StORFs):
             track_current_start = int(data[3])
             track_current_stop = int(data[4])
             if track_current_start == track_prev_start and track_current_stop == track_prev_stop:  # `duplicate' entry in GFF
-                print("skip")
+                if options.verbose == True:
+                    print("skip")
             else:
                 StORFs, all_StORFs = find_prev_StORFs(options,all_StORFs, track_current_start, track_prev_stop)
             track_prev_start = track_current_start

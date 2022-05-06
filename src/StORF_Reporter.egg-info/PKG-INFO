@@ -1,3 +1,20 @@
+Metadata-Version: 2.1
+Name: StORF-Reporter
+Version: 0.3.1
+Summary: StORF-Reporter - A tool that takes as input an annotated genome and returns missed CDS genes from the unannotated regions.
+Home-page: https://github.com/NickJD/StORF-Reporter
+Author: Nicholas Dimonaco
+Author-email: nicholas@dimonaco.co.uk
+License: UNKNOWN
+Project-URL: Bug Tracker, https://github.com/NickJD/StORF-Reporter/issues
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
 # StORF-Reporter - Preprint: https://www.biorxiv.org/content/10.1101/2022.03.31.486628v1
 
 StORF-Reporter, a tool that takes as input an annotated genome and returns missed CDS genes from the unannotated regions.
@@ -95,3 +112,5 @@ optional arguments:
   -gz {True,False}      Default - False: Output as .gz
   -v {True,False}       Default - False: Print out runtime status
 ```
+
+

@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+src/StORF-Reporter/StORF_Finder.py
+src/StORF-Reporter/StORF_Reporter.py
+src/StORF-Reporter/UR_Extractor.py
+src/StORF-Reporter/__init__.py
+src/StORF_Reporter.egg-info/PKG-INFO
+src/StORF_Reporter.egg-info/SOURCES.txt
+src/StORF_Reporter.egg-info/dependency_links.txt
+src/StORF_Reporter.egg-info/top_level.txt
