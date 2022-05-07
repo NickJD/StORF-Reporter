@@ -14,7 +14,7 @@ except ImportError:
 
 def StoRF_write(sequence_id,outfile,StORF,StORF_Num): # Consistency in outfile
     ID = sequence_id + '_Stop-ORF:' + str(StORF[1]) + '-' + str(StORF[2])
-    outfile.write(sequence_id + '\tStORF-Reporter\tStORF\t' + str(StORF[1]) + '\t' + str(StORF[2]) + '\t.\t' +
+    outfile.write(sequence_id + '\tStORF_Reporter\tStORF\t' + str(StORF[1]) + '\t' + str(StORF[2]) + '\t.\t' +
         StORF[7] + '\t.\tID=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Position=' + StORF[0] + ';StORF_Num=' + str(
             StORF_Num) + ';StORF_Num_In_UR=' + str(StORF[9]) +
         ';StORF_Length=' + str(StORF[8]) + ';StORF_Frame=' + str(StORF[5]) + ';UR_StORF_Frame=' + str(
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     else:
         print("Please provide correct PROKKA output directory")
 
-    ################## Find StORFs in URs - Setup StORF-Reporter-Finder Run
+    ################## Find StORFs in URs - Setup StORF_Reporter-Finder Run
     StORF_options = Namespace(reporter=True, gff=Reporter_options.gff,  stop_codons="TGA,TAA,TAG", partial_storf=False, whole_contig=False,
                         con_storfs=False, con_only=False, max_orf=50000, filtering='hard',
                         overlap_nt=50, allowed_overlap=Reporter_options.allowed_overlap,

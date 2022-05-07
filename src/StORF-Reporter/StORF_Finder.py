@@ -52,7 +52,7 @@ def tile_filtering(storfs,options): #Hard filtering
     ordered_by_length = OrderedDict()
     for tup in storfs:
         ordered_by_length.update({tup[0]:tup[1]}) # -1 for last?
-    ############## - For each StORF-Reporter, remove all smaller overlapping STORFs according to filtering rules
+    ############## - For each StORF_Reporter, remove all smaller overlapping STORFs according to filtering rules
     length = len(ordered_by_length)
     i = 0
     ordered_by_length = list(ordered_by_length.items())
@@ -117,7 +117,7 @@ def prepare_out(options,storfs,seq_id):
             elif strand == '-':
                 frame = (int(gff_stop) % 3) + 4
             storf_name = native_seq + '_' + storf_Type + ':' + gff_start + '-' + gff_stop
-            gff_entries.append(native_seq + '\tStORF-Reporter\tStORF\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
+            gff_entries.append(native_seq + '\tStORF_Reporter\t' + options.type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';UR=' + ur_name + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(
                     length) +
                 ';Frame=' + str(frame) + ';UR_Frame=' + str(ur_frame) +
@@ -133,7 +133,7 @@ def prepare_out(options,storfs,seq_id):
                 frame) + '|Start_Stop=' + start_stop +
                      '|End_Stop=' + end_stop + '|StORF_Type:' + storf_Type + "\n")
 
-            gff_entries.append(                native_seq + '\tStORF-Reporter\tStORF\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
+            gff_entries.append(                native_seq + '\tStORF_Reporter\t' + options.type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';UR=' + ur_name + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(
                     length) +
                 ';Frame=' + str(frame) + ';UR_Frame=' + str(ur_frame) +
@@ -319,7 +319,7 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
                                 start_stops.append(stop)
                                 prevlength = prev_next_stop - prev_stop
                         elif first:
-                            if options.partial_storf: # upstream partial StORF-Reporter
+                            if options.partial_storf: # upstream partial StORF_Reporter
                                 if stop > options.min_orf and frames_covered[frame] != 1:
                                     seq = sequence[0:stop + 3] #Start of seq to first stop identified
                                     ps_seq = cut_seq(seq, '-')
@@ -340,7 +340,7 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
                         break
                     break
         counter +=1
-    if options.partial_storf:  # downstream partial StORF-Reporter - Last Stop to end of sequence
+    if options.partial_storf:  # downstream partial StORF_Reporter - Last Stop to end of sequence
         try:
             if (len(sequence) - stop) > options.min_orf:
                 seq = sequence[stop:len(sequence)]  # Start of seq to first stop identified
@@ -487,6 +487,9 @@ if __name__ == "__main__":
                         help='Default - False: Only output Consecutive StORFs')
     parser.add_argument('-stop_ident', action="store", dest='stop_ident', default=True, type=eval, choices=[True, False],
                         help='Default - True: Identify Stop Codon positions with \'*\'')
+    parser.add_argument('-type', action='store', dest='type', default='StORF', const='StORF', nargs='?',
+                        choices=['StORF', 'CDS', 'ORF'],
+                        help='Default - "StORF": Which GFF "type" for StORFs to be reported as in GFF')
     parser.add_argument('-minorf', action="store", dest='min_orf', default=100, type=int,
                         help='Default - 100: Minimum StORF size in nt')
     parser.add_argument('-maxorf', action="store", dest='max_orf', default=50000, type=int,

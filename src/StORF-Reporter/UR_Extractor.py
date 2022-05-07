@@ -166,5 +166,5 @@ if __name__ == "__main__":
     options = parser.parse_args()
     extractor(options)
 
-    # Contig name could have a ';' which will mess up later on in StORF-Reporter-R
+    # Contig name could have a ';' which will mess up later on in StORF_Reporter-R
     # UR output should state original non extended
