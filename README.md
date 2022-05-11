@@ -3,46 +3,48 @@
 StORF-Reporter, a toolkit that takes as input an annotated genome and returns missed CDS 
 genes from the Unannotated Regions (URs).
 # Please use `pip3 install StORF-Reporter' to install the tool.
-This will also install the 'ORForise' package from https://github.com/NickJD/ORForise to allow for additional functionality.
+This will also install numpy and the 'ORForise' package from https://github.com/NickJD/ORForise to allow for additional functionality.
 
-# StORF-Reporter (BETA)
+# StORF-Reporter (BETA) - Please raise issues at https://github.com/NickJD/StORF-Reporter/issues
 This tool extracts Unnannotated Regions from PROKKA genome annotations, finds Stop - Open Reading Frames
 and reports them in a new PROKKA formatted GFF file in the PROKKA output directory.
 
 This tool is currently in BETA but can be run as: 
-```python
+```console
 python3 -m StORF-Reporter.StORF_Reporter -anno PROKKA -pd ../PROKKA_04062022/
 ```
 ### Menu - (python3 -m StORF-Reporter.StORF_Reporter -h):
 ```python
-usage: StORF_Reporter.py [-h] -anno [{PROKKA,Ensembl,CDS}] [-pd PROKKA_DIR]
-                         [-min_len MINLEN] [-max_len MAXLEN] [-ex_len EXLEN]
-                         [-gz {True,False}] [-ao ALLOWED_OVERLAP]
-                         [-v {True,False}]
+usage: StORF_Reporter.py [-h] -anno [{PROKKA,Ensembl,CDS}] [-pd PROKKA_DIR] [-min_len MINLEN]
+[-max_len MAXLEN] [-ex_len EXLEN] [-olap OVERLAP_NT] [-type [{StORF,CDS,ORF}]] [-ao ALLOWED_OVERLAP] 
+[-gz {True,False}] [-v {True,False}]
 
 optional arguments:
   -h, --help            show this help message and exit
   -anno [{PROKKA,Ensembl,CDS}]
-                        Annotation type to be StORF-Reported:Options: PROKKA =
-                        "misc_RNA,gene,mRNA,CDS,tRNA,tmRNA,CRISPR";Ensembl =
-                        "ID=gene" ;CDS = "CDS"
+                        Default - PROKKA: Annotation type to be StORF-Reported:Options: PROKKA = 
+                        "misc_RNA,gene,mRNA,CDS,tRNA,tmRNA,CRISPR";Ensembl = "ID=gene" ;CDS = "CDS"
   -pd PROKKA_DIR, --PROKKA_dir PROKKA_DIR
                         PROKKA output directory to be used if PROKKA chosen
-  -min_len MINLEN       Minimum UR Length: Default 30
-  -max_len MAXLEN       Maximum UR Length: Default 100,000
-  -ex_len EXLEN         UR Extension Length: Default 50
+  -min_len MINLEN       Default - 30: Minimum UR Length
+  -max_len MAXLEN       Default - 100,000: Maximum UR Length
+  -ex_len EXLEN         Default - 50: UR Extension Length
+  -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which can overlap another StORF.
+  -type [{StORF,CDS,ORF}]
+                        Default - "StORF": Which GFF type for StORFs to be reported as in GFF (StORF,CDS,ORF)
+  -ao ALLOWED_OVERLAP   Default - 50 nt: Maximum overlap between a StORF and an original gene.
   -gz {True,False}      Default - False: Output as .gz
-  -ao ALLOWED_OVERLAP   Default - 50 nt: Maximum overlap between StORF and
-                        original genes.
   -v {True,False}       Default - False: Print out runtime status
-
 ```
 
 # UR_Extractor
 Python3 script to extract Unannotated Regions from DNA sequences uses FASTA and GFF files as input.
 
 ### Menu - (python3 -m StORF-Reporter.UR_Extractor -h):  
-Example: python3 -m StORF-Reporter.UR_Extractor -f genomes/E-coli.fasta.gz -gff genomes/E-coli.gff -o genomes/E-coli_UR -gz True
+```console
+python3 -m StORF-Reporter.UR_Extractor -f genomes/E-coli.fasta.gz -gff genomes/E-coli.gff -o genomes/E-coli_UR -gz True
+```
+
 ```python
 usage: UR_Extractor.py [-h] -f FASTA -gff GFF [-ident IDENT] [-min_len MINLEN]
                        [-max_len MAXLEN] [-ex_len EXLEN]
@@ -71,7 +73,10 @@ optional arguments:
 Python3 script to extract Stop - Stop Codon (St)ORFs from Fasta sequences.  
 
 ### Menu - (python3 -m StORF-Reporter.StORF_Finder -h):   
-Example: python3 -m StORF-Reporter.StORF_Finder -seq genomes/E-coli_UR.fasta.gz -o genomes/E-coli_UR_StORF -gz True
+```console
+python3 -m StORF-Reporter.StORF_Finder -seq genomes/E-coli_UR.fasta.gz -o genomes/E-coli_UR_StORF -gz True
+```
+
 ```python
 usage: StORF_Finder.py [-h] -f FASTA [-ua {True,False}] [-wc {True,False}]
                        [-ps {True,False}] [-filt [{none,soft,hard}]]

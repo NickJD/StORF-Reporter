@@ -2,6 +2,7 @@ LICENSE
 README.md
 pyproject.toml
 setup.cfg
+src/StORF-Reporter/StORF_Adder.py
 src/StORF-Reporter/StORF_Finder.py
 src/StORF-Reporter/StORF_Reporter.py
 src/StORF-Reporter/UR_Extractor.py
