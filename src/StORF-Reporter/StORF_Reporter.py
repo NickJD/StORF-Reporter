@@ -1,8 +1,8 @@
 import argparse
 from argparse import Namespace
 import pathlib
-import re
-
+import textwrap
+import collections
 
 try:
     from UR_Extractor import extractor
@@ -12,13 +12,80 @@ except ImportError:
     from .StORF_Finder import StORF_Reported
 
 
-def StoRF_write(StORF_options,sequence_id,outfile,StORF,StORF_Num): # Consistency in outfile
+###################
+gencode = {
+      'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
+      'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+      'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K',
+      'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R',
+      'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L',
+      'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P',
+      'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q',
+      'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R',
+      'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V',
+      'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A',
+      'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+      'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G',
+      'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S',
+      'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
+      'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*',
+      'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W'}
+############################
+
+def StoRF_write(StORF_options,sequence_id,gff_outfile,fasta_outfile, StORF,StORF_Num): # Consistency in outfile
     ID = sequence_id + '_Stop-ORF:' + str(StORF[1]) + '-' + str(StORF[2])
-    outfile.write(sequence_id + '\tStORF_Reporter\t' + StORF_options.type + '\t' +  str(StORF[1]) + '\t' + str(StORF[2]) + '\t.\t' +
+    ### Write out new GFF entry
+    gff_outfile.write(sequence_id + '\tStORF_Reporter\t' + StORF_options.feature_type + '\t' +  str(StORF[1]) + '\t' + str(StORF[2]) + '\t.\t' +
         StORF[7] + '\t.\tID=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Position=' + StORF[0] + ';StORF_Num=' + str(
             StORF_Num) + ';StORF_Num_In_UR=' + str(StORF[9]) +
         ';StORF_Length=' + str(StORF[8]) + ';StORF_Frame=' + str(StORF[5]) + ';UR_StORF_Frame=' + str(
             StORF[6]) + '\n')
+    ### Wrtie out new FASTA entry
+    fasta_outfile.write('>'+ID+'\n'+StORF[10]+'\n')
+
+def FASTA_Load(faa_infile,ffn_infile):
+    ### Coding sequences first
+    PROKKA_CoDing = collections.defaultdict()
+    first = True
+    infile = open(faa_infile)
+    seq = ''
+    ##load in fasta file and make dict of seqs and ids
+    for line in infile:
+        line = line.strip()
+        if line.startswith('>') and first == False:
+            PROKKA_CoDing.update({id:seq})
+            id = line.replace('>','')
+            id = id.split(' ')[0]
+            seq = ''
+        elif line.startswith('>'):
+            id = line.replace('>','')
+            id = id.split(' ')[0]
+            first = False
+        else:
+            seq += line
+    PROKKA_CoDing.update({id:seq})
+    ### Non-Coding sequences next
+    PROKKA_Non_CoDing = collections.defaultdict()
+    first = True
+    infile = open(ffn_infile)
+    seq = ''
+    ##load in fasta file and make dict of seqs and ids
+    for line in infile:
+        line = line.strip()
+        if line.startswith('>') and first == False:
+            PROKKA_Non_CoDing.update({id:seq})
+            id = line.replace('>','')
+            id = id.split(' ')[0]
+            seq = ''
+        elif line.startswith('>'):
+            id = line.replace('>','')
+            id = id.split(' ')[0]
+            first = False
+        else:
+            seq += line
+    PROKKA_Non_CoDing.update({id:seq})
+
+    return PROKKA_CoDing,PROKKA_Non_CoDing
 
 
 def run_UR_Extractor(Reporter_options):
@@ -120,6 +187,14 @@ def StORF_Filler(sequence_id,StORF_options,all_StORFs):
     StORF_Num = 0
     end = False
 
+    ### Rename .gff to .fasta / faa and load in fasta file
+    fasta_outfile = StORF_options.gff.replace('.gff','')
+    fasta_outfile = open(fasta_outfile + '_StORF_Reporter_Combined.fasta','w')
+    faa_infile = StORF_options.gff.replace('.gff', '.faa')
+    ffn_infile = StORF_options.gff.replace('.gff', '.ffn')
+    PROKKA_CoDing,PROKKA_Non_CoDing = FASTA_Load(faa_infile,ffn_infile)
+    ##this will be a dict of ids and seqs
+
     for line in gff_in:
         if not line.startswith('#') and end == False:
             data = line.split('\t')
@@ -133,9 +208,23 @@ def StORF_Filler(sequence_id,StORF_options,all_StORFs):
             track_prev_start = track_current_start
             track_prev_stop = track_current_stop
 
+            ##### Print out PROKKA Protein
+            if 'gene' in data[2]:
+                PROKKA_ID = data[8].split(';')[0].replace('ID=','').replace('_gene','')
+                try:
+                    PROKKA_Seq = PROKKA_CoDing[PROKKA_ID]
+                except KeyError:
+                    try:
+                        PROKKA_Seq = PROKKA_Non_CoDing[PROKKA_ID]
+                    except KeyError:
+                        print("PROKKA seq not found")
+                fasta_outfile.write('>'+PROKKA_ID+'\n'+PROKKA_Seq+'\n')
+
+            ##use dict to print seq
+
             if StORFs:
                 for StORF in StORFs:  # ([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand, StORF_Length, StORF_UR_Num, StORF_Seq)]
-                    StoRF_write(StORF_options,sequence_id,outfile,StORF,StORF_Num) # To keep consistency
+                    StoRF_write(StORF_options,sequence_id,outfile, fasta_outfile,StORF,StORF_Num) # To keep consistency
                     StORF_Num += 1
             outfile.write(line)
             StORFs = None
@@ -145,7 +234,7 @@ def StORF_Filler(sequence_id,StORF_options,all_StORFs):
             StORFs = find_after_StORFs(StORF_options,all_StORFs, track_current_start, track_current_stop)
             if StORFs:
                 for StORF in StORFs:  #  ([ur_pos,StORF_start,StORF_stop,StORF_Start_In_UR,StORF_Stop_In_UR,frame,ur_frame,strand,StORF_Length,StORF_UR_Num,StORF_Seq)]
-                    StoRF_write(StORF_options,sequence_id,outfile,StORF,StORF_Num) # To keep consistency
+                    StoRF_write(StORF_options,sequence_id,outfile, fasta_outfile, StORF,StORF_Num) # To keep consistency
                     StORF_Num += 1
             outfile.write(line)
 
@@ -172,12 +261,18 @@ if __name__ == "__main__":
 
     parser.add_argument('-olap', action="store", dest='overlap_nt', default=50, type=int,
                         help='Default - 50: Maximum number of nt of a StORF which can overlap another StORF.')
-    parser.add_argument('-type', action='store', dest='type', default='StORF', const='StORF', nargs='?',
+    parser.add_argument('-type', action='store', dest='feature_type', default='StORF', const='StORF', nargs='?',
                         choices=['StORF', 'CDS', 'ORF'],
-                        help='Default - "StORF": Which GFF type for StORFs to be reported as in GFF (StORF,CDS,ORF)')
+                        help='Default - "StORF": Which GFF feature type for StORFs to be reported as in GFF (StORF,CDS,ORF)')
 
     parser.add_argument('-ao', action="store", dest='allowed_overlap', default=50, type=int,
                         help='Default - 50 nt: Maximum overlap between a StORF and an original gene.')
+
+
+    parser.add_argument('-lw', action="store", dest='line_wrap', default=True, type=eval, choices=[True, False],
+                        help='Default - True: Line wrap FASTA sequence output at 60 chars')
+    parser.add_argument('-aa', action="store", dest='translate', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Report StORFs as amino acid sequences')
 
     parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
@@ -196,7 +291,7 @@ if __name__ == "__main__":
 
     ################## Find StORFs in URs - Setup StORF_Reporter-Finder Run
     StORF_options = Namespace(reporter=True, gff=Reporter_options.gff,  stop_codons="TGA,TAA,TAG", partial_storf=False, whole_contig=False,
-                        con_storfs=False, con_only=False, max_orf=50000, filtering='hard', type=Reporter_options.type, overlap_nt=Reporter_options.overlap_nt,
+                        con_storfs=False, con_only=False, max_orf=50000, filtering='hard', feature_type=Reporter_options.feature_type, overlap_nt=Reporter_options.overlap_nt,
                         allowed_overlap=Reporter_options.allowed_overlap,
                         minlen=30, maxlen=100000, min_orf=100, verbose=False, nout=True)
 

@@ -1,10 +1,4 @@
-
-prodigal/
-ensembl/
-swiss/
 __pycache__/
-
-
-
+dist/
 .idea
 

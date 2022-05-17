@@ -117,7 +117,7 @@ def prepare_out(options,storfs,seq_id):
             elif strand == '-':
                 frame = (int(gff_stop) % 3) + 4
             storf_name = native_seq + '_' + storf_Type + ':' + gff_start + '-' + gff_stop
-            gff_entries.append(native_seq + '\tStORF_Reporter\t' + options.type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
+            gff_entries.append(native_seq + '\tStORF_Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';UR=' + ur_name + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(
                     length) +
                 ';Frame=' + str(frame) + ';UR_Frame=' + str(ur_frame) +
@@ -133,7 +133,7 @@ def prepare_out(options,storfs,seq_id):
                 frame) + '|Start_Stop=' + start_stop +
                      '|End_Stop=' + end_stop + '|StORF_Type:' + storf_Type + "\n")
 
-            gff_entries.append(                native_seq + '\tStORF_Reporter\t' + options.type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
+            gff_entries.append(                native_seq + '\tStORF_Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';UR=' + ur_name + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(
                     length) +
                 ';Frame=' + str(frame) + ';UR_Frame=' + str(ur_frame) +
@@ -487,9 +487,9 @@ if __name__ == "__main__":
                         help='Default - False: Only output Consecutive StORFs')
     parser.add_argument('-stop_ident', action="store", dest='stop_ident', default=True, type=eval, choices=[True, False],
                         help='Default - True: Identify Stop Codon positions with \'*\'')
-    parser.add_argument('-type', action='store', dest='type', default='StORF', const='StORF', nargs='?',
+    parser.add_argument('-type', action='store', dest='feature_type', default='StORF', const='StORF', nargs='?',
                         choices=['StORF', 'CDS', 'ORF'],
-                        help='Default - "StORF": Which GFF "type" for StORFs to be reported as in GFF')
+                        help='Default - "StORF": Which GFF feature type for StORFs to be reported as in GFF')
     parser.add_argument('-minorf', action="store", dest='min_orf', default=100, type=int,
                         help='Default - 100: Minimum StORF size in nt')
     parser.add_argument('-maxorf', action="store", dest='max_orf', default=50000, type=int,
@@ -504,8 +504,8 @@ if __name__ == "__main__":
                         help='Default - Do not append suffix to genome ID')
     parser.add_argument('-o', action="store", dest='out_prefix', required=False,
                         help='Default - False/Same as input name with \'_StORF-R\': Output filename prefix - Without filetype')
-    parser.add_argument('-lw', action="store", dest='line_wrap', default=False, type=eval, choices=[True, False],
-                        help='Default - False: Line wrap FASTA sequence output at 60 chars')
+    parser.add_argument('-lw', action="store", dest='line_wrap', default=True, type=eval, choices=[True, False],
+                        help='Default - True: Line wrap FASTA sequence output at 60 chars')
     parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
     parser.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
