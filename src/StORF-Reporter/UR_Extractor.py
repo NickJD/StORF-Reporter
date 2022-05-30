@@ -15,8 +15,10 @@ def write_fasta(dna_regions, options):
     for dna_region, dna_region_ur in dna_regions.items():
         ur_ident = dna_region + options.ident # Add user ident onto name of dna regions
         if dna_region_ur[3]:
-            for ir, ur_seq in dna_region_ur[3].items():
-                out.write('>' + ur_ident + '|' + ir + '\n' + ur_seq + '\n')
+            for ex_ur, data in dna_region_ur[3].items():
+                original_ur = data[0]
+                ur_seq = data[1]
+                out.write('>' + ur_ident + '_' + ex_ur + '\n' + ur_seq + '\n')
     out.close()
 
 def write_gff(dna_regions,options):
@@ -31,10 +33,10 @@ def write_gff(dna_regions,options):
     for dna_region, dna_region_ur in dna_regions.items():
         ur_ident = dna_region + options.ident
         if dna_region_ur[3]:
-            for ir, ur_seq in dna_region_ur[3].items():
-                length = len(ur_seq)
-                ur_pos = ir.replace('_','\t')
-                entry = (dna_region + '\tUR_Extractor\tunannotated_region\t' + ur_pos + '\t.\t.\t.\tID='+ur_ident+'_'+ir+';Note=UR_Length(Extended):' + str(length) + '\n')
+            for ex_ur, data in dna_region_ur[3].items():
+                length = len(data[1])
+                ex_ur_pos = ex_ur.replace('_','\t')
+                entry = (dna_region + '\tUR_Extractor\tunannotated_region\t' + ex_ur_pos + '\t.\t.\t.\tID='+ur_ident+'_'+ex_ur+';' + 'Original_UR=' + str(data[0]) + ';Note=UR_Length(Extended):' + str(length) + '\n')
                 out.write(entry)
     out.close()
 
@@ -97,40 +99,39 @@ def extractor(options):
         gff_in = open(options.gff,'r')
         dna_regions = gff_load(options,gff_in,dna_regions)
 
-    for (key,(seq,seq_length,posns,irs))  in dna_regions.items(): #Extract IRs from 1 dna_region at a time
-        intergenic_regions = collections.OrderedDict()
-        inter_start = 0
-        if posns: # If IR has a pos
-            for pos in posns: # Iterate over GFF loci and measure flanking regions for potential IRs
+    for (key,(seq,seq_length,posns,URs))  in dna_regions.items(): #Extract URs from 1 dna_region at a time
+        unannotated_regions = collections.OrderedDict()
+        unannotated_start = 0
+        if posns: # If UR has a pos
+            for pos in posns: # Iterate over GFF loci and measure flanking regions for potential URs
                 start = int(pos.split('_')[0])
                 stop = int(pos.split('_')[1])
                 ###### This hack is to get over GFF errors where genome-long annotations
                 if stop-start >= 100000:
+                    if options.verbose == True:
+                        print("UR " + pos + " is more than 100,000 kbs - Please Check Annotation")
                     continue
-                if start > inter_start:
-                    length = start - inter_start
+                if start > unannotated_start:
+                    length = start - unannotated_start
                     if length >= options.minlen and length <= options.maxlen: #default between 30 - 100,000
-                        inter_start = max(inter_start - options.exlen, 0)
+                        original_UR = str(unannotated_start) + '_' + str(start)
+                        unannotated_start = max(unannotated_start - options.exlen, 0)
                         start += options.exlen
-                        inter_seq = seq[inter_start:start]
-                        inter_loci = str(inter_start) + '_' + str(start)
-                        intergenic_regions.update({inter_loci: inter_seq})
-                if stop > inter_start:
-                    inter_start = stop
+                        unannotated_seq = seq[unannotated_start:start]
+                        unannotated_loci = str(unannotated_start) + '_' + str(start)
+                        unannotated_regions.update({unannotated_loci: [original_UR,unannotated_seq]})
+                if stop > unannotated_start:
+                    unannotated_start = stop
             try:
-                if (seq_length - stop) >= options.minlen and (seq_length - stop) <= options.maxlen: #default between 30 - 100,000: # Get IR at end of dna_region if longer than minlen
+                if (seq_length - stop) >= options.minlen and (seq_length - stop) <= options.maxlen: #default between 30 - 100,000: # Get UR at end of dna_region if longer than minlen
+                    unannotated_start = max(unannotated_start - options.exlen, 0)
                     stop -= options.exlen
-                    inter_seq = seq[stop:seq_length]
-                    inter_loci = str(stop) + '_' + str(seq_length)
-                    intergenic_regions.update({inter_loci: inter_seq})
+                    unannotated_seq = seq[stop:seq_length]
+                    unannotated_loci = str(stop) + '_' + str(seq_length)
+                    unannotated_regions.update({unannotated_loci: [original_UR,unannotated_seq]})
             except UnboundLocalError:
                 pass
-            dna_regions.update({key: (seq, seq_length, posns, intergenic_regions)})
-
-        # if intergenic_regions:
-        #     dna_regions.update({key: (seq, seq_length, posns, intergenic_regions)})
-        # else:
-        #     del dna_regions[key]
+            dna_regions.update({key: (seq, seq_length, posns, unannotated_regions)})
 
 
     if options.nout == False:
