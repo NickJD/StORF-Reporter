@@ -90,10 +90,19 @@ if __name__ == "__main__":
             multi_counting +=1
         for value in values:
             value_list.append(value)
-    print(len(Con_StORFs))
+
+    print("Number of Con-StORFs With Hit: " + str(len(Con_StORFs)))
+    non_empty_list = [(k, v) for k, v in Con_StORFs.items() if v]
+    print("Number of Validated Con-StORFs: " + str(len(non_empty_list)))
     validated = list(filter(None,Con_StORFs.values()))
     validated = [item for sublist in validated for item in sublist]
-    print("Number of Validated Con-StORF: " + str(len(validated)))
+    print("Number of Validated Con-StORF Stop Codons: " + str(len(validated)))
     print("TGA: " + str(value_list.count("TGA")) + "\nTAG: " +
           str(value_list.count("TAG")) + "\nTAA: " + str(value_list.count("TAA")))
     print("MULTI: " + str(multi_counting))
+
+
+
+
+
+    print("End")

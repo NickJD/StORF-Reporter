@@ -7,7 +7,7 @@ import gzip
 #Output FASTA and GFF separately using the same out_filename but with respective extensions - gz output optional
 def write_fasta(dna_regions, options):
     if options.out_file == None:
-        options.out_file = options.fasta.split('.')[0]
+        options.out_file = options.gff.split('.gff')[0]
     if options.gz == False:
         out =  open(options.out_file + '_UR.fasta','w', newline='\n', encoding='utf-8')
     elif options.gz == True:
@@ -23,13 +23,13 @@ def write_fasta(dna_regions, options):
 
 def write_gff(dna_regions,options):
     if options.out_file == None:
-        options.out_file = options.fasta.split('.')[0]
+        options.out_file = options.gff.split('.gff')[0]
     if options.gz == False:
         out =  open(options.out_file + '_UR.gff','w', newline='\n', encoding='utf-8')
     elif options.gz == True:
         out = gzip.open(options.out_file + '_UR.gff.gz', 'wt', newline='\n', encoding='utf-8')
     out.write("##gff-version\t3\n#\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
-    out.write("##Original File: " + options.fasta + '\n')
+    out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n')
     for dna_region, dna_region_ur in dna_regions.items():
         ur_ident = dna_region + options.ident
         if dna_region_ur[3]:
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     parser.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene',
                         help='Identifier used for extraction of "unannotated" regions "CDS,rRNA,tRNA": Default for Ensembl_Bacteria = "ID=gene"')
     parser.add_argument('-o', '--output_file', action='store', dest='out_file', required=False,
-                        help='Output file - Without filetype - default appends "_UR" to end of input fasta')
+                        help='Output file - Without filetype - default appends "_UR" to end of input gff filename (replaces \'.gff\')')
     parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
     parser.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
