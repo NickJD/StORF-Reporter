@@ -41,23 +41,52 @@ def write_gff(dna_regions,options):
     out.close()
 
 def fasta_load(fasta_in):
-    first = True
     dna_regions = collections.OrderedDict()
-    for line in fasta_in:
-        line = line.strip()
-        if line.startswith('>') and first == False:  # Check if first seq in file
-            dna_region_length = len(seq)
-            dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
-            seq = ''
-            dna_region_id = line.split()[0].replace('>', '')
-        elif line.startswith('>'):
-            seq = ''
-            dna_region_id = line.split()[0].replace('>', '')
-        else:
-            seq += str(line)
-            first = False
-    dna_region_length = len(seq)
-    dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
+    first = True
+    if '>' in fasta_in.readline().rstrip():
+        fasta_in.seek(0)
+        #### Default for when presented with standard fasta file
+        for line in fasta_in:
+            line = line.strip()
+            if line.startswith('>') and first == False:  # Check if first seq in file
+                dna_region_length = len(seq)
+                dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
+                seq = ''
+                dna_region_id = line.split()[0].replace('>', '')
+            elif line.startswith('>'):
+                seq = ''
+                dna_region_id = line.split()[0].replace('>', '')
+            else:
+                seq += str(line)
+                first = False
+        dna_region_length = len(seq)
+        dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
+    elif '##' in  fasta_in.readline().rstrip(): # Clunky and may fall over
+        fasta_in.seek(0)
+        #### Called when presented with PROKKA GFF file so must get fasta from inside it
+        ### Get to genome seq
+        at_FASTA = False
+        for line in fasta_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
+            if line.startswith('##FASTA'):  # Not to crash on empty lines in GFF
+                print(line)
+                at_FASTA = True
+            elif at_FASTA == True:
+
+                line = line.strip()
+                if line.startswith('>') and first == False:  # Check if first seq in file
+                    dna_region_length = len(seq)
+                    dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
+                    seq = ''
+                    dna_region_id = line.split()[0].replace('>', '')
+                elif line.startswith('>'):
+                    seq = ''
+                    dna_region_id = line.split()[0].replace('>', '')
+                else:
+                    seq += str(line)
+                    first = False
+        dna_region_length = len(seq)
+        dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
+
     return dna_regions
 
 def gff_load(options,gff_in,dna_regions):
@@ -139,8 +168,11 @@ def extractor(options):
         write_gff(dna_regions, options)
     else:
         return dna_regions
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.4.2: UR_Extractor Run Parameters.')
+
     parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
                         help='FASTA file for Unannotated Region seq extraction')
     parser.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',

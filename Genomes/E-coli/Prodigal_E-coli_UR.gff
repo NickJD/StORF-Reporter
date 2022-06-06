@@ -1,6 +1,6 @@
 ##gff-version	3
 #	UR Extractor 
-#	Run Date:2022-05-31
+#	Run Date:2022-06-05
 ##Original Files: ../../Genomes/E-coli/E-coli.fa | ../../Genomes/E-coli/Prodigal_E-coli.gff
 Chromosome	UR_Extractor	unannotated_region	48	387	.	.	.	ID=Chromosome_UR_48_387;Original_UR=98_337;Note=UR_Length(Extended):339
 Chromosome	UR_Extractor	unannotated_region	4970	5284	.	.	.	ID=Chromosome_UR_4970_5284;Original_UR=5020_5234;Note=UR_Length(Extended):314

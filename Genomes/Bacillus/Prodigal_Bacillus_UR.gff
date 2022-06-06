@@ -1,6 +1,6 @@
 ##gff-version	3
 #	UR Extractor 
-#	Run Date:2022-05-31
+#	Run Date:2022-06-05
 ##Original Files: ../../Genomes/Bacillus/Bacillus.fa | ../../Genomes/Bacillus/Prodigal_Bacillus.gff
 Chromosome	UR_Extractor	unannotated_region	0	460	.	.	.	ID=Chromosome_UR_0_460;Original_UR=0_410;Note=UR_Length(Extended):460
 Chromosome	UR_Extractor	unannotated_region	1700	1989	.	.	.	ID=Chromosome_UR_1700_1989;Original_UR=1750_1939;Note=UR_Length(Extended):289

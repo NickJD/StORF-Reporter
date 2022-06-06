@@ -1,6 +1,6 @@
 ##gff-version	3
 #	UR Extractor 
-#	Run Date:2022-05-31
+#	Run Date:2022-06-05
 ##Original Files: ../../Genomes/Pseudo/Pseudo.fa | ../../Genomes/Pseudo/Prodigal_Pseudo.gff
 Chromosome	UR_Extractor	unannotated_region	0	472	.	.	.	ID=Chromosome_UR_0_472;Original_UR=0_422;Note=UR_Length(Extended):472
 Chromosome	UR_Extractor	unannotated_region	2264	2409	.	.	.	ID=Chromosome_UR_2264_2409;Original_UR=2314_2359;Note=UR_Length(Extended):145

@@ -1,6 +1,6 @@
 ##gff-version	3
 #	UR Extractor 
-#	Run Date:2022-05-31
+#	Run Date:2022-06-05
 ##Original Files: ../../Genomes/Myco/Myco.fa | ../../Genomes/Myco/Prodigal_Myco.gff
 Chromosome	UR_Extractor	unannotated_region	0	736	.	.	.	ID=Chromosome_UR_0_736;Original_UR=0_686;Note=UR_Length(Extended):736
 Chromosome	UR_Extractor	unannotated_region	2023	2655	.	.	.	ID=Chromosome_UR_2023_2655;Original_UR=2073_2605;Note=UR_Length(Extended):632

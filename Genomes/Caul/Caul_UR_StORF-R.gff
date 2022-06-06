@@ -1,6 +1,6 @@
 ##gff-version	3
 #	StORF Stop - Stop ORF Predictions
-#	Run Date:2022-06-02
+#	Run Date:2022-06-05
 ##Original File: ../../Genomes/Caul/Caul_UR.fasta
 Chromosome_UR_0_210	StORF_Reporter	StORF	35	209	.	+	.	ID=Chromosome_UR_0_210_Stop-ORF_1:35-209;UR=Chromosome_UR_0_210;UR_Stop_Locations=35-209;Length=174;Strand=+;Frame=3;UR_Frame=3;Start_Stop=TGA;End_Stop=TAA;StORF_Type=Stop-ORF
 Chromosome_UR_3853_4072	StORF_Reporter	StORF	3918	4026	.	-	.	ID=Chromosome_UR_3853_4072_Stop-ORF_0:3918-4026;UR=Chromosome_UR_3853_4072;UR_Stop_Locations=65-173;Length=108;Strand=-;Frame=4;UR_Frame=6;Start_Stop=TGA;End_Stop=TAG;StORF_Type=Stop-ORF

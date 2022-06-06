@@ -1,6 +1,6 @@
 ##gff-version	3
 #	UR Extractor 
-#	Run Date:2022-05-31
+#	Run Date:2022-06-05
 ##Original Files: ../../Genomes/Caul/Caul.fa | ../../Genomes/Caul/Prodigal_Caul.gff
 Chromosome	UR_Extractor	unannotated_region	0	252	.	.	.	ID=Chromosome_UR_0_252;Original_UR=0_202;Note=UR_Length(Extended):252
 Chromosome	UR_Extractor	unannotated_region	3108	3240	.	.	.	ID=Chromosome_UR_3108_3240;Original_UR=3158_3190;Note=UR_Length(Extended):132

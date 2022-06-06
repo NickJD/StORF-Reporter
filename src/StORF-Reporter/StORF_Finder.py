@@ -346,7 +346,7 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
             pass
     return storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx
 
-def STORF(sequence, sequence_id, options): #Main Function
+def STORF_Finder(sequence, sequence_id, options): #Main Function
     stops = []
     frames_covered = OrderedDict()
     for x in range (1,7):
@@ -453,22 +453,31 @@ def fasta_load(fasta_in):
     sequences.update({sequence_name: seq})
 
 
-def StORF_Reported(URs,options):
+def StORF_Reported(Contigs,options):
     Reporter_StORFs = collections.OrderedDict()
-    for sequence_id, sequences in URs.items():
-        print(sequence_id)
-        sequences = sequences[3]
-        for sequence in sequences:
-            if len(sequences[sequence]) >= options.min_orf:
-                StORFs = STORF(sequences[sequence],options)
-                Reporter_StORFs.update({sequence:StORFs})
-    return sequence_id,Reporter_StORFs
+    for Contig_ID, Contig_URs in Contigs.items():
+        Reporter_StORFs.update({Contig_ID:[]})
+        URs = Contig_URs[3]
+        try:
+            for UR in URs:
+                if len(URs[UR][1]) >= options.min_orf: # Here
+                    StORFs = STORF_Finder(URs[UR][1], Contig_ID, options)
+
+                    if StORFs: #  Left out for now to allow for tracking of non-StORF URs
+                        for StORF in StORFs.values():
+                            StORF.append(URs[UR][0])
+                            StORF.append(UR)
+                        Reporter_StORFs[Contig_ID].append(StORFs)
+        except TypeError:
+            if options.verbose == True:
+                print("No URs in seq")
+    return Reporter_StORFs
 
 
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.4.2: StORF_Finder Run Parameters.')
     parser.add_argument('-reporter', action="store", dest='reporter', default=False, required=False,
                         help=argparse.SUPPRESS)
     parser.add_argument('-f', action="store", dest='fasta', required=True,
@@ -571,5 +580,5 @@ if __name__ == "__main__":
 
     for sequence_id, sequence in sequences.items():
         if len(sequence) >= options.min_orf:
-            STORF(sequence, sequence_id, options)
+            STORF_Finder(sequence, sequence_id, options)
 

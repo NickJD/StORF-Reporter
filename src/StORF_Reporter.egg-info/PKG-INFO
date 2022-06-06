@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: StORF-Reporter
-Version: 0.4.1
+Version: 0.4.2
 Summary: StORF-Reporter - A tool that takes as input an annotated genome and returns missed CDS genes from the unannotated regions.
 Home-page: https://github.com/NickJD/StORF-Reporter
 Author: Nicholas Dimonaco

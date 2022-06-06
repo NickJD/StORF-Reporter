@@ -1,6 +1,6 @@
 ##gff-version	3
 #	UR Extractor 
-#	Run Date:2022-05-31
+#	Run Date:2022-06-05
 ##Original Files: ../../Genomes/Staph/Staph.fa | ../../Genomes/Staph/Prodigal_Staph.gff
 Chromosome	UR_Extractor	unannotated_region	100	1043	.	.	.	ID=Chromosome_UR_100_1043;Original_UR=150_993;Note=UR_Length(Extended):943
 Chromosome	UR_Extractor	unannotated_region	1140	1413	.	.	.	ID=Chromosome_UR_1140_1413;Original_UR=1190_1363;Note=UR_Length(Extended):273
