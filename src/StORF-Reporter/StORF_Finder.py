@@ -465,8 +465,8 @@ def StORF_Reported(Contigs,options):
 
                     if StORFs: #  Left out for now to allow for tracking of non-StORF URs
                         for StORF in StORFs.values():
-                            StORF.append(URs[UR][0])
-                            StORF.append(UR)
+                            StORF.append(URs[UR][0]) # True UR
+                            StORF.append(UR) # Extended UR
                         Reporter_StORFs[Contig_ID].append(StORFs)
         except TypeError:
             if options.verbose == True:

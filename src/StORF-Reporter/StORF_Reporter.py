@@ -163,9 +163,9 @@ def find_prev_StORFs(StORF_options,Contig_URs,track_current_start,track_prev_sto
     return StORFs, Contig_URs
 
 def find_after_StORFs(options,Contig_URs,track_current_start,track_current_stop, track_contig):
+    current_Contig_URs = Contig_URs[track_contig]
     StORFs = []
     is_break = False
-    current_Contig_URs = Contig_URs[track_contig]
     for StORF_Num, data in current_Contig_URs.items():
         if is_break == True:
             break
@@ -205,7 +205,7 @@ def StORF_Filler(StORF_options,Reported_StORFs):
     track_prev_contig, track_contig = '',''
     StORF_Num = 0
     end = False
-
+    written_line = None
     Contig_URS = collections.defaultdict()
     for Contig, URs in Reported_StORFs.items():
         UR_StORF_Num = 0
@@ -233,17 +233,21 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                 track_current_start = int(data[3])
                 track_current_stop = int(data[4])
                 track_contig = data[0]
+                if "E01288.contig.55" in track_contig:
+                    print("")
                 if track_contig != track_prev_contig:  # End of current contig
-                    track_prev_start, track_prev_stop = 0, 0
                     if track_prev_contig != '': # Get last StORF on Contig - If Present
-                        StORFs = find_after_StORFs(StORF_options, Contig_URS, track_current_start, track_current_stop,track_prev_contig)
+                        StORFs = find_after_StORFs(StORF_options, Contig_URS, track_prev_start, track_prev_stop,track_prev_contig) # Changed to prev stop because we are switching from previous contig
                         if StORFs:
                             for StORF in StORFs:  # ([ur_pos,StORF_start,StORF_stop,StORF_Start_In_UR,StORF_Stop_In_UR,frame,ur_frame,strand,StORF_Length,StORF_UR_Num,StORF_Seq)]
-                                GFF_StoRF_write(StORF_options, track_contig, outfile, StORF,
+                                GFF_StoRF_write(StORF_options, track_prev_contig, outfile, StORF,
                                                 StORF_Num)  # To keep consistency
                                 FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
                                 StORF_Num += 1
-                        outfile.write(line)
+                    track_prev_start, track_prev_stop = 0, 0
+                # if line != written_line:  # Print out last canonical Gene
+                #     outfile.write(line)
+                #     written_line = line
                 track_prev_contig = track_contig
                 if track_current_start == track_prev_start and track_current_stop == track_prev_stop:  # `duplicate' entry in GFF
                     if StORF_options.verbose == True:
@@ -272,7 +276,9 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                         GFF_StoRF_write(StORF_options, track_contig, outfile, StORF, StORF_Num)  # To keep consistency
                         FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
                         StORF_Num += 1
-                outfile.write(line)
+                if line != written_line:
+                    outfile.write(line)
+                    written_line = line
                 StORFs = None
 
             # elif track_contig != track_prev_contig and track_prev_contig != '':
@@ -293,10 +299,14 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                 #         GFF_StoRF_write(StORF_options,track_contig,outfile, StORF,StORF_Num) # To keep consistency
                 #         FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
                 #         StORF_Num += 1
-                outfile.write(line)
+                if line != written_line:
+                    outfile.write(line)
+                    written_line = line
 
             else:
-                outfile.write(line)
+                if line != written_line:
+                    outfile.write(line)
+                    written_line = line
 ##############################################################
     elif StORF_options.prokka_gffs == True:
         for line in gff_in:
@@ -316,7 +326,9 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                     for StORF in StORFs:  # ([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand, StORF_Length, StORF_UR_Num, StORF_Seq)]
                         GFF_StoRF_write(StORF_options,track_contig,outfile, StORF,StORF_Num) # To keep consistency
                         StORF_Num += 1
-                outfile.write(line)
+                if line != written_line:
+                    outfile.write(line)
+                    written_line = line
                 StORFs = None
 
             elif line.startswith('##FASTA'):
@@ -326,10 +338,14 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                     for StORF in StORFs:  # ([ur_pos,StORF_start,StORF_stop,StORF_Start_In_UR,StORF_Stop_In_UR,frame,ur_frame,strand,StORF_Length,StORF_UR_Num,StORF_Seq)]
                         GFF_StoRF_write(StORF_options, track_contig, outfile, StORF, StORF_Num)  # To keep consistency
                         StORF_Num += 1
-                outfile.write(line)
+                if line != written_line:
+                    outfile.write(line)
+                    written_line = line
 
             else:
-                outfile.write(line)
+                if line != written_line:
+                    outfile.write(line)
+                    written_line = line
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='StORF-Reporter v0.4.2: StORF_Reporter Run Parameters.')
