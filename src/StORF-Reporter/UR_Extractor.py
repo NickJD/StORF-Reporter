@@ -2,7 +2,7 @@ import argparse
 import collections
 from datetime import date
 import gzip
-
+import sys
 
 #Output FASTA and GFF separately using the same out_filename but with respective extensions - gz output optional
 def write_fasta(dna_regions, options):
@@ -68,7 +68,6 @@ def fasta_load(fasta_in):
         at_FASTA = False
         for line in fasta_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
             if line.startswith('##FASTA'):  # Not to crash on empty lines in GFF
-                print(line)
                 at_FASTA = True
             elif at_FASTA == True:
 
@@ -115,18 +114,22 @@ def gff_load(options,gff_in,dna_regions):
     return dna_regions
 
 def extractor(options):
-    try: # Detect whether fasta/gff files are .gz or text and read accordingly
-        fasta_in = gzip.open(options.fasta,'rt')
-        dna_regions = fasta_load(fasta_in)
-    except:
-        fasta_in = open(options.fasta,'r')
-        dna_regions = fasta_load(fasta_in)
     try:
-        gff_in = gzip.open(options.gff,'rt')
-        dna_regions = gff_load(options,gff_in,dna_regions)
-    except:
-        gff_in = open(options.gff,'r')
-        dna_regions = gff_load(options,gff_in,dna_regions)
+        try: # Detect whether fasta/gff files are .gz or text and read accordingly
+            fasta_in = gzip.open(options.fasta,'rt')
+            dna_regions = fasta_load(fasta_in)
+        except:
+            fasta_in = open(options.fasta,'r')
+            dna_regions = fasta_load(fasta_in)
+        try:
+            gff_in = gzip.open(options.gff,'rt')
+            dna_regions = gff_load(options,gff_in,dna_regions)
+        except:
+            gff_in = open(options.gff,'r')
+            dna_regions = gff_load(options,gff_in,dna_regions)
+    except AttributeError:
+        sys.exit("Attribute Error:\nStORF GFF probably already exists - Must be deleted before running")
+
 
     for (key,(seq,seq_length,posns,URs))  in dna_regions.items(): #Extract URs from 1 dna_region at a time
         unannotated_regions = collections.OrderedDict()
@@ -171,7 +174,7 @@ def extractor(options):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.4.2: UR_Extractor Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.0: UR_Extractor Run Parameters.')
 
     parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
                         help='FASTA file for Unannotated Region seq extraction')

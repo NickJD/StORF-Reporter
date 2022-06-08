@@ -1,9 +1,7 @@
 import argparse
 from argparse import Namespace
 import pathlib
-import textwrap
 import collections
-import copy
 
 
 
@@ -36,10 +34,11 @@ gencode = {
 ############################
 
 def GFF_StoRF_write(StORF_options,track_contig,gff_outfile, StORF,StORF_Num): # Consistency in outfile
-    ID = track_contig + '_Stop-ORF:' + str(StORF[1]) + '-' + str(StORF[2])
-    ### Write out new GFF entry
+    ID = StORF_options.gff.split('/')[-1].replace('.gff','') + '_StORF_'+str(StORF_Num)
+    #ID = track_contig + '_Stop-ORF:' + str(StORF[1]) + '-' + str(StORF[2])
+    ### Write out new GFF entry -
     gff_outfile.write(track_contig + '\tStORF_Reporter\t' + StORF_options.feature_type + '\t' +  str(StORF[1]) + '\t' + str(StORF[2]) + '\t.\t' +
-        StORF[7] + '\t.\tID=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Position=' + StORF[0] + ';StORF_Num=' + str(
+        StORF[7] + '\t.\tID=' + ID + ';locus_tag=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Position=' + StORF[0] + ';Name=StORF_' + str(StORF_Num) + ';StORF_Num=' + str(
             StORF_Num) + ';StORF_Num_In_UR=' + str(StORF[9]) +
         ';StORF_Length=' + str(StORF[8]) + ';StORF_Frame=' + str(StORF[5]) + ';UR_StORF_Frame=' + str(
             StORF[6]) + '\n')
@@ -218,137 +217,83 @@ def StORF_Filler(StORF_options,Reported_StORFs):
 
         Contig_URS[Contig] = Contig_StORFs
 
-    if StORF_options.prokka_dir == True:
-        ### Rename .gff to .fasta / faa and load in fasta file
+ #   if StORF_options.prokka_dir == True:
+    ### Rename .gff to .fasta / faa and load in fasta file
+    if StORF_options.prokka_dir == True: # If normal PROKKA Dir run
         fasta_outfile = StORF_options.gff.replace('.gff','')
         fasta_outfile = open(fasta_outfile + '_StORF_Reporter_Combined.fasta','w')
         faa_infile = StORF_options.gff.replace('.gff', '.faa')
         ffn_infile = StORF_options.gff.replace('.gff', '.ffn')
         PROKKA_CoDing,PROKKA_Non_CoDing = FASTA_Load(faa_infile,ffn_infile)
-        ##this will be a dict of ids and seqs
-
-        for line in gff_in:
-            if not line.startswith('#') and end == False:
-                data = line.split('\t')
-                track_current_start = int(data[3])
-                track_current_stop = int(data[4])
-                track_contig = data[0]
-                if "E01288.contig.55" in track_contig:
-                    print("")
-                if track_contig != track_prev_contig:  # End of current contig
-                    if track_prev_contig != '': # Get last StORF on Contig - If Present
-                        StORFs = find_after_StORFs(StORF_options, Contig_URS, track_prev_start, track_prev_stop,track_prev_contig) # Changed to prev stop because we are switching from previous contig
-                        if StORFs:
-                            for StORF in StORFs:  # ([ur_pos,StORF_start,StORF_stop,StORF_Start_In_UR,StORF_Stop_In_UR,frame,ur_frame,strand,StORF_Length,StORF_UR_Num,StORF_Seq)]
-                                GFF_StoRF_write(StORF_options, track_prev_contig, outfile, StORF,
-                                                StORF_Num)  # To keep consistency
+    ##this will be a dict of ids and seqs
+    for line in gff_in:
+        if not line.startswith('#') and end == False:
+            data = line.split('\t')
+            track_current_start = int(data[3])
+            track_current_stop = int(data[4])
+            track_contig = data[0]
+            if track_contig != track_prev_contig:  # End of current contig
+                if track_prev_contig != '': # Get last StORF on Contig - If Present
+                    StORFs = find_after_StORFs(StORF_options, Contig_URS, track_prev_start, track_prev_stop,track_prev_contig) # Changed to prev stop because we are switching from previous contig
+                    if StORFs:
+                        for StORF in StORFs:
+                            GFF_StoRF_write(StORF_options, track_prev_contig, outfile, StORF,
+                                            StORF_Num)  # To keep consistency
+                            if StORF_options.prokka_dir == True:
                                 FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
-                                StORF_Num += 1
-                    track_prev_start, track_prev_stop = 0, 0
-                # if line != written_line:  # Print out last canonical Gene
-                #     outfile.write(line)
-                #     written_line = line
-                track_prev_contig = track_contig
-                if track_current_start == track_prev_start and track_current_stop == track_prev_stop:  # `duplicate' entry in GFF
-                    if StORF_options.verbose == True:
-                        print("skip")
-                else:
-                    StORFs, Contig_URS = find_prev_StORFs(StORF_options,Contig_URS, track_current_start, track_prev_stop, track_contig)
-                track_prev_start = track_current_start
-                track_prev_stop = track_current_stop
-
-                ##### Print out PROKKA Protein
-                if 'gene' in data[2]:
-                    PROKKA_ID = data[8].split(';')[0].replace('ID=','').replace('_gene','')
+                            StORF_Num += 1
+                track_prev_start, track_prev_stop = 0, 0
+            track_prev_contig = track_contig
+            if track_current_start == track_prev_start and track_current_stop == track_prev_stop:  # `duplicate' entry in GFF
+                if StORF_options.verbose == True:
+                    print("skip")
+            else:
+                StORFs, Contig_URS = find_prev_StORFs(StORF_options,Contig_URS, track_current_start, track_prev_stop, track_contig)
+            track_prev_start = track_current_start
+            track_prev_stop = track_current_stop
+            ##### Print out PROKKA Protein
+            if 'gene' in data[2] and StORF_options.prokka_dir == True:
+                PROKKA_ID = data[8].split(';')[0].replace('ID=','').replace('_gene','')
+                try:
+                    PROKKA_Seq = PROKKA_CoDing[PROKKA_ID]
+                except KeyError:
                     try:
-                        PROKKA_Seq = PROKKA_CoDing[PROKKA_ID]
+                        PROKKA_Seq = PROKKA_Non_CoDing[PROKKA_ID]
                     except KeyError:
-                        try:
-                            PROKKA_Seq = PROKKA_Non_CoDing[PROKKA_ID]
-                        except KeyError:
-                            print("PROKKA seq not found")
-                    fasta_outfile.write('>'+PROKKA_ID+'\n'+PROKKA_Seq+'\n')
-
-                ##use dict to print seq
-
-                if StORFs:
-                    for StORF in StORFs:  # ([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand, StORF_Length, StORF_UR_Num, StORF_Seq)]
-                        GFF_StoRF_write(StORF_options, track_contig, outfile, StORF, StORF_Num)  # To keep consistency
+                        print("PROKKA seq not found")
+                fasta_outfile.write('>'+PROKKA_ID+'\n'+PROKKA_Seq+'\n')
+            if StORFs:
+                for StORF in StORFs:  # ([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand, StORF_Length, StORF_UR_Num, StORF_Seq)]
+                    GFF_StoRF_write(StORF_options, track_contig, outfile, StORF, StORF_Num)  # To keep consistency
+                    if StORF_options.prokka_dir == True:
                         FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
-                        StORF_Num += 1
-                if line != written_line:
-                    outfile.write(line)
-                    written_line = line
-                StORFs = None
+                    StORF_Num += 1
+            if line != written_line:
+                outfile.write(line)
+                written_line = line
+            StORFs = None
+        elif line.startswith('##FASTA'):
+            end = True
+            StORFs = find_after_StORFs(StORF_options, Contig_URS, track_prev_start, track_prev_stop, track_prev_contig)  # Changed to prev stop because we are switching from previous contig
+            if StORFs:
+                for StORF in StORFs:
+                    GFF_StoRF_write(StORF_options, track_prev_contig, outfile, StORF, StORF_Num)  # To keep consistency
+                    if StORF_options.prokka_dir == True:
+                        FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
+                    StORF_Num += 1
+            if line != written_line:
+                outfile.write(line)
+                written_line = line
 
-            # elif track_contig != track_prev_contig and track_prev_contig != '':
-            #     StORFs = find_after_StORFs(StORF_options,Contig_URS, track_current_start, track_current_stop, track_contig)
-            #     if StORFs:
-            #         for StORF in StORFs:  #  ([ur_pos,StORF_start,StORF_stop,StORF_Start_In_UR,StORF_Stop_In_UR,frame,ur_frame,strand,StORF_Length,StORF_UR_Num,StORF_Seq)]
-            #             GFF_StoRF_write(StORF_options,track_contig,outfile, StORF,StORF_Num) # To keep consistency
-            #             FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
-            #             StORF_Num += 1
-            #     outfile.write(line)
-
-
-            elif line.startswith('##FASTA'):
-                end = True
-                # StORFs = find_after_StORFs(StORF_options,Contig_URS, track_current_start, track_current_stop, track_contig)
-                # if StORFs:
-                #     for StORF in StORFs:  #  ([ur_pos,StORF_start,StORF_stop,StORF_Start_In_UR,StORF_Stop_In_UR,frame,ur_frame,strand,StORF_Length,StORF_UR_Num,StORF_Seq)]
-                #         GFF_StoRF_write(StORF_options,track_contig,outfile, StORF,StORF_Num) # To keep consistency
-                #         FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
-                #         StORF_Num += 1
-                if line != written_line:
-                    outfile.write(line)
-                    written_line = line
-
-            else:
-                if line != written_line:
-                    outfile.write(line)
-                    written_line = line
+        else:
+            if line != written_line:
+                outfile.write(line)
+                written_line = line
 ##############################################################
-    elif StORF_options.prokka_gffs == True:
-        for line in gff_in:
-            if not line.startswith('#') and end == False:
-                data = line.split('\t')
-                track_current_start = int(data[3])
-                track_current_stop = int(data[4])
-                if track_current_start == track_prev_start and track_current_stop == track_prev_stop:  # `duplicate' entry in GFF
-                    if StORF_options.verbose == True:
-                        print("skip")
-                else:
-                    StORFs, all_StORFs = find_prev_StORFs(StORF_options,all_StORFs, track_current_start, track_prev_stop)
-                track_prev_start = track_current_start
-                track_prev_stop = track_current_stop
 
-                if StORFs:
-                    for StORF in StORFs:  # ([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand, StORF_Length, StORF_UR_Num, StORF_Seq)]
-                        GFF_StoRF_write(StORF_options,track_contig,outfile, StORF,StORF_Num) # To keep consistency
-                        StORF_Num += 1
-                if line != written_line:
-                    outfile.write(line)
-                    written_line = line
-                StORFs = None
-
-            elif line.startswith('##FASTA'):
-                end = True
-                StORFs = find_after_StORFs(StORF_options, all_StORFs, track_current_start, track_current_stop)
-                if StORFs:
-                    for StORF in StORFs:  # ([ur_pos,StORF_start,StORF_stop,StORF_Start_In_UR,StORF_Stop_In_UR,frame,ur_frame,strand,StORF_Length,StORF_UR_Num,StORF_Seq)]
-                        GFF_StoRF_write(StORF_options, track_contig, outfile, StORF, StORF_Num)  # To keep consistency
-                        StORF_Num += 1
-                if line != written_line:
-                    outfile.write(line)
-                    written_line = line
-
-            else:
-                if line != written_line:
-                    outfile.write(line)
-                    written_line = line
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.4.2: StORF_Reporter Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.0: StORF_Reporter Run Parameters.')
     parser.add_argument('-anno', action='store', dest='annotation_type', default='PROKKA', const='PROKKA', required=True,
                         choices=['PROKKA', 'Ensembl', 'CDS'], nargs='?',
                         help='Default - PROKKA: Annotation type to be StORF-Reported:'
@@ -365,13 +310,12 @@ if __name__ == "__main__":
                         help='Default - 100,000: Maximum UR Length')
     parser.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
                         help='Default - 50: UR Extension Length')
-
+    parser.add_argument('-type', action='store', dest='feature_type', default='CDS', const='CDS', nargs='?',
+                        choices=['StORF', 'CDS', 'ORF'],
+                        help='Default - "CDS": Which GFF feature type for StORFs to be reported as in GFF - '
+                             '"CDS" is probably needed for use in tools such as Roary')
     parser.add_argument('-olap', action="store", dest='overlap_nt', default=50, type=int,
                         help='Default - 50: Maximum number of nt of a StORF which can overlap another StORF.')
-    parser.add_argument('-type', action='store', dest='feature_type', default='StORF', const='StORF', nargs='?',
-                        choices=['StORF', 'CDS', 'ORF'],
-                        help='Default - "StORF": Which GFF feature type for StORFs to be reported as in GFF (StORF,CDS,ORF)')
-
     parser.add_argument('-ao', action="store", dest='allowed_overlap', default=50, type=int,
                         help='Default - 50 nt: Maximum overlap between a StORF and an original gene.')
 
@@ -393,7 +337,6 @@ if __name__ == "__main__":
         Reporter_options.gene_ident = "misc_RNA,gene,mRNA,CDS,tRNA,tmRNA,CRISPR"
         Reporter_options.nout = True
         Contigs, Reporter_options = run_UR_Extractor_PROKKA_DIR(Reporter_options)
-        ####
         ################## Find StORFs in URs - Setup StORF_Reporter-Finder Run
         StORF_options = Namespace(reporter=True, gff=Reporter_options.gff, stop_codons="TGA,TAA,TAG",
                                   partial_storf=False, whole_contig=False, storf_order='start_pos',
@@ -403,14 +346,8 @@ if __name__ == "__main__":
                                   minlen=30, maxlen=100000, min_orf=100, verbose=False, nout=True)
 
         Reporter_StORFs = StORF_Reported(Contigs, StORF_options)
-        # for URs, StORFs in list(Reporter_StORFs.items()):  # Remove empty URs
-        #     for StORF in StORFs:
-        #         if StORF is None:
-        #             del StORFs[StORF]
-
         StORF_Filler(StORF_options,Reporter_StORFs)  # Append StORFs to current GFF file from provided genome annotation
-
-        print("Finished")
+        print("Finished: " + Reporter_options.gff)
         ####
     elif Reporter_options.annotation_type == 'PROKKA' and Reporter_options.prokka_gffs != "":
         Reporter_options.gene_ident = "misc_RNA,gene,mRNA,CDS,tRNA,tmRNA,CRISPR"
@@ -418,7 +355,7 @@ if __name__ == "__main__":
 
         gff_list = list(pathlib.Path(Reporter_options.prokka_gffs).glob('*.gff'))
         for gff in gff_list:
-            URs, Reporter_options = run_UR_Extractor_PROKKA_GFFs(Reporter_options,gff)
+            Contigs, Reporter_options = run_UR_Extractor_PROKKA_GFFs(Reporter_options,gff)
             ################## Find StORFs in URs - Setup StORF_Reporter-Finder Run
             StORF_options = Namespace(reporter=True, gff=Reporter_options.gff, stop_codons="TGA,TAA,TAG",
                                       partial_storf=False, whole_contig=False,
@@ -427,15 +364,10 @@ if __name__ == "__main__":
                                       overlap_nt=Reporter_options.overlap_nt, prokka_dir='', prokka_gffs=True,
                                       allowed_overlap=Reporter_options.allowed_overlap,
                                       minlen=30, maxlen=100000, min_orf=100, verbose=False, nout=True)
-
-            sequence_id, all_StORFs = StORF_Reported(URs, StORF_options)
-            for URs, StORFs in list(all_StORFs.items()):  # Remove empty URs
-                if StORFs is None:
-                    del all_StORFs[URs]
-
-            StORF_Filler(sequence_id, StORF_options, all_StORFs)  # Append StORFs to current GFF file from provided genome annotation
-
-            print("Finished")
+            Reporter_StORFs = StORF_Reported(Contigs, StORF_options)
+            #sequence_id, all_StORFs = StORF_Reported(URs, StORF_options)
+            StORF_Filler(StORF_options, Reporter_StORFs)  # Append StORFs to current GFF file from provided genome annotation
+            print("Finished: " + Reporter_options.gff) # Will add number of additional StORFs here
     else:
         print("Please provide correct PROKKA output directory")
 
