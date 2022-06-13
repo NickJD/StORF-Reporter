@@ -2,7 +2,7 @@ import argparse
 from argparse import Namespace
 import pathlib
 import collections
-
+import textwrap
 
 
 try:
@@ -12,6 +12,11 @@ except ImportError:
     from .UR_Extractor import extractor
     from .StORF_Finder import StORF_Reported
 
+
+# class StORF_obj: # TODO
+#     def __init__(self, name, roll):
+#         self.name = name
+#         self.roll = roll
 
 ###################
 gencode = {
@@ -34,19 +39,23 @@ gencode = {
 ############################
 
 def GFF_StoRF_write(StORF_options,track_contig,gff_outfile, StORF,StORF_Num): # Consistency in outfile
-    ID = StORF_options.gff.split('/')[-1].replace('.gff','') + '_StORF_'+str(StORF_Num)
+    ID = StORF_options.gff.split('/')[-1].replace('.gff','') + '_' + StORF[10] + '_'+str(StORF_Num)
     #ID = track_contig + '_Stop-ORF:' + str(StORF[1]) + '-' + str(StORF[2])
     ### Write out new GFF entry -
     gff_outfile.write(track_contig + '\tStORF_Reporter\t' + StORF_options.feature_type + '\t' +  str(StORF[1]) + '\t' + str(StORF[2]) + '\t.\t' +
-        StORF[7] + '\t.\tID=' + ID + ';locus_tag=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Position=' + StORF[0] + ';Name=StORF_' + str(StORF_Num) + ';StORF_Num=' + str(
-            StORF_Num) + ';StORF_Num_In_UR=' + str(StORF[9]) +
-        ';StORF_Length=' + str(StORF[8]) + ';StORF_Frame=' + str(StORF[5]) + ';UR_StORF_Frame=' + str(
+        StORF[7] + '\t.\tID=' + ID + ';locus_tag=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Positions=' + StORF[11] + ';Name=' + StORF[10] + '_' + str(StORF_Num) + ';' + StORF[10] + '_Num=' + str(
+            StORF_Num) + ';' + StORF[10] + '_Num_In_UR=' + str(StORF[9]) +
+        ';' + StORF[10] + '_Length=' + str(StORF[8]) + ';' + StORF[10] + '_Frame=' + str(StORF[5]) + ';UR_' + StORF[10] + '_Frame=' + str(
             StORF[6]) + '\n')
 
+
 def FASTA_StoRF_write(track_contig, fasta_outfile, StORF):  # Consistency in outfile
-    ID = track_contig + '_Stop-ORF:' + str(StORF[1]) + '-' + str(StORF[2])
+    ID = track_contig + '_' + StORF[10] + ':' + str(StORF[1]) + '-' + str(StORF[2])
     ### Wrtie out new FASTA entry
-    fasta_outfile.write('>'+ID+'\n'+StORF[10]+'\n')
+    fasta_outfile.write('>'+ID+'\n')
+    wrapped = textwrap.wrap(StORF[-1], width=60)
+    for wrap in wrapped:
+        fasta_outfile.write(wrap + '\n')
 
 def FASTA_Load(faa_infile,ffn_infile):
     ### Coding sequences first
@@ -123,11 +132,10 @@ def find_prev_StORFs(StORF_options,Contig_URs,track_current_start,track_prev_sto
         if is_break == True:
             break
         if data != None:
-         #   for UR_StORF, UR_StORF_data in UR_StORFs.items():
             ur_pos = data[7]
-            StORF_Pos_In_UR = data[0]
-            StORF_Start_In_UR = int(StORF_Pos_In_UR.split(',')[0])
-            StORF_Stop_In_UR = int(StORF_Pos_In_UR.split(',')[1])
+            StORF_Stop_Pos = data[0]
+            StORF_Start_In_UR = int(StORF_Stop_Pos.split(',')[0])
+            StORF_Stop_In_UR = int(StORF_Stop_Pos.split(',')[-1])
             ur_frame = data[2]
             strand = data[3]
             key_start = int(ur_pos.split('_')[0])
@@ -147,7 +155,7 @@ def find_prev_StORFs(StORF_options,Contig_URs,track_current_start,track_prev_sto
                 elif strand == '-':
                     frame = (int(gff_stop) % 3) + 4
                 StORFs.append([ur_pos,StORF_start,StORF_stop,StORF_Start_In_UR,StORF_Stop_In_UR,frame,ur_frame,strand,
-                               StORF_Length,StORF_UR_Num,StORF_Seq])
+                               StORF_Length,StORF_UR_Num,data[5],StORF_Stop_Pos,StORF_Seq])
                 if StORF_Num not in StORFs_to_del:
                     StORFs_to_del.append(StORF_Num)
             elif allow_start > track_current_start: # Check
@@ -171,9 +179,9 @@ def find_after_StORFs(options,Contig_URs,track_current_start,track_current_stop,
         if data != None:
             #for UR_StORF, UR_StORF_data in UR_StORFs.items():
             ur_pos = data[7]
-            StORF_Pos_In_UR = data[0]
-            StORF_Start_In_UR = int(StORF_Pos_In_UR.split(',')[0])
-            StORF_Stop_In_UR = int(StORF_Pos_In_UR.split(',')[1])
+            StORF_Stop_Pos = data[0]
+            StORF_Start_In_UR = int(StORF_Stop_Pos.split(',')[0])
+            StORF_Stop_In_UR = int(StORF_Stop_Pos.split(',')[-1])
             ur_frame = data[2]
             strand = data[3]
             key_start = int(ur_pos.split('_')[0])
@@ -191,7 +199,7 @@ def find_after_StORFs(options,Contig_URs,track_current_start,track_current_stop,
             elif strand == '-':
                 frame = (int(gff_stop) % 3) + 4
             StORFs.append([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand,
-                           StORF_Length, StORF_UR_Num, StORF_Seq])
+                           StORF_Length, StORF_UR_Num, data[5], StORF_Stop_Pos, StORF_Seq])
 
     return StORFs
 
@@ -216,8 +224,6 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                 UR_StORF_Num += 1
 
         Contig_URS[Contig] = Contig_StORFs
-
- #   if StORF_options.prokka_dir == True:
     ### Rename .gff to .fasta / faa and load in fasta file
     if StORF_options.prokka_dir == True: # If normal PROKKA Dir run
         fasta_outfile = StORF_options.gff.replace('.gff','')
@@ -248,7 +254,7 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                 if StORF_options.verbose == True:
                     print("skip")
             else:
-                StORFs, Contig_URS = find_prev_StORFs(StORF_options,Contig_URS, track_current_start, track_prev_stop, track_contig)
+                StORFs, Contig_URS = find_prev_StORFs(StORF_options, Contig_URS, track_current_start, track_prev_stop, track_contig)
             track_prev_start = track_current_start
             track_prev_stop = track_current_stop
             ##### Print out PROKKA Protein
@@ -261,7 +267,10 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                         PROKKA_Seq = PROKKA_Non_CoDing[PROKKA_ID]
                     except KeyError:
                         print("PROKKA seq not found")
-                fasta_outfile.write('>'+PROKKA_ID+'\n'+PROKKA_Seq+'\n')
+                fasta_outfile.write('>'+PROKKA_ID+'\n')
+                wrapped = textwrap.wrap(PROKKA_Seq, width=60)
+                for wrap in wrapped:
+                    fasta_outfile.write(wrap + '\n')
             if StORFs:
                 for StORF in StORFs:  # ([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand, StORF_Length, StORF_UR_Num, StORF_Seq)]
                     GFF_StoRF_write(StORF_options, track_contig, outfile, StORF, StORF_Num)  # To keep consistency
@@ -293,7 +302,7 @@ def StORF_Filler(StORF_options,Reported_StORFs):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.0: StORF_Reporter Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.1: StORF_Reporter Run Parameters.')
     parser.add_argument('-anno', action='store', dest='annotation_type', default='PROKKA', const='PROKKA', required=True,
                         choices=['PROKKA', 'Ensembl', 'CDS'], nargs='?',
                         help='Default - PROKKA: Annotation type to be StORF-Reported:'
@@ -304,6 +313,10 @@ if __name__ == "__main__":
                              'all Coding and Non-Coding Seqs')
     parser.add_argument('-p_gff', '--PROKKA_GFFs', action='store', dest='prokka_gffs', default='', required=False,
                         help='Provide directory contain GFFs to be StORFed - Only produces modified GFFs')
+    parser.add_argument('-con_storfs', action="store", dest='con_storfs', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Output Consecutive StORFs')
+    parser.add_argument('-con_only', action="store", dest='con_only', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Only output Consecutive StORFs')
     parser.add_argument('-min_len', action='store', dest='minlen', default='30', type=int,
                         help='Default - 30: Minimum UR Length')
     parser.add_argument('-max_len', action='store', dest='maxlen', default='100000', type=int,
@@ -340,7 +353,8 @@ if __name__ == "__main__":
         ################## Find StORFs in URs - Setup StORF_Reporter-Finder Run
         StORF_options = Namespace(reporter=True, gff=Reporter_options.gff, stop_codons="TGA,TAA,TAG",
                                   partial_storf=False, whole_contig=False, storf_order='start_pos',
-                                  con_storfs=False, con_only=False, max_orf=50000, filtering='hard',
+                                  con_storfs=Reporter_options.con_storfs, con_only=Reporter_options.con_only,
+                                  max_orf=50000, filtering='hard',
                                   feature_type=Reporter_options.feature_type, overlap_nt=Reporter_options.overlap_nt,
                                   allowed_overlap=Reporter_options.allowed_overlap, prokka_dir=True, prokka_gffs='',
                                   minlen=30, maxlen=100000, min_orf=100, verbose=False, nout=True)
@@ -359,7 +373,8 @@ if __name__ == "__main__":
             ################## Find StORFs in URs - Setup StORF_Reporter-Finder Run
             StORF_options = Namespace(reporter=True, gff=Reporter_options.gff, stop_codons="TGA,TAA,TAG",
                                       partial_storf=False, whole_contig=False,
-                                      con_storfs=False, con_only=False, max_orf=50000, filtering='hard',
+                                      con_storfs=Reporter_options.con_storfs, con_only=Reporter_options.con_only,
+                                      max_orf=50000, filtering='hard',
                                       feature_type=Reporter_options.feature_type, storf_order='start_pos',
                                       overlap_nt=Reporter_options.overlap_nt, prokka_dir='', prokka_gffs=True,
                                       allowed_overlap=Reporter_options.allowed_overlap,
@@ -372,8 +387,8 @@ if __name__ == "__main__":
         print("Please provide correct PROKKA output directory")
 
 
-
-
+######
+# StORFs should be an object
 
 
 

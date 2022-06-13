@@ -1,9 +1,11 @@
-# StORF-Reporter v0.5.0 - Preprint: https://www.biorxiv.org/content/10.1101/2022.03.31.486628v1
+# StORF-Reporter v0.5.1 - Preprint: https://www.biorxiv.org/content/10.1101/2022.03.31.486628v1
 
 StORF-Reporter, a toolkit that takes as input an annotated genome and returns missed CDS 
 genes from the Unannotated Regions (URs).
 # Please use `pip3 install StORF-Reporter' to install the tool.
 This will also install numpy and the 'ORForise' package from https://github.com/NickJD/ORForise to allow for additional functionality.
+
+# Please Note: To report Con-StORFs (Pseudogenes), use "-con_storfs True" and "-con_only" to disable reporting of StORFs (missed complete genes). 
 
 # StORF-Reporter (BETA) - Please raise issues at https://github.com/NickJD/StORF-Reporter/issues
 This tool extracts Unnannotated Regions from PROKKA genome annotations, finds Stop - Open Reading Frames
@@ -21,15 +23,16 @@ python3 -m StORF-Reporter.StORF_Reporter -anno PROKKA -p_gff ../PROKKA_Outputs/
 
 ### Menu - (python3 -m StORF-Reporter.StORF_Reporter -h):
 ```python
-usage: StORF_Reporter [-h] -anno [{PROKKA,Ensembl,CDS}] [-pd PROKKA_DIR]
-                         [-p_gff PROKKA_GFFS] [-min_len MINLEN]
+usage: StORF_Reporter.py [-h] -anno [{PROKKA,Ensembl,CDS}] [-pd PROKKA_DIR]
+                         [-p_gff PROKKA_GFFS] [-con_storfs {True,False}]
+                         [-con_only {True,False}] [-min_len MINLEN]
                          [-max_len MAXLEN] [-ex_len EXLEN]
                          [-type [{StORF,CDS,ORF}]] [-olap OVERLAP_NT]
                          [-ao ALLOWED_OVERLAP] [-lw {True,False}]
                          [-aa {True,False}] [-gz {True,False}]
                          [-v {True,False}]
 
-StORF-Reporter v0.4.2: StORF_Reporter Run Parameters.
+StORF-Reporter v0.5.1: StORF_Reporter Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -45,6 +48,10 @@ optional arguments:
   -p_gff PROKKA_GFFS, --PROKKA_GFFs PROKKA_GFFS
                         Provide directory contain GFFs to be StORFed - Only
                         produces modified GFFs
+  -con_storfs {True,False}
+                        Default - False: Output Consecutive StORFs
+  -con_only {True,False}
+                        Default - False: Only output Consecutive StORFs
   -min_len MINLEN       Default - 30: Minimum UR Length
   -max_len MAXLEN       Default - 100,000: Maximum UR Length
   -ex_len EXLEN         Default - 50: UR Extension Length
@@ -60,6 +67,7 @@ optional arguments:
                         chars
   -aa {True,False}      Default - False: Report StORFs as amino acid sequences
   -gz {True,False}      Default - False: Output as .gz
+  -v {True,False}       Default - False: Print out runtime status
 
 ```
 # To use on non-PROKKA tools such as those covered by ORForise (https://github.com/NickJD/ORForise), ur UR_Extrator and StORF_Finder induvidually.
@@ -75,7 +83,7 @@ python3 -m StORF-Reporter.UR_Extractor -f genomes/E-coli.fasta.gz -gff genomes/E
 usage: UR_Extractor [-h] -f FASTA -gff GFF [-ident IDENT] [-min_len MINLEN] [-max_len MAXLEN] [-ex_len EXLEN] [-gene_ident GENE_IDENT] [-o OUT_FILE]
                        [-gz {True,False}] [-v {True,False}]
 
-StORF-Reporter v0.5.0: UR_Extractor Run Parameters.
+StORF-Reporter v0.5.1: UR_Extractor Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -108,7 +116,7 @@ uusage: StORF_Finder [-h] -f FASTA [-ua {True,False}] [-wc {True,False}] [-ps {T
                        [-minorf MIN_ORF] [-maxorf MAX_ORF] [-codons STOP_CODONS] [-olap OVERLAP_NT] [-gff {True,False}] [-s SUFFIX]
                        [-so [{start_pos,strand}]] [-o OUT_FILE] [-af AFFIX] [-lw {True,False}] [-gz {True,False}] [-v {True,False}]
 
-StORF-Reporter v0.5.0: StORF_Finder Run Parameters.
+StORF-Reporter v0.5.1: StORF_Finder Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit
