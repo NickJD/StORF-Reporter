@@ -414,7 +414,7 @@ def STORF_Finder(sequence, sequence_id, options): #Main Function
             write_fasta(fasta_entries, fasta_out, aa_fasta_out)
             if not options.aa_only:
                 write_gff(gff_entries, gff_out)
-    elif options.con_only == False:
+    elif options.con_only == True:
         if options.filtering == 'hard':
             con_StORFs = tile_filtering(con_StORFs, options)
             con_StORFs = OrderedDict(sorted(con_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
@@ -473,7 +473,7 @@ def StORF_Reported(Contigs,options):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.1: StORF_Finder Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.2: StORF_Finder Run Parameters.')
     parser.add_argument('-reporter', action="store", dest='reporter', default=False, required=False,
                         help=argparse.SUPPRESS)
     parser.add_argument('-f', action="store", dest='fasta', required=True,

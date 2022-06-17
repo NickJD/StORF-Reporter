@@ -1,4 +1,4 @@
-# StORF-Reporter v0.5.1 - Preprint: https://www.biorxiv.org/content/10.1101/2022.03.31.486628v1
+# StORF-Reporter v0.5.2 - Preprint: https://www.biorxiv.org/content/10.1101/2022.03.31.486628v1
 
 StORF-Reporter, a toolkit that takes as input an annotated genome and returns missed CDS 
 genes from the Unannotated Regions (URs).
@@ -32,7 +32,7 @@ usage: StORF_Reporter.py [-h] -anno [{PROKKA,Ensembl,CDS}] [-pd PROKKA_DIR]
                          [-aa {True,False}] [-gz {True,False}]
                          [-v {True,False}]
 
-StORF-Reporter v0.5.1: StORF_Reporter Run Parameters.
+StORF-Reporter v0.5.2: StORF_Reporter Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -83,7 +83,7 @@ python3 -m StORF-Reporter.UR_Extractor -f genomes/E-coli.fasta.gz -gff genomes/E
 usage: UR_Extractor [-h] -f FASTA -gff GFF [-ident IDENT] [-min_len MINLEN] [-max_len MAXLEN] [-ex_len EXLEN] [-gene_ident GENE_IDENT] [-o OUT_FILE]
                        [-gz {True,False}] [-v {True,False}]
 
-StORF-Reporter v0.5.1: UR_Extractor Run Parameters.
+StORF-Reporter v0.5.2: UR_Extractor Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -116,7 +116,7 @@ uusage: StORF_Finder [-h] -f FASTA [-ua {True,False}] [-wc {True,False}] [-ps {T
                        [-minorf MIN_ORF] [-maxorf MAX_ORF] [-codons STOP_CODONS] [-olap OVERLAP_NT] [-gff {True,False}] [-s SUFFIX]
                        [-so [{start_pos,strand}]] [-o OUT_FILE] [-af AFFIX] [-lw {True,False}] [-gz {True,False}] [-v {True,False}]
 
-StORF-Reporter v0.5.1: StORF_Finder Run Parameters.
+StORF-Reporter v0.5.2: StORF_Finder Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit

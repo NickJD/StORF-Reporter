@@ -294,15 +294,14 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                 outfile.write(line)
                 written_line = line
 
-        else:
-            if line != written_line:
-                outfile.write(line)
-                written_line = line
+        else: # Now we just print out the remaining lines in the GFF
+            outfile.write(line)
+            written_line = line
 ##############################################################
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.1: StORF_Reporter Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.2: StORF_Reporter Run Parameters.')
     parser.add_argument('-anno', action='store', dest='annotation_type', default='PROKKA', const='PROKKA', required=True,
                         choices=['PROKKA', 'Ensembl', 'CDS'], nargs='?',
                         help='Default - PROKKA: Annotation type to be StORF-Reported:'
