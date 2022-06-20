@@ -155,7 +155,7 @@ def prepare_out(options,storfs,seq_id):
             elif strand == '-':
                 frame = (int(gff_stop) % 3) + 4
             storf_name = native_seq + '_' + storf_Type + '_' + str(idx) + ':' + gff_start + '-' + gff_stop
-            gff_entries.append(native_seq + '\tStORF_Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
+            gff_entries.append(native_seq + '\tStORF-Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';UR=' + ur_name.replace('>','')  + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(
                     length) + ';Strand=' + data[2] +
                 ';Frame=' + str(frame) + ';UR_Frame=' + str(ur_frame) +
@@ -171,7 +171,7 @@ def prepare_out(options,storfs,seq_id):
                 frame) + '|Start_Stop=' + start_stop +
                      '|End_Stop=' + end_stop + '|StORF_Type:' + storf_Type + "\n")
 
-            gff_entries.append(                native_seq + '\tStORF_Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
+            gff_entries.append(                native_seq + '\tStORF-Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';UR=' + ur_name + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(
                     length) +
                 ';Frame=' + str(frame) + ';UR_Frame=' + str(ur_frame) +
@@ -550,6 +550,8 @@ if __name__ == "__main__":
             fasta_out = open(options.out_file + affix + '.fasta', 'w', newline='\n', encoding='utf-8')
             if options.translate:
                 aa_fasta_out = open(options.out_file + affix + '_aa.fasta', 'w', newline='\n', encoding='utf-8')
+            else:
+                aa_fasta_out = None
         elif options.aa_only:
             aa_fasta_out = open(options.out_file + affix + '_aa.fasta', 'w', newline='\n', encoding='utf-8')
     elif options.gz:
@@ -560,8 +562,11 @@ if __name__ == "__main__":
             fasta_out = gzip.open(options.out_file + affix + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
             if options.translate:
                 aa_fasta_out = gzip.open(options.out_file + affix + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+            else:
+                aa_fasta_out = None
         elif options.aa_only:
             aa_fasta_out = gzip.open(options.out_file + affix + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+
 
     sequences = OrderedDict()
     if options.reporter == False:

@@ -1,5 +1,13 @@
 
-from ORForise.GFF_Adder import gff_adder  # Calling from ORForise via pip
+
+
+try:
+    from ORForise.GFF_Adder import gff_adder  # Calling from ORForise via pip
+except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
+    from ORForise.src.ORForise.GFF_Adder import gff_adder  # Calling from ORForise locally (StORF-Reporter and ORForise in same dir)
+
+
+
 import argparse
 
 parser = argparse.ArgumentParser()

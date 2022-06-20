@@ -3,7 +3,9 @@
 StORF-Reporter, a toolkit that takes as input an annotated genome and returns missed CDS 
 genes from the Unannotated Regions (URs).
 # Please use `pip3 install StORF-Reporter' to install the tool.
-This will also install numpy and the 'ORForise' package from https://github.com/NickJD/ORForise to allow for additional functionality.
+This will also install numpy and the 'ORForise' package from https://github.com/NickJD/ORForise to allow for additional functionality. 
+
+Consider using '--no-cache-dir' with pip to ensure the download of the newest version of the package.
 
 # Please Note: To report Con-StORFs (Pseudogenes), use "-con_storfs True" and "-con_only" to disable reporting of StORFs (missed complete genes). 
 
