@@ -12,7 +12,9 @@ def write_fasta(dna_regions, options):
         out =  open(options.out_file + '_UR.fasta','w', newline='\n', encoding='utf-8')
     elif options.gz == True:
         out = gzip.open(options.out_file + '_UR.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+
     for dna_region, dna_region_ur in dna_regions.items():
+        out.write('###Sequence Region: ' + dna_region + ' Sequence Length: ' + str(len(dna_region_ur[0])) + '\n\n')
         ur_ident = dna_region + options.ident # Add user ident onto name of dna regions
         if dna_region_ur[3]:
             for ex_ur, data in dna_region_ur[3].items():

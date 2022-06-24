@@ -127,7 +127,7 @@ def translate_frame(sequence):
     translate = ''.join([gencode.get(sequence[3 * i:3 * i + 3], 'X') for i in range(len(sequence) // 3)])
     return translate
 
-def prepare_out(options,storfs,seq_id):
+def prepare_out(options,storfs,seq_id, sequence_region_length):
     gff_entries = []
     fasta_entries = {}
     for pos, data in storfs.items():
@@ -141,6 +141,7 @@ def prepare_out(options,storfs,seq_id):
         stop = int(pos_[-1])
         ur_frame = int(data[1])
         storf_Type = data[4]
+        #seq_id = seq_id.split('_UR')[0]
         #if options.suffix == None:
         #    seq_id = seq_id.replace('_UR','')
         #seq_id = seq_id.split()[0].replace('>', '')
@@ -148,12 +149,15 @@ def prepare_out(options,storfs,seq_id):
         ur_name = seq_id.replace('|', ':')
         length = len(sequence)
         if options.unannotated == True:
-            gff_start = str(start + int(ur_name.split('_')[2]))
-            gff_stop = str(stop + int(ur_name.split('_')[2]))
             if strand == '+':
+                gff_start = str(start + int(ur_name.split('_')[2]))
+                gff_stop = str(stop + int(ur_name.split('_')[2]))
                 frame = (int(gff_stop) % 3) + 1
             elif strand == '-':
+                gff_start = str(start + int(ur_name.split('_')[2]))
+                gff_stop = str(stop + int(ur_name.split('_')[2]))
                 frame = (int(gff_stop) % 3) + 4
+
             storf_name = native_seq + '_' + storf_Type + '_' + str(idx) + ':' + gff_start + '-' + gff_stop
             gff_entries.append(native_seq + '\tStORF-Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';UR=' + ur_name.replace('>','')  + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(
@@ -346,7 +350,9 @@ def find_storfs(working_frame,stops,sequence,storfs,con_StORFs,frames_covered,co
             pass
     return storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx
 
-def STORF_Finder(sequence, sequence_id, options): #Main Function
+def STORF_Finder(sequence_info, sequence_id, options): #Main Function
+    sequence = sequence_info[0]
+    sequence_region_length = sequence_info[1]
     stops = []
     frames_covered = OrderedDict()
     for x in range (1,7):
@@ -395,7 +401,7 @@ def STORF_Finder(sequence, sequence_id, options): #Main Function
             if options.reporter == True:
                 return all_StORFs
             ###Data Prepare
-            gff_entries, fasta_entries = prepare_out(options, all_StORFs, sequence_id)
+            gff_entries, fasta_entries = prepare_out(options, all_StORFs, sequence_id, sequence_region_length)
             write_fasta(fasta_entries, fasta_out, aa_fasta_out)
             if not options.aa_only:
                 write_gff(gff_entries, gff_out)
@@ -410,7 +416,7 @@ def STORF_Finder(sequence, sequence_id, options): #Main Function
             if options.reporter == True:
                 return all_StORFs
             ###Data Prepare
-            gff_entries, fasta_entries = prepare_out(options, all_StORFs, sequence_id)
+            gff_entries, fasta_entries = prepare_out(options, all_StORFs, sequence_id, sequence_region_length)
             write_fasta(fasta_entries, fasta_out, aa_fasta_out)
             if not options.aa_only:
                 write_gff(gff_entries, gff_out)
@@ -423,7 +429,7 @@ def STORF_Finder(sequence, sequence_id, options): #Main Function
         if options.reporter == True:
             return con_StORFs
         ###Data Prepare
-        gff_entries, fasta_entries = prepare_out(options, con_StORFs, sequence_id)
+        gff_entries, fasta_entries = prepare_out(options, con_StORFs, sequence_id, sequence_region_length)
         write_fasta(fasta_entries, fasta_out, aa_fasta_out)
         if not options.aa_only:
             write_gff(gff_entries, gff_out)
@@ -433,20 +439,23 @@ def STORF_Finder(sequence, sequence_id, options): #Main Function
 def fasta_load(fasta_in):
     first = True
     for line in fasta_in:
-        line = line.strip()
-        if line.startswith(';'):
+        #line = line.strip()
+        if '###' in line:
+            sequence_region_length = int(line.split(' ')[-1])
+        elif line.startswith((';','\n')):
             continue
         elif line.startswith('>') and not first:
-            sequences.update({sequence_name: seq})
+            sequences.update({sequence_name: [seq.strip(),sequence_region_length]})
             seq = ''
-            sequence_name = line
+            sequence_name = line.strip()
         elif line.startswith('>'):
             seq = ''
-            sequence_name = line
+            sequence_name = line.strip()
         else:
             seq += str(line)
             first = False
-    sequences.update({sequence_name: seq})
+
+    sequences.update({sequence_name: [seq.strip(),sequence_region_length]})
 
 
 def StORF_Reported(Contigs,options):
@@ -457,7 +466,7 @@ def StORF_Reported(Contigs,options):
         try:
             for UR in URs:
                 if len(URs[UR][1]) >= options.min_orf: # Here
-                    StORFs = STORF_Finder(URs[UR][1], Contig_ID, options)
+                    StORFs = STORF_Finder(URs[UR][1], Contig_ID, options) # need to pass seq and original seq length
 
                     if StORFs: #  Left out for now to allow for tracking of non-StORF URs
                         for StORF in StORFs.values():
@@ -579,7 +588,7 @@ if __name__ == "__main__":
         if options.verbose == True:
             print(fasta_in.name)
 
-    for sequence_id, sequence in sequences.items():
-        if len(sequence) >= options.min_orf:
-            STORF_Finder(sequence, sequence_id, options)
+    for sequence_id, sequence_info in sequences.items():
+        if len(sequence_info[0]) >= options.min_orf:
+            STORF_Finder(sequence_info, sequence_id, options)
 
