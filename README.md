@@ -1,4 +1,4 @@
-# StORF-Reporter v0.5.2 - Preprint: https://www.biorxiv.org/content/10.1101/2022.03.31.486628v1
+# StORF-Reporter v0.5.2 - Preprint: https://www.biorxiv.org/content/10.1101/2022.03.31.486628v2
 
 StORF-Reporter, a toolkit that takes as input an annotated genome and returns missed CDS 
 genes from the Unannotated Regions (URs).

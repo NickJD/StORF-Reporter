@@ -11,8 +11,8 @@ from  matplotlib.ticker import PercentFormatter
 
 #clusters_In = open('./E-coli/Escherichia_coli_PEP_UR-Con-StORFs_NO_STAR_CD_80_NEW.clstr','r') # Clusters for single Genera
 #clusters_In = open('./E-coli/Escherichia_coli_PEP_UR_StORFs_NO_STAR_CD_80_NEW.clstr','r') # Clusters for single Genera
-PEP_In = open('./E-coli/Escherichia_coli_PEP.fa_CD_c90_s60.clstr','r')
-StORF_In = open('./E-coli/Escherichia_coli_PEP_Clustered_With_Unclustered_UR-StORFs.fa_CD_c90_s60.clstr','r')
+PEP_In = open('/home/nick/Nextcloud/Ensem/E-coli/Escherichia_coli_PEP.fa_CD_c90_s60.clstr','r')
+StORF_In = open('/home/nick/Nextcloud/Ensem/E-coli/Escherichia_coli_PEP_Clustered_With_Unclustered_UR-Con-StORFs.fa_CD_c90_s60.clstr','r')
 
 
 

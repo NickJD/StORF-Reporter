@@ -14,7 +14,7 @@ def write_fasta(dna_regions, options):
         out = gzip.open(options.out_file + '_UR.fasta.gz', 'wt', newline='\n', encoding='utf-8')
 
     for dna_region, dna_region_ur in dna_regions.items():
-        out.write('###Sequence Region: ' + dna_region + ' Sequence Length: ' + str(len(dna_region_ur[0])) + '\n\n')
+        out.write('##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
         ur_ident = dna_region + options.ident # Add user ident onto name of dna regions
         if dna_region_ur[3]:
             for ex_ur, data in dna_region_ur[3].items():
@@ -31,7 +31,9 @@ def write_gff(dna_regions,options):
     elif options.gz == True:
         out = gzip.open(options.out_file + '_UR.gff.gz', 'wt', newline='\n', encoding='utf-8')
     out.write("##gff-version\t3\n#\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
-    out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n')
+    for seq_reg in dna_regions:
+        out.write('##sequence-region\t' + seq_reg + ' 1 ' + str(dna_regions[seq_reg][1]) + '\n')
+    out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n\n')
     for dna_region, dna_region_ur in dna_regions.items():
         ur_ident = dna_region + options.ident
         if dna_region_ur[3]:
@@ -72,7 +74,6 @@ def fasta_load(fasta_in):
             if line.startswith('##FASTA'):  # Not to crash on empty lines in GFF
                 at_FASTA = True
             elif at_FASTA == True:
-
                 line = line.strip()
                 if line.startswith('>') and first == False:  # Check if first seq in file
                     dna_region_length = len(seq)
@@ -121,16 +122,16 @@ def extractor(options):
             fasta_in = gzip.open(options.fasta,'rt')
             dna_regions = fasta_load(fasta_in)
         except:
-            fasta_in = open(options.fasta,'r')
+            fasta_in = open(options.fasta,'r',encoding='unicode_escape') # Not sure if needed in long term
             dna_regions = fasta_load(fasta_in)
         try:
             gff_in = gzip.open(options.gff,'rt')
             dna_regions = gff_load(options,gff_in,dna_regions)
         except:
-            gff_in = open(options.gff,'r')
+            gff_in = open(options.gff,'r',encoding='unicode_escape') # Not sure if needed in long term
             dna_regions = gff_load(options,gff_in,dna_regions)
     except AttributeError:
-        sys.exit("Attribute Error:\nStORF GFF probably already exists - Must be deleted before running")
+        sys.exit("Attribute Error:\nStORF'ed GFF probably already exists - Must be deleted before running")
 
 
     for (key,(seq,seq_length,posns,URs))  in dna_regions.items(): #Extract URs from 1 dna_region at a time
@@ -148,8 +149,8 @@ def extractor(options):
                 if start > unannotated_start:
                     length = start - unannotated_start
                     if length >= options.minlen and length <= options.maxlen: #default between 30 - 100,000
-                        original_UR = str(unannotated_start) + '_' + str(start)
-                        unannotated_start = max(unannotated_start - options.exlen, 0)
+                        original_UR = str(max(unannotated_start,1)) + '_' + str(start)
+                        unannotated_start = max(unannotated_start - options.exlen, 0) # 0 here for pythons base-o here is for the GFF base-1 reporting format
                         start += options.exlen
                         unannotated_seq = seq[unannotated_start:start]
                         unannotated_loci = str(unannotated_start) + '_' + str(start)
@@ -158,7 +159,7 @@ def extractor(options):
                     unannotated_start = stop
             try:
                 if (seq_length - stop) >= options.minlen and (seq_length - stop) <= options.maxlen: #default between 30 - 100,000: # Get UR at end of dna_region if longer than minlen
-                    unannotated_start = max(unannotated_start - options.exlen, 0)
+                    original_UR = str(max(unannotated_start, 1)) + '_' + str(start)
                     stop -= options.exlen
                     unannotated_seq = seq[stop:seq_length]
                     unannotated_loci = str(stop) + '_' + str(seq_length)
