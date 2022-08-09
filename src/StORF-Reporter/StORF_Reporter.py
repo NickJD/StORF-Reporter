@@ -351,7 +351,7 @@ def StORF_Filler(StORF_options,Reported_StORFs):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.2: StORF_Reporter Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.3: StORF_Reporter Run Parameters.')
     parser.add_argument('-anno', action='store', dest='annotation_type', default='PROKKA', const='PROKKA', required=True,
                         choices=['PROKKA', 'Ensembl', 'Gene'], nargs='?',
                         help='Default - PROKKA: Annotation type to be StORF-Reported:'
