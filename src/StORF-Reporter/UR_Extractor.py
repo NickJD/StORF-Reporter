@@ -153,7 +153,7 @@ def extractor(options):
                         unannotated_start = max(unannotated_start - options.exlen, 0) # 0 here for pythons base-o here is for the GFF base-1 reporting format
                         start += options.exlen
                         unannotated_seq = seq[unannotated_start:start]
-                        unannotated_loci = str(unannotated_start) + '_' + str(start)
+                        unannotated_loci = str(max(unannotated_start,1)) + '_' + str(start)
                         unannotated_regions.update({unannotated_loci: [original_UR,unannotated_seq]})
                 if stop > unannotated_start:
                     unannotated_start = stop

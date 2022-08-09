@@ -3,6 +3,7 @@ from argparse import Namespace
 import pathlib
 import collections
 import textwrap
+import hashlib
 
 
 try:
@@ -36,11 +37,16 @@ gencode = {
       'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
       'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*',
       'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W'}
+
+def translate_frame(sequence):
+    translate = ''.join([gencode.get(sequence[3 * i:3 * i + 3], 'X') for i in range(len(sequence) // 3)])
+    return translate
 ############################
 
 def GFF_StoRF_write(StORF_options,track_contig,gff_outfile, StORF,StORF_Num): # Consistency in outfile
     ID = track_contig + '_UR_' + StORF[0] + '_' + StORF[10] + '_'+ str(StORF[9])
-    #locus_tag = track_contig + '_UR_' + StORF[0] + '_' + StORF[10] + '_' + str(StORF_Num)
+    to_hash = gff_outfile.name + ID # create unique hash from outfile name and ID
+    locus_tag = hashlib.shake_256(to_hash.encode()).hexdigest(8)
     ### Write out new GFF entry -
     strand = StORF[7]
     start = StORF[3]
@@ -55,29 +61,41 @@ def GFF_StoRF_write(StORF_options,track_contig,gff_outfile, StORF,StORF_Num): # 
     end_stop = StORF[12][-3:]
 
     if strand == '+':
-        gff_start = str(max(start + 1 + UR_Start, 1)) # this may need to change to account for different exlen
-        gff_stop = str(max(stop + UR_Start, 1))
+        gff_start = max(start + UR_Start, 1) # this may need to change to account for different exlen
+        gff_stop = max(stop - 1 + UR_Start, 1)
+        if Reporter_options.stop_inclusive == False:  # To remove the start and stop codon positions.
+            gff_start = gff_start + 3
         frame = (int(gff_stop) % 3) + 1
     elif strand == '-':
-        gff_start = str(max(start - 2 + UR_Start, 1))
-        gff_stop = str(max(stop - 3 + UR_Start, 1))
+        gff_start = max(start - 2 + UR_Start, 1)
+        gff_stop = max(stop - 3 + UR_Start, 1)
+        if Reporter_options.stop_inclusive == False:  # To remove the start and stop codon positions.
+            gff_stop = gff_stop - 3
         frame = (int(gff_stop) % 3) + 4
+
     StORF_length = int(gff_stop) + 1 - int(gff_start) # +1 to adjust for base-1
 
     gff_outfile.write(track_contig + '\tStORF_Reporter\t' + StORF_options.feature_type + '\t' +  str(gff_start) + '\t' + str(gff_stop) + '\t.\t' +
-        StORF[7] + '\t.\tID=' + ID + ';locus_tag=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Stop_Locations=' + StORF[11].replace(',','-') + ';Name=' +
+        StORF[7] + '\t.\tID=StORF_' + locus_tag + ';locus_tag=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Stop_Locations=' + StORF[11].replace(',','-') + ';Name=' +
            StORF[10] + '_' + str(StORF_Num) + ';' + StORF[10] + '_Num_In_UR=' + str(StORF[9]) + ';' + StORF[10] + '_Length=' + str(StORF_length) + ';' + StORF[10] +
            '_Frame=' + str(StORF[5]) + ';UR_' + StORF[10] + '_Frame=' + str(StORF[6]) +  ';Start_Stop=' + start_stop + ';Mid_Stops=' + mid_stop  + ';End_Stop='
            + end_stop + ';StORF_Type=' + StORF[10] + '\n')
 
 
-def FASTA_StoRF_write(track_contig, fasta_outfile, StORF):  # Consistency in outfile
-    ID = track_contig + '_' + StORF[10] + ':' + str(StORF[1]) + '-' + str(StORF[2])
+def FASTA_StoRF_write(track_contig, fasta_outfile, StORF,StORF_Num):  # Consistency in outfile
+    ID = track_contig + '_' + StORF[10] + '_' + str(StORF_Num) + ':' + str(StORF[1]) + '-' + str(StORF[2])
     ### Wrtie out new FASTA entry
     fasta_outfile.write('>'+ID+'\n')
     wrapped = textwrap.wrap(StORF[-1], width=60)
     for wrap in wrapped:
         fasta_outfile.write(wrap + '\n')
+    if Reporter_options.storfs_out == True: # clean this
+        amino = translate_frame(StORF[-1][0:])
+        storf_fasta_outfile = open(str(fasta_outfile.name).replace('.fasta','_StORFs_Only.fasta'),'a') #wa not good
+        storf_fasta_outfile.write('>' + ID + '\n')
+        storf_fasta_outfile.write(amino+'\n')
+        # for wrap in wrapped:
+        #     storf_fasta_outfile.write(wrap + '\n')
 
 def FASTA_Load(faa_infile,ffn_infile):
     ### Coding sequences first
@@ -278,7 +296,7 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                             GFF_StoRF_write(StORF_options, track_prev_contig, outfile, StORF,
                                             StORF_Num)  # To keep consistency
                             if StORF_options.prokka_dir == True:
-                                FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
+                                FASTA_StoRF_write(track_contig, fasta_outfile, StORF,StORF_Num)
                             StORF_Num += 1
                 track_prev_start, track_prev_stop = 0, 0
             track_prev_contig = track_contig
@@ -307,7 +325,7 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                 for StORF in StORFs:  # ([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand, StORF_Length, StORF_UR_Num, StORF_Seq)]
                     GFF_StoRF_write(StORF_options, track_contig, outfile, StORF, StORF_Num)  # To keep consistency
                     if StORF_options.prokka_dir == True:
-                        FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
+                        FASTA_StoRF_write(track_contig, fasta_outfile, StORF,StORF_Num)
                     StORF_Num += 1
             if line != written_line:
                 outfile.write(line)
@@ -320,7 +338,7 @@ def StORF_Filler(StORF_options,Reported_StORFs):
                 for StORF in StORFs:
                     GFF_StoRF_write(StORF_options, track_prev_contig, outfile, StORF, StORF_Num)  # To keep consistency
                     if StORF_options.prokka_dir == True:
-                        FASTA_StoRF_write(track_contig, fasta_outfile, StORF)
+                        FASTA_StoRF_write(track_contig, fasta_outfile, StORF,StORF_Num)
                     StORF_Num += 1
             if line != written_line:
                 outfile.write(line)
@@ -349,6 +367,12 @@ if __name__ == "__main__":
                              '(list .fa then .gff containing directories separated by commas - ./FA,./GFF)')
     parser.add_argument('-comb', action='store', dest='combined_gffs', default='', required=False,
                         help='Provide directory containing GFFs with sequences combined into single file to be StORFed - Only produces modified GFFs')
+    parser.add_argument('-spos', action="store", dest='stop_inclusive', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Print out StORF positions inclusive of first stop codon')
+
+    parser.add_argument('-sout', action="store", dest='storfs_out', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Print out StORF sequences separately?')
+
     parser.add_argument('-con_storfs', action="store", dest='con_storfs', default=False, type=eval, choices=[True, False],
                         help='Default - False: Output Consecutive StORFs')
     parser.add_argument('-con_only', action="store", dest='con_only', default=False, type=eval, choices=[True, False],
@@ -359,6 +383,8 @@ if __name__ == "__main__":
                         help='Default - 100,000: Maximum UR Length')
     parser.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
                         help='Default - 50: UR Extension Length')
+    parser.add_argument('-minorf', action="store", dest='min_orf', default=100, type=int,
+                        help='Default - 100: Minimum StORF size in nt')
     parser.add_argument('-type', action='store', dest='feature_type', default='CDS', const='CDS', nargs='?',
                         choices=['StORF', 'CDS', 'ORF'],
                         help='Default - "CDS": Which GFF feature type for StORFs to be reported as in GFF - '
@@ -390,10 +416,10 @@ if __name__ == "__main__":
         StORF_options = Namespace(reporter=True, gff=Reporter_options.gff, stop_codons="TGA,TAA,TAG",
                                   partial_storf=False, whole_contig=False, storf_order='start_pos',
                                   con_storfs=Reporter_options.con_storfs, con_only=Reporter_options.con_only,
-                                  max_orf=50000, filtering='hard',
+                                  max_orf=50000, filtering='hard', stop_inclusive=False,
                                   feature_type=Reporter_options.feature_type, overlap_nt=Reporter_options.overlap_nt,
                                   allowed_overlap=Reporter_options.allowed_overlap, prokka_dir=True, prokka_gffs='',
-                                  minlen=30, maxlen=100000, min_orf=100, verbose=False, nout=True)
+                                  minlen=30, maxlen=100000, min_orf=Reporter_options.min_orf, verbose=False, nout=True)
 
         Reporter_StORFs = StORF_Reported(Contigs, StORF_options)
         StORF_Filler(StORF_options,Reporter_StORFs)  # Append StORFs to current GFF file from provided genome annotation
@@ -413,7 +439,7 @@ if __name__ == "__main__":
                                       feature_type=Reporter_options.feature_type, storf_order='start_pos',
                                       overlap_nt=Reporter_options.overlap_nt, prokka_dir='', prokka_gffs=True,
                                       allowed_overlap=Reporter_options.allowed_overlap,
-                                      minlen=30, maxlen=100000, min_orf=100, verbose=False, nout=True)
+                                      minlen=30, maxlen=100000, min_orf=Reporter_options.min_orf, verbose=False, nout=True)
             Reporter_StORFs = StORF_Reported(Contigs, StORF_options)
             #sequence_id, all_StORFs = StORF_Reported(URs, StORF_options)
             StORF_Filler(StORF_options, Reporter_StORFs)  # Append StORFs to current GFF file from provided genome annotation
@@ -440,11 +466,11 @@ if __name__ == "__main__":
             StORF_options = Namespace(reporter=True, gff=Reporter_options.gff, stop_codons="TGA,TAA,TAG",
                                       partial_storf=False, whole_contig=False,
                                       con_storfs=Reporter_options.con_storfs, con_only=Reporter_options.con_only,
-                                      max_orf=50000, filtering='hard',
+                                      max_orf=50000, filtering='hard', stop_inclusive=False,
                                       feature_type=Reporter_options.feature_type, storf_order='start_pos',
                                       overlap_nt=Reporter_options.overlap_nt, prokka_dir='', prokka_gffs=True,
                                       allowed_overlap=Reporter_options.allowed_overlap,
-                                      minlen=30, maxlen=100000, min_orf=100, verbose=False, nout=True)
+                                      minlen=30, maxlen=100000, min_orf=Reporter_options.min_orf, verbose=False, nout=True)
             Reporter_StORFs = StORF_Reported(Contigs, StORF_options)
             #sequence_id, all_StORFs = StORF_Reported(URs, StORF_options)
             StORF_Filler(StORF_options, Reporter_StORFs)  # Append StORFs to current GFF file from provided genome annotation

@@ -31,6 +31,11 @@ gencode = {
       'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
       'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*',
       'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W'}
+
+def translate_frame(sequence):
+    translate = ''.join([gencode.get(sequence[3 * i:3 * i + 3], 'X') for i in range(len(sequence) // 3)])
+    return translate
+
 ############################
 
 def reverseCorrectLoci(sequence_id,first,second,third): # here for the negative loci correction
@@ -134,9 +139,6 @@ def tile_filtering(storfs,options): #Hard filtering
 
     return final_filtered_storfs
 
-def translate_frame(sequence):
-    translate = ''.join([gencode.get(sequence[3 * i:3 * i + 3], 'X') for i in range(len(sequence) // 3)])
-    return translate
 
 def prepare_out(options,storfs,seq_id, sequence_region_length):
     gff_entries = []
@@ -164,11 +166,16 @@ def prepare_out(options,storfs,seq_id, sequence_region_length):
             if strand == '+':
                 gff_start = str(start + 1 + int(ur_name.split('_')[-2])) # + 1 to adjust the first stop codon loci
                 gff_stop = str(stop + int(ur_name.split('_')[-2]))
+                if options.stop_inclusive == False:  # To remove the start and stop codon positions.
+                    gff_start = gff_start + 3
                 frame = (int(gff_stop) % 3) + 1
             elif strand == '-':
                 gff_start = str(start - 2 + int(ur_name.split('_')[-2])) # -2 / -3 to adjust the first stop codon loci
                 gff_stop = str(stop - 3 + int(ur_name.split('_')[-2]))
+                if options.stop_inclusive == False:  # To remove the start and stop codon positions.
+                    gff_stop = gff_stop - 3
                 frame = (int(gff_stop) % 3) + 4
+
             storf_name = native_seq + '_' + storf_Type + '_' + str(idx) + ':' + gff_start + '-' + gff_stop
 
             gff_entries.append(native_seq.split('_UR')[0] + '\tStORF-Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
@@ -601,6 +608,8 @@ if __name__ == "__main__":
     parser.add_argument('-so', action="store", dest='storf_order', default='start_pos', nargs='?', choices=['start_pos','strand'],
                         required=False,
                         help='Default - Start Position: How should StORFs be ordered when >1 reported in a single UR.')
+    parser.add_argument('-spos', action="store", dest='stop_inclusive', default=True, type=eval, choices=[True, False],
+                        help='Default - False: Print out StORF positions inclusive of first stop codon')
     parser.add_argument('-o', action="store", dest='out_file', required=False,
                         help='Default - False: Without filetype - default appends \'_StORF-R\' to end of input gff filename (replaces \'.gff\')')
     parser.add_argument('-af', action="store", dest='affix', required=False,
