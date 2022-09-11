@@ -86,11 +86,16 @@ def FASTA_StoRF_write(track_contig, fasta_outfile, StORF,StORF_Num):  # Consiste
     ID = track_contig + '_' + StORF[10] + '_' + str(StORF_Num) + ':' + str(StORF[1]) + '-' + str(StORF[2])
     ### Wrtie out new FASTA entry
     fasta_outfile.write('>'+ID+'\n')
-    wrapped = textwrap.wrap(StORF[-1], width=60)
+    amino = translate_frame(StORF[-1][0:])
+    if Reporter_options.remove_stop == True:
+        amino = amino.strip('*')
+    wrapped = textwrap.wrap(amino, width=60)
     for wrap in wrapped:
         fasta_outfile.write(wrap + '\n')
     if Reporter_options.storfs_out == True: # clean this
         amino = translate_frame(StORF[-1][0:])
+        if Reporter_options.remove_stop == True:
+            amino = amino.strip('*')
         storf_fasta_outfile = open(str(fasta_outfile.name).replace('.fasta','_StORFs_Only.fasta'),'a') #wa not good
         storf_fasta_outfile.write('>' + ID + '\n')
         storf_fasta_outfile.write(amino+'\n')
@@ -351,7 +356,7 @@ def StORF_Filler(StORF_options,Reported_StORFs):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.3: StORF_Reporter Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.4: StORF_Reporter Run Parameters.')
     parser.add_argument('-anno', action='store', dest='annotation_type', default='PROKKA', const='PROKKA', required=True,
                         choices=['PROKKA', 'Ensembl', 'Gene'], nargs='?',
                         help='Default - PROKKA: Annotation type to be StORF-Reported:'
@@ -369,6 +374,8 @@ if __name__ == "__main__":
                         help='Provide directory containing GFFs with sequences combined into single file to be StORFed - Only produces modified GFFs')
     parser.add_argument('-spos', action="store", dest='stop_inclusive', default=False, type=eval, choices=[True, False],
                         help='Default - False: Print out StORF positions inclusive of first stop codon')
+    parser.add_argument('-rs', action="store", dest='remove_stop', default=True, type=eval, choices=[True, False],
+                        help='Default - True: Remove stop "*" from StORF amino acid sequences')
 
     parser.add_argument('-sout', action="store", dest='storfs_out', default=False, type=eval, choices=[True, False],
                         help='Default - False: Print out StORF sequences separately?')
