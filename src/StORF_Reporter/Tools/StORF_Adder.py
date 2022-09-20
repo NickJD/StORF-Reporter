@@ -4,14 +4,14 @@ import argparse
 try:
     from ORForise.GFF_Adder import gff_adder  # Calling from ORForise via pip
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
-    from ORForise.src.ORForise.GFF_Adder import gff_adder  # Calling from ORForise locally (StORF-Reporter and ORForise in same dir)
+    from ORForise.src.ORForise.GFF_Adder import gff_adder  # Calling from ORForise locally (StORF_Reporter and ORForise in same dir)
 
 
 
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.3: UR_StORFed Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.4: StORF-Adder Run Parameters.')
     parser.add_argument('-dna', '--genome_DNA', required=True, help='Genome DNA file (.fa) which both annotations '
                                                                     'are based on')
     parser.add_argument('-rt', '--reference_tool', required=False,

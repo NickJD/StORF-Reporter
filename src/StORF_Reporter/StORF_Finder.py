@@ -9,7 +9,7 @@ import gzip
 try:
     from ORForise.utils import sortORFs  # Calling from ORForise via pip
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
-    from ORForise.src.ORForise.utils import sortORFs  # Calling from ORForise locally (StORF-Reporter and ORForise in same dir)
+    from ORForise.src.ORForise.utils import sortORFs  # Calling from ORForise locally (StORF_Reporter and ORForise in same dir)
 
 
 
@@ -178,7 +178,7 @@ def prepare_out(options,storfs,seq_id, sequence_region_length):
 
             storf_name = native_seq + '_' + storf_Type + '_' + str(idx) + ':' + gff_start + '-' + gff_stop
 
-            gff_entries.append(native_seq.split('_UR')[0] + '\tStORF-Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
+            gff_entries.append(native_seq.split('_UR')[0] + '\tStORF_Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';UR=' + ur_name.replace('>','')  + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(
                     length) + ';Strand=' + data[2] +
                 ';Frame=' + str(frame) + ';UR_Frame=' + str(ur_frame) +
@@ -194,7 +194,7 @@ def prepare_out(options,storfs,seq_id, sequence_region_length):
             fa_id = (">" + str(storf_name) + "|" + str(start) + strand + str(stop) + "|Frame:" + str(
                 frame) + '|Start_Stop=' + start_stop + '|Mid_Stop=' + mid_stop +
                      '|End_Stop=' + end_stop + '|StORF_Type:' + storf_Type + "\n")
-            gff_entries.append(                native_seq + '\tStORF-Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
+            gff_entries.append(                native_seq + '\tStORF_Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';UR=' + ur_name + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(
                     length) +
                 ';Frame=' + str(frame) + ';UR_Frame=' + str(ur_frame) +
@@ -565,7 +565,7 @@ def StORF_Reported(Contigs,options):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.4: StORF_Finder Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.54: StORF-Finder Run Parameters.')
     parser.add_argument('-reporter', action="store", dest='reporter', default=False, required=False,
                         help=argparse.SUPPRESS)
     parser.add_argument('-f', action="store", dest='fasta', required=True,

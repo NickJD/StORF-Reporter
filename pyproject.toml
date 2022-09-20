@@ -1,8 +1,9 @@
 [build-system]
 requires = [
-    "setuptools>=42",
+    "setuptools>=61.0",
     "wheel",
-    "numpy",
+    "numpy>=1.22.0",
     "ORForise"
 ]
 build-backend = "setuptools.build_meta"
+

@@ -78,7 +78,7 @@ def gff_load(options,gff_in,dna_regions):
         line_data = line.split()
         if line.startswith('\n') or line.startswith('#'): # Not to crash on empty lines in GFF
             continue
-        elif line_data[1] == 'StORF-Reporter':
+        elif line_data[1] == 'StORF_Reporter':
             if 'Con-StORF' not in line:
                 current_UR = line_data[8].split('_UR_')[1].split('_StORF')[0]
             else:
@@ -170,7 +170,7 @@ def extractor(options):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.3: UR_StORFed Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF_Reporter v0.5.4: UR_StORFed Run Parameters.')
     parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
                         help='FASTA file for Unannotated Region seq extraction')
     parser.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',

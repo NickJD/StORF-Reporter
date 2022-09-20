@@ -89,7 +89,7 @@ already_seen_PEP = []
 Combined_clusters = collections.OrderedDict()
 Combined_reps = collections.OrderedDict()
 first = True
-## We load in the combined PEP and StORF-Reporter data separately
+## We load in the combined PEP and StORF_Reporter data separately
 for line in StORF_In:
     if line.startswith('>'):
         if first == False:
@@ -148,7 +148,7 @@ for line in StORF_In:
                 Combined_pangenome_clusters_StORF_SEQS[cluster_id].append(clustered)
             else:
                 if cluster_id not in not_StORF_Only_Cluster_IDs:
-                    not_StORF_Only_Cluster_IDs.append(cluster_id)# Tell us which StORF-Reporter clustered are unmatched to a PEP
+                    not_StORF_Only_Cluster_IDs.append(cluster_id)# Tell us which StORF_Reporter clustered are unmatched to a PEP
                 if clustered_genome not in Combined_pangenome_clusters_PEP[cluster_id]:
                     Combined_pangenome_clusters_PEP[cluster_id].append(clustered_genome)
                 Combined_pangenome_clusters_PEP_SEQS[cluster_id].append(clustered)
@@ -246,7 +246,7 @@ Without_StORF.close()
 
 
 
-############## Typing for the StORF-Reporter-Data
+############## Typing for the StORF_Reporter-Data
 Combined_pangenome_clusters_ONLY_StORF_Type = collections.defaultdict(list)
 Combined_pangenome_clusters_StORF_Type = collections.defaultdict(list)
 for cluster, genomes in Combined_pangenome_clusters_StORF.items():
@@ -305,7 +305,7 @@ def calc_single_pep_extended_StORF_only_core(cluster,pep_num,storf_num): # Count
         cores['extended_15'] +=1
         accessory_list.append(cluster)
 #####################################
-def calc_multi_pep_extended_StORF_only_core(pep_num,storf_num): # Count seperately those gene families extended with StORF-Reporter but combined >1 PEP
+def calc_multi_pep_extended_StORF_only_core(pep_num,storf_num): # Count seperately those gene families extended with StORF_Reporter but combined >1 PEP
     if pep_num < math.floor(core_99) and pep_num != 0 and pep_num+storf_num >= math.floor(core_99):
         cores['comb_extended_99'] +=1
     elif pep_num < math.floor(core_95) and pep_num != 0 and pep_num+storf_num >= math.floor(core_95) and pep_num+storf_num < math.floor(core_99):
@@ -359,7 +359,7 @@ for cluster, numbers in pangenome_clusters_Type.items(): # put limits here to ma
         for num in numbers[2]:
             multi_PEP_Combined_By_StORFs_num_of_PEP_Clusters +=1# ,numbers[3])
             multi_PEP_Combined_By_StORFs_1.update({cluster: numbers})
-############################# Calc PEP and StORF-Reporter - M
+############################# Calc PEP and StORF_Reporter - M
     if numbers[0] == 1 and numbers[3] >= 1: # If StORFs did not combine PEP reps
         calc_single_pep_extended_StORF_only_core(cluster,numbers[1],numbers[3])
     elif numbers[0] >1 and numbers[3] >= 1: # IF unique StORFs combined multiple PEP
@@ -487,7 +487,7 @@ print("DDD")
 #
 # print("DDD")
 # comb = list(zip(Ensem_Dec,StORF_Dec))
-# distributions = pd.DataFrame(comb, columns=['Ensembl','StORF-Reporter'])
+# distributions = pd.DataFrame(comb, columns=['Ensembl','StORF_Reporter'])
 # #ax.yaxis.set_major_formatter(mtick.PercentFormatter())
 # ax = sns.displot(distributions, legend=False)
 # plt.show()
@@ -496,7 +496,7 @@ print("DDD")
 
 
 #         pangenome_clusters_Type_list.append([counts[1],counts[3]])
-# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF-Reporter'])
+# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF_Reporter'])
 # ax = sns.displot(distributions, legend=False,hist=False)
 # ax.set(xlabel='Number of strains', ylabel='Clusters',title="Distribution of cluster sizes")
 # ax.set(yscale="log")
@@ -504,24 +504,24 @@ print("DDD")
 # for axs in ax.axes.flat:
 #     axs.xaxis.set_major_formatter(PercentFormatter(xmax=219))
 #
-# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF-Reporter'])
+# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF_Reporter'])
 # plt.tight_layout()
 # plt.savefig("Ensembl_StORF_E-coli_Distributions_stack.pdf")
 #
 #
 # for clust in pangenome_clusters_Type_list:
 #     clust[1] = clust[0]+clust[1]
-# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF-Reporter Extended'])
+# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF_Reporter Extended'])
 # ax = sns.displot(distributions['Ensembl'])
-# ax = sns.displot(distributions['StORF-Reporter Extended'])
+# ax = sns.displot(distributions['StORF_Reporter Extended'])
 # #ax = sns.displot(distributions, multiple="stack",legend=False)
 # #ax = sns.kdeplot(distributions['Ensembl'])
-# #ax = sns.kdeplot(distributions['StORF-Reporter Extended'])
+# #ax = sns.kdeplot(distributions['StORF_Reporter Extended'])
 # ax.set(xlabel='Number of strains', ylabel='Clusters',title="Distribution of clusters sizes extended by StORFs")
 # ax.set(yscale="log")
 # for axs in ax.axes.flat:
 #     axs.xaxis.set_major_formatter(PercentFormatter(xmax=219))
-# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF-Reporter Extended'])
+# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF_Reporter Extended'])
 # plt.tight_layout()
 # plt.savefig("Ensembl_StORF_Extended_E-coli_Distributions_stack.pdf")
 #
@@ -594,7 +594,7 @@ print("DDD")
 # for clust, counts in pangenome_clusters_Type.items():
 #     if (counts[0] >1 and counts[4] >1):# and counts[0] >1 and counts[1] >1:
 #      pangenome_clusters_Type_list.append(counts)
-# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF-Reporter'])
+# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF_Reporter'])
 # ax = sns.displot(distributions, multiple="st
 #ack",legend=False)
 # ax.set(xlabel='Number of strains', ylabel='Clusters',title="Distribution of cluster sizes")
@@ -603,7 +603,7 @@ print("DDD")
 # for axs in ax.axes.flat:
 #     axs.xaxis.set_major_formatter(PercentFormatter(xmax=219))
 #
-# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF-Reporter'])
+# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF_Reporter'])
 # plt.tight_layout()
 # plt.savefig("Ensembl_StORF_E-coli_Distributions_stack.pdf")
 #
@@ -611,13 +611,13 @@ print("DDD")
 #
 # for clust in pangenome_clusters_Type_list:
 #     clust[1] = clust[0]+clust[1]
-# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF-Reporter Extended'])
+# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF_Reporter Extended'])
 # ax = sns.displot(distributions, multiple="stack",legend=False)
 # ax.set(xlabel='Number of strains', ylabel='Clusters',title="Distribution of clusters sizes extended by StORFs")
 # ax.set(yscale="log")
 # for axs in ax.axes.flat:
 #     axs.xaxis.set_major_formatter(PercentFormatter(xmax=219))
-# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF-Reporter Extended'])
+# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF_Reporter Extended'])
 # plt.tight_layout()
 # plt.savefig("Ensembl_StORF_Extended_E-coli_Distributions_stack.pdf")
 

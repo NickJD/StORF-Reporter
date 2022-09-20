@@ -112,7 +112,7 @@ Combined_clusters = collections.OrderedDict()
 Combined_reps = collections.OrderedDict()
 first = True
 ###############
-## We load in the combined PEP and StORF-Reporter data separately
+## We load in the combined PEP and StORF_Reporter data separately
 for line in StORF_In:
     if line.startswith('>'):
         if first == False:
@@ -187,7 +187,7 @@ for line in StORF_In:
                 if clustered_strain not in Combined_pangenome_clusters_PEP_Strains[cluster_id]:
                     Combined_pangenome_clusters_PEP_Strains[cluster_id].append(clustered_strain)
                 if cluster_id not in not_StORF_Only_Cluster_IDs:
-                    not_StORF_Only_Cluster_IDs.append(cluster_id)  # Tell us which StORF-Reporter clustered are unmatched to a PEP
+                    not_StORF_Only_Cluster_IDs.append(cluster_id)  # Tell us which StORF_Reporter clustered are unmatched to a PEP
                 Combined_pangenome_clusters_PEP_SEQS[cluster_id].append(clustered)
 
 
@@ -284,7 +284,7 @@ With_StORF.close()
 Without_StORF.close()
 #With_Extending_StORF.close()
 
-############## Typing for the StORF-Reporter-Data
+############## Typing for the StORF_Reporter-Data
 
 
 multi_PEP_Combined_By_StORFs = collections.OrderedDict()
@@ -365,7 +365,7 @@ for cluster, numbers in pangenome_clusters_Type_Genera.items():
         # for num in numbers[2]:
         #     calc_pep_only(num)  # ,numbers[3])
 
-############################# Calc PEP and StORF-Reporter
+############################# Calc PEP and StORF_Reporter
     if numbers[0] == 1 and numbers[3] >1: # If StORFs did not combine PEP reps
         calc_pep_extended_StORF(cluster,numbers[1],numbers[3])
         extended.update({cluster:numbers})
@@ -382,7 +382,7 @@ for cluster, numbers in pangenome_clusters_Type_Genera.items():
 
 import os
 ###########################
-############################### Calc StORF-Reporter only
+############################### Calc StORF_Reporter only
 Combined_pangenome_clusters_ONLY_StORF_Type = collections.defaultdict(list)
 Combined_pangenome_clusters_StORF_Type = collections.defaultdict(list)
 
@@ -427,7 +427,7 @@ print("Biggest: " +biggest_genera)
 
 
 
-############################### Calc StORF-Reporter only
+############################### Calc StORF_Reporter only
 # for cluster, data in Combined_pangenome_clusters_StORF_Type.items():
 #     if data[1] >=1:
 #         calc_StORF_only_when_with_pep(data[1])  # ,numbers[3])
