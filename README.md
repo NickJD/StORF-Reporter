@@ -25,7 +25,7 @@ usage: UR-Extractor [-h] -f FASTA -gff GFF [-ident IDENT] [-min_len MINLEN]
                        [-gene_ident GENE_IDENT] [-o OUT_FILE]
                        [-gz {True,False}] [-v {True,False}]
 
-StORF-Reporter v0.5.54: UR-Extractor Run Parameters.
+StORF-Reporter v0.5.55: UR-Extractor Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -71,7 +71,7 @@ usage: StORF-Finder [-h] -f FASTA [-ua {True,False}] [-wc {True,False}]
                        [-o OUT_FILE] [-af AFFIX] [-lw {True,False}]
                        [-gz {True,False}] [-v {True,False}]
 
-StORF-Reporter v0.5.54: StORF-Finder Run Parameters.
+StORF-Reporter v0.5.55: StORF-Finder Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -149,7 +149,7 @@ usage: StORF-Reporter [-h] -anno [{PROKKA,Ensembl,Gene}] [-pd PROKKA_DIR]
                          [-lw {True,False}] [-aa {True,False}]
                          [-gz {True,False}] [-v {True,False}]
 
-StORF-Reporter v0.5.54: StORF-Reporter Run Parameters.
+StORF-Reporter v0.5.55: StORF-Reporter Run Parameters.
 
 optional arguments:
   -h, --help            show this help message and exit

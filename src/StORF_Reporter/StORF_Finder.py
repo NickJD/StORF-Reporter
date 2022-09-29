@@ -564,8 +564,8 @@ def StORF_Reported(Contigs,options):
     return Reporter_StORFs
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.54: StORF-Finder Run Parameters.')
+def main():
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.55: StORF-Finder Run Parameters.')
     parser.add_argument('-reporter', action="store", dest='reporter', default=False, required=False,
                         help=argparse.SUPPRESS)
     parser.add_argument('-f', action="store", dest='fasta', required=True,
@@ -680,3 +680,7 @@ if __name__ == "__main__":
     for sequence_id, sequence_info in sequences.items():
         if len(sequence_info[1]) >= options.min_orf:
             STORF_Finder(sequence_info, sequence_id, options)
+
+if __name__ == "__main__":
+    main()
+    print("Complete")

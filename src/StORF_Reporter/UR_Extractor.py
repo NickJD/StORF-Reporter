@@ -95,7 +95,7 @@ def gff_load(options,gff_in,dna_regions):
     #Will code in different versions for different types of GFF3 files (Prodigal,Ensembl etc)
     for line in gff_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
         line_data = line.split()
-        if line.startswith('\n'): # Not to crash on empty lines in GFF
+        if line.startswith('\n') or line.startswith('##'):  # Not to crash on empty lines in GFF
             continue
         elif options.gene_ident == 'ID=gene':
             if line_data[0] in dna_regions and options.gene_ident in line_data[8]:
@@ -176,8 +176,8 @@ def extractor(options):
         return dna_regions
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.54: UR-Extractor Run Parameters.')
+def main():
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.55: UR-Extractor Run Parameters.')
 
     parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
                         help='FASTA file for Unannotated Region seq extraction')
@@ -207,3 +207,7 @@ if __name__ == "__main__":
 
     # Contig name could have a ';' which will mess up later on in StORF_Reporter-R
     # UR output should state original non extended
+
+if __name__ == "__main__":
+    main()
+    print("Complete")
