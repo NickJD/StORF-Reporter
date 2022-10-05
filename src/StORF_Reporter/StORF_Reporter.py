@@ -169,6 +169,8 @@ def run_UR_Extractor_PROKKA_GFFs(Reporter_options,gff): # When given a directory
     return URs,Reporter_options
 
 def find_prev_StORFs(options,Contig_URs,track_current_start,track_prev_stop, track_contig):
+    global Reporter_options
+    global StORF_options
     StORFs_to_del = []
     StORFs = []
     is_break = False
@@ -357,7 +359,7 @@ def StORF_Filler(StORF_options,Reported_StORFs):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.55: StORF-Reporter Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.56: StORF-Reporter Run Parameters.')
 
     parser.add_argument('-anno', action='store', dest='annotation_type', default='PROKKA', const='PROKKA', required=True,
                         choices=['PROKKA', 'Ensembl', 'Gene'], nargs='?',
@@ -414,6 +416,8 @@ def main():
     parser.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
                         help='Default - False: Print out runtime status')
 
+    global Reporter_options
+    global StORF_options
     Reporter_options = parser.parse_args()
 
     ######### Setup for PROKKA

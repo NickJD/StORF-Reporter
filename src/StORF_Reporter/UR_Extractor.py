@@ -177,7 +177,7 @@ def extractor(options):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.55: UR-Extractor Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.56: UR-Extractor Run Parameters.')
 
     parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
                         help='FASTA file for Unannotated Region seq extraction')

@@ -565,7 +565,7 @@ def StORF_Reported(Contigs,options):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.55: StORF-Finder Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.56: StORF-Finder Run Parameters.')
     parser.add_argument('-reporter', action="store", dest='reporter', default=False, required=False,
                         help=argparse.SUPPRESS)
     parser.add_argument('-f', action="store", dest='fasta', required=True,
