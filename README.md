@@ -204,3 +204,5 @@ optional arguments:
 ```
 
 
+## Test Datasets: 
+### The direcotory 'Genomes' contains GFF and FASTA datasets to test a users installation and use of StORF-Reporter. Example output files are also available for comparison.
