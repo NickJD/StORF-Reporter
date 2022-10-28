@@ -248,7 +248,7 @@ def write_fasta(options, fasta_entries, fasta_out,aa_fasta_out):  # Some Lines c
         storf_num += 1
 
 
-def find_storfs(working_frame,sequence_id,stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,strand,StORF_idx,Con_StORF_idx,options):
+def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con_StORFs,frames_covered,counter,lengths,strand,StORF_idx,short_StORF_idx,Con_StORF_idx,options):
     first = True
     con_StORF_tracker = ''
     next_stops = []
@@ -263,7 +263,7 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,con_StORFs,frame
         frames_covered.update({frame: 1})
         for next_stop in stops[counter + 1:]:
             length = abs(next_stop - stop)
-            if length % 3 == 0 and next_stop not in seen_stops:
+            if length % 3 == 0 and next_stop not in seen_stops: # In frame and not already seen?
                     if length >= options.min_orf and length <= options.max_orf:
                         if not first and stop == prev_next_stop:
                             if prev_next_stop != con_StORF_tracker:
@@ -417,7 +417,14 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,con_StORFs,frame
                             prevlength = prev_next_stop - prev_stop
                             first = False
                         break
-                    break
+
+                    if options.short_storfs != False and length >= 30: # Report short (<= 120) StORFs with less than 50% overlap with other larger StORFs
+                        seq = sequence[stop:next_stop + 3]
+                        length = next_stop - stop
+                        short_storfs.update({",".join([str(stop), str(next_stop + 3)]): [seq, str(frame), strand, length,'Short-StORF', short_StORF_idx]})
+                        short_StORF_idx +1
+                    else:
+                        break
         counter +=1
     if options.partial_storf:  # downstream partial StORF_Reporter - Last Stop to end of sequence
         try:
@@ -428,7 +435,7 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,con_StORFs,frame
                 StORF_idx +=1
         except UnboundLocalError:
             pass
-    return storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx
+    return storfs, short_storfs, con_StORFs, frames_covered, counter, lengths, StORF_idx, Con_StORF_idx
 
 def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, gff_out): #Main Function
     sequence_region_length = sequence_info[0]
@@ -441,12 +448,14 @@ def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, g
         stops += [match.start() for match in re.finditer(re.escape(stop_codon), sequence)]
     stops.sort()
     storfs = OrderedDict()
+    short_storfs = OrderedDict()
     con_StORFs = OrderedDict()
     counter = 0
     lengths = []
     StORF_idx = 0
+    short_StORF_idx = 0
     Con_StORF_idx = 0
-    storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("positive",sequence_id,stops,sequence,storfs,con_StORFs,frames_covered,counter,lengths,'+',StORF_idx,Con_StORF_idx,options)
+    storfs, short_storfs, con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("positive",sequence_id,stops,sequence,storfs,short_storfs,con_StORFs,frames_covered,counter,lengths,'+',StORF_idx,short_StORF_idx,Con_StORF_idx,options)
     ###### Reversed Comppliment
     sequence_rev = revCompIterative(sequence)
     stops = []
@@ -454,7 +463,7 @@ def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, g
         stops += [match.start() for match in re.finditer(re.escape(stop_codon), sequence_rev)]
     stops.sort()
     counter = 0
-    storfs,con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("negative",sequence_id,stops,sequence_rev,storfs,con_StORFs,frames_covered,counter,lengths,'-',StORF_idx,Con_StORF_idx,options)
+    storfs, short_storfs, con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("negative",sequence_id,stops,sequence_rev,storfs,short_storfs,con_StORFs,frames_covered,counter,lengths,'-',StORF_idx,short_StORF_idx,Con_StORF_idx,options)
     #Potential run-through StORFs
     if options.whole_contig:
         for frame,present in frames_covered.items():
@@ -469,30 +478,60 @@ def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, g
                     wc_seq = cut_seq(wc_seq,'+')
                     storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '-', len(sequence_rev),'Run-Through-StORF',StORF_idx]})
                     StORF_idx +=1
-
-    #Check if there are StORFs to report - Universally use all_StORFs as final StORF container - con-StORFs when that only
+    ######## Only StORFs
+    #Check if there are StORFs to report
     if options.con_storfs == False and options.con_only == False:
-        if bool(storfs):
+        if options.short_storfs == False:
+            ### Only StORFs
             if options.filtering == 'hard':
-                all_StORFs = tile_filtering(storfs,options) # Filtering
-                all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
-            else:
-                all_StORFs = OrderedDict(sorted(storfs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
+                storfs = tile_filtering(storfs, options)  # Filtering
+            storfs = OrderedDict(sorted(storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))  # Reorder by start position
             if options.reporter == True:
-                return all_StORFs
+                return storfs
             ###Data Prepare
+            gff_entries, fasta_entries = prepare_out(options, storfs, sequence_id)
+            write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
+            if not options.aa_only:
+                write_gff(gff_entries, gff_out)
+        ### Only Short-StORFs
+        elif options.short_storfs != False and options.short_storfs_only == True: # Short-StORFs ONLY
+            if bool(short_storfs):
+                short_storfs = OrderedDict(sorted(short_storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))  # Reorder by start position
+                if options.filtering == 'hard':
+                    short_storfs = tile_filtering(short_storfs, options)  # Filtering
+                ###Data Prepare
+                gff_entries, fasta_entries = prepare_out(options, short_storfs, sequence_id)
+                write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
+                if not options.aa_only:
+                    write_gff(gff_entries, gff_out)
+
+        ### StORFs and Short-StORFs
+        elif options.short_storfs != False and options.short_storfs_only == False:# Not finished the conditional if's here.. - Here if there are short-StORFs then we just filter as normal
+            if options.short_storfs == 'Nolap':
+                all_StORFs = {**storfs, **short_storfs}
+                if options.filtering == 'hard':
+                    all_StORFs = tile_filtering(all_StORFs,options) # Filtering
+                all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
+                if options.reporter == True:
+                    return all_StORFs
+            elif options.short_storfs == 'Olap':
+                if options.filtering == 'hard':
+                    storfs = tile_filtering(storfs,options) # Filtering
+                    short_storfs = tile_filtering(short_storfs,options) # Filtering
+                all_StORFs = {**storfs, **short_storfs}
+                all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
+                ###Data Prepare
             gff_entries, fasta_entries = prepare_out(options, all_StORFs, sequence_id)
             write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
             if not options.aa_only:
                 write_gff(gff_entries, gff_out)
+    ####### StORFs and Con-StORFs
     elif options.con_storfs == True and options.con_only == False:
         all_StORFs = {**storfs, **con_StORFs}
         if bool(storfs):
             if options.filtering == 'hard':
                 all_StORFs = tile_filtering(all_StORFs, options) # Filtering
-                all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
-            else:
-                all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
+            all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
             if options.reporter == True:
                 return all_StORFs
             ###Data Prepare
@@ -500,6 +539,7 @@ def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, g
             write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
             if not options.aa_only:
                 write_gff(gff_entries, gff_out)
+    ###### Con-StORFs only
     elif options.con_only == True:
         if options.filtering == 'hard':
             con_StORFs = tile_filtering(con_StORFs, options)
@@ -513,6 +553,7 @@ def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, g
         write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
         if not options.aa_only:
             write_gff(gff_entries, gff_out)
+    ###### Below won't work..?
     elif options.verbose == True:
         print("No StOFS Found")
 
@@ -590,10 +631,13 @@ def main():
                         help='Default - False: Output Consecutive StORFs')
     parser.add_argument('-con_only', action="store", dest='con_only', default=False, type=eval, choices=[True, False],
                         help='Default - False: Only output Consecutive StORFs')
-    #parser.add_argument('-short_storf', action="store", dest='short_storf', default=False, type=eval, choices=[True, False],
-    #                    help='Default - False: Run StORF-Finder in "Short-StORF" mode. Will only return StORFs <=120 nt '
-    #                         'that do not overlap longer StORFs')
-    parser.add_argument('-stop_ident', action="store", dest='stop_ident', default=True, type=eval, choices=[True, False],
+    parser.add_argument('-short_storfs', action="store", dest='short_storfs', default=False, type=str, choices=['False', 'Nolap', 'Olap'],
+                        help='Default - False: Run StORF-Finder in "Short-StORF" mode. Will only return StORFs between 30 and 120 nt '
+                             'that do not overlap longer StORFs - Only works with StORFs for now. "Nolap" will filter Short-StORFs which are'
+                             'overlapped by StORFs and Olap will report Short-StORFs which do overlap StORFs. Overlap is defined by "-olap".')
+    parser.add_argument('-short_storfs_only', action="store", dest='short_storfs_only', default=False, type=eval, choices=[True, False],
+                        help='Default - True. Only report Short-StORFs?')
+    parser.add_argument('-stop_ident', action="store", dest='stop_ident', default=False, choices=[True, False],
                         help='Default - True: Identify Stop Codon positions with \'*\'')
     parser.add_argument('-type', action='store', dest='feature_type', default='StORF', const='StORF', nargs='?',
                         choices=['StORF', 'CDS', 'ORF'],
