@@ -3,6 +3,7 @@ import collections
 from datetime import date
 import gzip
 import sys
+from Constants import *
 
 #Output FASTA and GFF separately using the same out_filename but with respective extensions - gz output optional
 def write_fasta(dna_regions, options):
@@ -13,8 +14,10 @@ def write_fasta(dna_regions, options):
     elif options.gz == True:
         out = gzip.open(options.out_file + '_UR.fasta.gz', 'wt', newline='\n', encoding='utf-8')
 
+    out.write("##\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
+    out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n')
     for dna_region, dna_region_ur in dna_regions.items():
-        out.write('##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
+        out.write('\n##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
         ur_ident = dna_region + options.ident # Add user ident onto name of dna regions
         if dna_region_ur[3]:
             for ex_ur, data in dna_region_ur[3].items():
@@ -31,6 +34,7 @@ def write_gff(dna_regions,options):
     elif options.gz == True:
         out = gzip.open(options.out_file + '_UR.gff.gz', 'wt', newline='\n', encoding='utf-8')
     out.write("##gff-version\t3\n#\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
+    out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
     for seq_reg in dna_regions:
         out.write('##sequence-region\t' + seq_reg + ' 1 ' + str(dna_regions[seq_reg][1]) + '\n')
     out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n\n')
@@ -177,30 +181,43 @@ def extractor(options):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.57: UR-Extractor Run Parameters.')
+    print("Thank you for using StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
-    parser.add_argument('-f', '--fasta_seq', action='store', dest='fasta', required=True,
+    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
+    parser._action_groups.pop()
+
+    required = parser.add_argument_group('Required Arguments')
+    required.add_argument('-f', action='store', dest='fasta', required=True,
                         help='FASTA file for Unannotated Region seq extraction')
-    parser.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',
+    required.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',
                         required=True)
-    parser.add_argument('-ident', action='store', dest='ident', default='_UR',
-                        help='Identifier given for Unannotated Region output sequences: Default "Input"_UR')
-    parser.add_argument('-min_len', action='store', dest='minlen', default='30', type=int,
+
+    optional = parser.add_argument_group('Optional Arguments')
+    optional.add_argument('-ident', action='store', dest='ident', default='_UR',
+                        help='Identifier given for Unannotated Region output sequences - Do not modify if output is '
+                             'to be used by StORF-Finder: Default "Sequence-ID"_UR')
+    optional.add_argument('-min_len', action='store', dest='minlen', default='30', type=int,
                         help='Minimum UR Length: Default 30')
-    parser.add_argument('-max_len', action='store', dest='maxlen', default='100000', type=int,
+    optional.add_argument('-max_len', action='store', dest='maxlen', default='100000', type=int,
                         help='Maximum UR Length: Default 100,000')
-    parser.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
-                        help='UR Extension Length: Default 50')
-    parser.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene',
-                        help='Identifier used for extraction of "unannotated" regions "CDS,rRNA,tRNA": Default for Ensembl_Bacteria = "ID=gene"')
-    parser.add_argument('-o', '--output_file', action='store', dest='out_file', required=False,
+    optional.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
+                        help='UR Extension Length on 5\' and 3\': Default 50')
+    optional.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene',
+                        help='Identifier used for extraction of Unannotated Regions "CDS,rRNA,tRNA": Default for Ensembl_Bacteria = '
+                             '"ID=gene" or "-gene_ident CDS" for "most" genome annotations')
+
+    output = parser.add_argument_group('Output')
+    output.add_argument('-o', action='store', dest='out_file', required=False,
                         help='Output file - Without filetype - default appends "_UR" to end of input gff filename (replaces \'.gff\')')
-    parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
+    output.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
-    parser.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
-                        help='Default - False: Print out runtime status')
     parser.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
                         help=argparse.SUPPRESS)
+
+    misc = parser.add_argument_group('Misc')
+    misc.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
+                        help='Default - False: Print out runtime status')
+
 
     options = parser.parse_args()
     extractor(options)

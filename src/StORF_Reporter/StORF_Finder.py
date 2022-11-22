@@ -5,6 +5,7 @@ from collections import defaultdict, OrderedDict
 from datetime import date
 import textwrap
 import gzip
+from Constants import *
 
 try:
     from ORForise.utils import sortORFs  # Calling from ORForise via pip
@@ -41,13 +42,13 @@ def translate_frame(sequence):
 def reverseCorrectLoci(sequence_id,first,second,third): # here for the negative loci correction
     ur_length = int(sequence_id.split('_')[-1]) - int(sequence_id.split('_')[-2])
     if second == None:
-        corrected_start = max(ur_length - int(third),1)
-        corrected_stop = max(ur_length - int(first),1)
+        corrected_start = max(ur_length - int(third-3),1)
+        corrected_stop = max(ur_length - int(first-3),1)
         return corrected_start, corrected_stop
     else:
-        corrected_start = max(ur_length - int(third),1)
-        corrected_mid = max(ur_length - int(second),1)
-        corrected_stop = max(ur_length - int(first),1)
+        corrected_start = max(ur_length - int(third-3),1)
+        corrected_mid = max(ur_length - int(second-3),1)
+        corrected_stop = max(ur_length - int(first-3),1)
         return corrected_start, corrected_mid, corrected_stop
 
 
@@ -87,8 +88,21 @@ def cut_seq(wc_seq,end):
             wc_seq = wc_seq[1:]  # keep removing char
     return wc_seq
 
-def tile_filtering(storfs,options): #Hard filtering
-    storfs = OrderedDict(sorted(storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
+def start_filtering(storfs):
+    keep_storfs = {}
+    for pos, data in storfs.items():
+        starts = []
+        for start_codon in ['ATG', 'GTG', 'TTG']:
+            starts += [match.start() for match in re.finditer(re.escape(start_codon), data[0])]
+        #### This must be slow?
+        for start in starts:
+            if start % 3 == 0: # maybe add a clause to report only those storfs with starts in first n of storfs
+                keep_storfs.update({pos:data})
+                break
+    return keep_storfs
+
+def tile_filtering(storfs,options): #both-strand filtering
+    #storfs = OrderedDict(sorted(storfs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Is this needed if I am reordering below?
     ################ - Order largest first filtering
     storfs = sorted(storfs.items(), key=lambda storfs:storfs[1][3],reverse=True)
     ordered_by_length = OrderedDict()
@@ -262,92 +276,94 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
             frame = (stop % 3) + 4
         frames_covered.update({frame: 1})
         for next_stop in stops[counter + 1:]:
-            length = abs(next_stop - stop)
+            length = abs((next_stop + 3) - stop)
             if length % 3 == 0 and next_stop not in seen_stops: # In frame and not already seen?
                     if length >= options.min_orf and length <= options.max_orf:
                         if not first and stop == prev_next_stop:
                             if prev_next_stop != con_StORF_tracker:
                                 con_StORF_tracker = next_stop
-                                seq = sequence[prev_stop:next_stop + 3]
+                                seq = sequence[prev_stop:next_stop]
                                 length = next_stop - prev_stop
                                 ##### Needed to correct for negative frame loci
                                 if working_frame == 'negative':
-                                    rev_corrected_start, rev_corrected_mid, rev_corrected_stop = reverseCorrectLoci(sequence_id,prev_stop,stop,next_stop)
-                                    con_StORF_Pos = ",".join([str(rev_corrected_start), str(rev_corrected_mid + 3), str(rev_corrected_stop + 3)])
+                                    rev_corrected_start, rev_corrected_mid, rev_corrected_stop = reverseCorrectLoci(sequence_id,prev_stop,stop,next_stop  + 3)
+                                    con_StORF_Pos = ",".join([str(rev_corrected_start), str(rev_corrected_mid), str(rev_corrected_stop)])
                                 else:
-                                    con_StORF_Pos = ",".join([str(prev_stop), str(stop+3), str(next_stop+3)])
+                                    con_StORF_Pos = ",".join([str(prev_stop), str(stop), str(next_stop  + 3)])
                                 #####
-                                con_StORFs.update({con_StORF_Pos: [seq, str(frame), strand, length,'Con-StORF',Con_StORF_idx]})
+                                con_length = abs((next_stop + 3) - prev_stop)
+                                con_StORFs.update({con_StORF_Pos: [seq, str(frame), strand, con_length,'Con-StORF',Con_StORF_idx]})
                                 Con_StORF_idx +=1
                             elif stop == con_StORF_tracker:
                                 con_StORF_tracker = next_stop
                                 prev_con_StORF = next(reversed(con_StORFs.keys())) #Get last key
                                 seq_start = int(prev_con_StORF.split(',')[0])
-                                seq = sequence[seq_start:next_stop + 3]
-                                length = next_stop - seq_start
+                                seq = sequence[seq_start:next_stop  + 3]
+                                length = next_stop - seq_start # Check
                                 prev_con_StORF = prev_con_StORF_CHECKER(prev_con_StORF,sequence,options)
                                 ##### Needed to correct for negative frame loci
                                 if working_frame == 'negative':
-                                    rev_corrected_start, rev_corrected_mid, rev_corrected_stop = reverseCorrectLoci(sequence_id,prev_stop,stop,next_stop)
-                                    con_StORF_Pos = ",".join([str(rev_corrected_start), str(rev_corrected_mid + 3), str(rev_corrected_stop + 3)])
+                                    rev_corrected_start, rev_corrected_mid, rev_corrected_stop = reverseCorrectLoci(sequence_id,prev_stop,stop,next_stop  + 3)
+                                    con_StORF_Pos = ",".join([str(rev_corrected_start), str(rev_corrected_mid), str(rev_corrected_stop)])
                                 else:
-                                    con_StORF_Pos = ",".join([str(prev_stop), str(stop + 3), str(next_stop + 3)])
+                                    con_StORF_Pos = ",".join([str(prev_stop), str(stop), str(next_stop  + 3)])
                                 #####
-                                if options.filtering == 'hard':
+                                if options.olap_filtering == 'both-strand':
                                     con_StORFs.popitem()
-                                con_StORFs.update({con_StORF_Pos: [seq, str(frame), strand, length,'Con-StORF',Con_StORF_idx]})
+                                con_length = abs((next_stop + 3) - prev_stop)
+                                con_StORFs.update({con_StORF_Pos: [seq, str(frame), strand, con_length,'Con-StORF',Con_StORF_idx]})
                                 Con_StORF_idx +=1
 
-                        if options.filtering == 'none': # This could be made more efficient
-                            seq = sequence[stop:next_stop + 3]
+                        if options.olap_filtering == 'none': # This could be made more efficient
+                            seq = sequence[stop:next_stop  + 3]
                             ##### Needed to correct for negative frame loci
                             if working_frame == 'negative':
-                                rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop)
-                                storfs.update({",".join([str(rev_corrected_start), str(rev_corrected_stop + 3)]): [seq, str(frame), strand, length, 'StORF', StORF_idx]})
+                                rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop  + 3)
+                                storfs.update({",".join([str(rev_corrected_start), str(rev_corrected_stop)]): [seq, str(frame), strand, length, 'StORF', StORF_idx]})
                             else:
-                                storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'StORF',StORF_idx]})
+                                storfs.update({",".join([str(stop), str(next_stop  + 3)]): [seq, str(frame), strand, length,'StORF',StORF_idx]})
                             #####
                             StORF_idx +=1
                             lengths.append(length)
                         elif not first:
-                            if stop > prev_stop and next_stop < prev_next_stop:
+                            if stop > prev_stop and next_stop < prev_next_stop: # Check
                                 break
-                            storf = set(range(stop, next_stop + 4))
+                            storf = set(range(stop, next_stop + 4)) # + 4 to account for set use
                             storf_overlap = len(prev_storf.intersection(storf))
                             if storf_overlap <= options.overlap_nt:
-                                seq = sequence[stop:next_stop + 3]
+                                seq = sequence[stop:next_stop  + 3]
                                 ##### Needed to correct for negative frame loci
                                 if working_frame == 'negative':
-                                    rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop)
-                                    storfs.update({",".join([str(rev_corrected_start), str(rev_corrected_stop + 3)]): [
+                                    rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop  + 3)
+                                    storfs.update({",".join([str(rev_corrected_start), str(rev_corrected_stop)]): [
                                         seq, str(frame), strand, length, 'StORF', StORF_idx]})
                                 else:
-                                    storfs.update({",".join([str(stop), str(next_stop + 3)]): [seq, str(frame), strand,
+                                    storfs.update({",".join([str(stop), str(next_stop  + 3)]): [seq, str(frame), strand,
                                                                                                length, 'StORF',
                                                                                                StORF_idx]})
                                 #####
                                 StORF_idx +=1
-                                seen_stops.append(next_stop)
+                                seen_stops.append(next_stop  + 3)
                                 prev_storf = storf
                                 prev_stop = stop
-                                prev_next_stop = next_stop
+                                prev_next_stop = next_stop # Check
                                 next_stops.append(next_stop)
                                 start_stops.append(stop)
                                 prevlength = prev_next_stop - prev_stop
-                            elif storf_overlap >= options.overlap_nt and options.filtering == 'hard':  # and length > prevlength:
+                            elif storf_overlap >= options.overlap_nt and options.olap_filtering == 'both-strand':  # and length > prevlength:
                                 if length > prevlength:
                                     storfs.popitem()
-                                    seq = sequence[stop:next_stop + 3]
+                                    seq = sequence[stop:next_stop  + 3]
                                     ##### Needed to correct for negative frame loci
                                     if working_frame == 'negative':
-                                        rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop)
+                                        rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop  + 3)
                                         storfs.update({",".join(
-                                            [str(rev_corrected_start), str(rev_corrected_stop + 3)]): [seq, str(frame),
+                                            [str(rev_corrected_start), str(rev_corrected_stop)]): [seq, str(frame),
                                                                                                        strand, length,
                                                                                                        'StORF',
                                                                                                        StORF_idx]})
                                     else:
-                                        storfs.update({",".join([str(stop), str(next_stop + 3)]): [seq, str(frame),
+                                        storfs.update({",".join([str(stop), str(next_stop  + 3)]): [seq, str(frame),
                                                                                                    strand, length,
                                                                                                    'StORF', StORF_idx]})
                                     #####
@@ -359,15 +375,15 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                                     next_stops.append(next_stop)
                                     start_stops.append(stop)
                                     prevlength = prev_next_stop - prev_stop
-                            else: # If filtering is none or soft, we do not remove overlapping StORFs on the same strand
-                                seq = sequence[stop:next_stop + 3]
+                            else: # If filtering is none or single-strand, we do not remove overlapping StORFs on the same strand
+                                seq = sequence[stop:next_stop  + 3]
                                 ##### Needed to correct for negative frame loci
                                 if working_frame == 'negative':
-                                    rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop)
-                                    storfs.update({",".join([str(rev_corrected_start), str(rev_corrected_stop + 3)]): [
+                                    rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop  + 3)
+                                    storfs.update({",".join([str(rev_corrected_start), str(rev_corrected_stop)]): [
                                         seq, str(frame), strand, length, 'StORF', StORF_idx]})
                                 else:
-                                    storfs.update({",".join([str(stop), str(next_stop + 3)]): [seq, str(frame), strand,
+                                    storfs.update({",".join([str(stop), str(next_stop  + 3)]): [seq, str(frame), strand,
                                                                                                length, 'StORF',
                                                                                                StORF_idx]})
                                 #####
@@ -383,33 +399,33 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                             if options.partial_storf: # upstream partial StORF_Reporter
                                 if stop > options.min_orf and frames_covered[frame] != 1:
                                     seq = sequence[0:stop + 3] #Start of seq to first stop identified
-                                    ps_seq = cut_seq(seq, '-')
+                                    #ps_seq = cut_seq(seq, '-')
                                     ##### Needed to correct for negative frame loci
                                     if working_frame == 'negative':
-                                        rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop)
+                                        rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop  + 3)
                                         storfs.update({",".join(
-                                            [str(rev_corrected_start), str(rev_corrected_stop + 3)]): [seq, str(frame),
+                                            [str(rev_corrected_start), str(rev_corrected_stop)]): [seq, str(frame),
                                                                                                        strand, length,
                                                                                                        'StORF',
                                                                                                        StORF_idx]})
                                     else:
-                                        storfs.update({",".join([str(stop), str(next_stop + 3)]): [seq, str(frame),
+                                        storfs.update({",".join([str(stop), str(next_stop  + 3)]): [seq, str(frame),
                                                                                                    strand, length,
                                                                                                    'StORF', StORF_idx]})
                                     #####
                                     StORF_idx +=1
-                            seq = sequence[stop:next_stop + 3]
+                            seq = sequence[stop:next_stop  + 3]
                             length = next_stop - stop
                             ##### Needed to correct for negative frame loci
                             if working_frame == 'negative':
-                                rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop)
-                                storfs.update({",".join([str(rev_corrected_start), str(rev_corrected_stop + 3)]): [seq, str(frame), strand, length, 'StORF', StORF_idx]})
+                                rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(sequence_id,stop,None,next_stop  + 3)
+                                storfs.update({",".join([str(rev_corrected_start), str(rev_corrected_stop)]): [seq, str(frame), strand, length, 'StORF', StORF_idx]})
                             else:
-                                storfs.update({",".join([str(stop), str(next_stop+3)]): [seq, str(frame), strand, length,'StORF',StORF_idx]})
+                                storfs.update({",".join([str(stop), str(next_stop  + 3)]): [seq, str(frame), strand, length,'StORF',StORF_idx]})
                             #####
                             StORF_idx +=1
                             seen_stops.append(next_stop)
-                            prev_storf = set(range(stop, next_stop + 4))
+                            prev_storf = set(range(stop, next_stop + 4)) # + 4 to account for set use
                             prev_stop = stop
                             prev_next_stop = next_stop
                             next_stops.append(next_stop)
@@ -419,9 +435,9 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                         break
 
                     if options.short_storfs != False and length >= 30: # Report short (<= 120) StORFs with less than 50% overlap with other larger StORFs
-                        seq = sequence[stop:next_stop + 3]
-                        length = next_stop - stop
-                        short_storfs.update({",".join([str(stop), str(next_stop + 3)]): [seq, str(frame), strand, length,'Short-StORF', short_StORF_idx]})
+                        seq = sequence[stop:next_stop  + 3]
+                        length = next_stop - stop # Check
+                        short_storfs.update({",".join([str(stop), str(next_stop  + 3)]): [seq, str(frame), strand, length,'Short-StORF', short_StORF_idx]})
                         short_StORF_idx +1
                     else:
                         break
@@ -478,12 +494,15 @@ def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, g
                     wc_seq = cut_seq(wc_seq,'+')
                     storfs.update({",".join([str(0), str(len(sequence))]): [wc_seq, str(frame), '-', len(sequence_rev),'Run-Through-StORF',StORF_idx]})
                     StORF_idx +=1
+
+####################################### Writing output
     ######## Only StORFs
     #Check if there are StORFs to report
-    if options.con_storfs == False and options.con_only == False:
-        if options.short_storfs == False:
-            ### Only StORFs
-            if options.filtering == 'hard':
+    if options.con_storfs == False and options.con_only == False and options.short_storfs == False:
+        if bool(storfs):
+            if options.start_filtering == True:
+                storfs = start_filtering(storfs)
+            if options.olap_filtering == 'both-strand':
                 storfs = tile_filtering(storfs, options)  # Filtering
             storfs = OrderedDict(sorted(storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))  # Reorder by start position
             if options.reporter == True:
@@ -493,43 +512,50 @@ def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, g
             write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
             if not options.aa_only:
                 write_gff(gff_entries, gff_out)
-        ### Only Short-StORFs
-        elif options.short_storfs != False and options.short_storfs_only == True: # Short-StORFs ONLY
-            if bool(short_storfs):
-                short_storfs = OrderedDict(sorted(short_storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))  # Reorder by start position
-                if options.filtering == 'hard':
-                    short_storfs = tile_filtering(short_storfs, options)  # Filtering
-                ###Data Prepare
-                gff_entries, fasta_entries = prepare_out(options, short_storfs, sequence_id)
-                write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
-                if not options.aa_only:
-                    write_gff(gff_entries, gff_out)
 
-        ### StORFs and Short-StORFs
-        elif options.short_storfs != False and options.short_storfs_only == False:# Not finished the conditional if's here.. - Here if there are short-StORFs then we just filter as normal
-            if options.short_storfs == 'Nolap':
-                all_StORFs = {**storfs, **short_storfs}
-                if options.filtering == 'hard':
-                    all_StORFs = tile_filtering(all_StORFs,options) # Filtering
-                all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
-                if options.reporter == True:
-                    return all_StORFs
-            elif options.short_storfs == 'Olap':
-                if options.filtering == 'hard':
-                    storfs = tile_filtering(storfs,options) # Filtering
-                    short_storfs = tile_filtering(short_storfs,options) # Filtering
-                all_StORFs = {**storfs, **short_storfs}
-                all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
-                ###Data Prepare
-            gff_entries, fasta_entries = prepare_out(options, all_StORFs, sequence_id)
+    ###### Only Short-StORFs
+    elif options.short_storfs != False and options.short_storfs_only == True: # Short-StORFs ONLY
+        if bool(short_storfs):
+            if options.start_filtering == True:
+                short_storfs = start_filtering(short_storfs)
+            if options.olap_filtering == 'both-strand':
+                short_storfs = tile_filtering(short_storfs, options)  # Filtering
+            short_storfs = OrderedDict(sorted(short_storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))  # Reorder by start position
+            ###Data Prepare
+            gff_entries, fasta_entries = prepare_out(options, short_storfs, sequence_id)
             write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
             if not options.aa_only:
                 write_gff(gff_entries, gff_out)
+
+    ### StORFs and Short-StORFs
+    elif options.short_storfs != False and options.short_storfs_only == False:
+        ### Don't allow short-storfs to overlap with storfs
+        if options.short_storfs == 'Nolap':
+            all_StORFs = {**storfs, **short_storfs}
+            if options.olap_filtering == 'both-strand':
+                all_StORFs = tile_filtering(all_StORFs,options) # Filtering
+            all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
+            if options.reporter == True:
+                return all_StORFs
+        ### short-storfs can onverlap with storfs
+        elif options.short_storfs == 'Olap':
+            if options.olap_filtering == 'both-strand': # Filter individually
+                storfs = tile_filtering(storfs,options) # Filtering
+                short_storfs = tile_filtering(short_storfs,options) # Filtering
+            all_StORFs = {**storfs, **short_storfs}
+            all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
+            ###Data Prepare
+        gff_entries, fasta_entries = prepare_out(options, all_StORFs, sequence_id)
+        write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
+        if not options.aa_only:
+            write_gff(gff_entries, gff_out)
+
+
     ####### StORFs and Con-StORFs
     elif options.con_storfs == True and options.con_only == False:
         all_StORFs = {**storfs, **con_StORFs}
         if bool(storfs):
-            if options.filtering == 'hard':
+            if options.olap_filtering == 'both-strand':
                 all_StORFs = tile_filtering(all_StORFs, options) # Filtering
             all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
             if options.reporter == True:
@@ -539,9 +565,10 @@ def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, g
             write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
             if not options.aa_only:
                 write_gff(gff_entries, gff_out)
+
     ###### Con-StORFs only
     elif options.con_only == True:
-        if options.filtering == 'hard':
+        if options.olap_filtering == 'both-strand':
             con_StORFs = tile_filtering(con_StORFs, options)
             con_StORFs = OrderedDict(sorted(con_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
         else:
@@ -565,7 +592,7 @@ def fasta_load(fasta_in, sequence_regions, sequences):
         if '##sequence-region' in line:
             sequence_region_length = int(line.split(' ')[-1]) # bug and wont work on non-UR runs
             sequence_regions.append(line)
-        elif line.startswith((';','\n')):
+        elif line.startswith((';','\n','#')):
             continue
         elif line.startswith('>') and not first:
             sequences.update({sequence_name: [sequence_region_length,seq.strip()]})
@@ -580,7 +607,7 @@ def fasta_load(fasta_in, sequence_regions, sequences):
     sequences.update({sequence_name: [sequence_region_length,seq.strip()]})
     return sequence_regions, sequences
 
-
+## Function to control how StORF-Finder handles StORF-Reporter output
 def StORF_Reported(options, Contigs):
     Reporter_StORFs = collections.OrderedDict()
     for Contig_ID, Contig_URs in Contigs.items():
@@ -608,70 +635,86 @@ def StORF_Reported(options, Contigs):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.57: StORF-Finder Run Parameters.')
-    parser.add_argument('-reporter', action="store", dest='reporter', default=False, required=False,
+    print("Thank you for using StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
+
+    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Finder Run Parameters.')
+    parser._action_groups.pop()
+
+    required = parser.add_argument_group('Required Arguments')
+    required.add_argument('-f', action="store", dest='fasta', required=True,
+                        help='Input FASTA File - (UR_Extractor output)')
+
+    optional = parser.add_argument_group('Optional Arguments')
+    optional.add_argument('-reporter', action="store", dest='reporter', default=False, required=False,
                         help=argparse.SUPPRESS)
-    parser.add_argument('-f', action="store", dest='fasta', required=True,
-                        help='Input FASTA File')
-    parser.add_argument('-ua', dest='unannotated', action='store', default=True, type=eval, choices=[True, False],
+    optional.add_argument('-ua', dest='unannotated', action='store', default=True, type=eval, choices=[True, False],
                         help='Default - Treat input as Unannotated: Use "-ua False" for standard fasta')
-    parser.add_argument('-wc', action="store", dest='whole_contig', default=False, type=eval, choices=[True, False],
+    optional.add_argument('-wc', action="store", dest='whole_contig', default=False, type=eval, choices=[True, False],
                         help='Default - False: StORFs reported across entire sequence')
-    parser.add_argument('-ps', action="store", dest='partial_storf', default=False, type=eval, choices=[True, False],
+    optional.add_argument('-ps', action="store", dest='partial_storf', default=False, type=eval, choices=[True, False],
                         help='Default - False: Partial StORFs reported')
-    parser.add_argument('-filt', action='store', dest='filtering', default='hard', const='hard', nargs='?',
-                        choices=['none', 'soft', 'hard'],
-                        help='Default - "hard": Filtering level "none" is not recommended, "soft" for single strand filtering '
-                             'and hard for both-strand longest-first tiling')
-    parser.add_argument('-aa', action="store", dest='translate', default=False, type=eval, choices=[True, False],
-                        help='Default - False: Report StORFs as amino acid sequences')
-    parser.add_argument('-aa_only', action="store", dest='aa_only', default=False, type=eval, choices=[True, False],
-                        help='Default - False: Only output Amino Acid Fasta')
-    parser.add_argument('-con_storfs', action="store", dest='con_storfs', default=False, type=eval, choices=[True, False],
+    optional.add_argument('-olap_filt', action='store', dest='olap_filtering', default='both-strand', const='both-strand', nargs='?',
+                        choices=['none', 'single-strand', 'both-strand'],
+                        help='Default - "both-strand": Filtering level "none" is not recommended, "single-strand" for single strand filtering '
+                             'and both-strand for both-strand longest-first tiling')
+    optional.add_argument('-start_filt', action="store", dest='start_filtering', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Filter out StORFs without at least one of the 3 common start codons (best used for short-storfs).')
+    optional.add_argument('-con_storfs', action="store", dest='con_storfs', default=False, type=eval, choices=[True, False],
                         help='Default - False: Output Consecutive StORFs')
-    parser.add_argument('-con_only', action="store", dest='con_only', default=False, type=eval, choices=[True, False],
+    optional.add_argument('-con_only', action="store", dest='con_only', default=False, type=eval, choices=[True, False],
                         help='Default - False: Only output Consecutive StORFs')
-    parser.add_argument('-short_storfs', action="store", dest='short_storfs', default=False, type=str, choices=['False', 'Nolap', 'Olap'],
+    optional.add_argument('-short_storfs', action="store", dest='short_storfs', default=False, type=str, choices=[False, 'Nolap', 'Olap'],
                         help='Default - False: Run StORF-Finder in "Short-StORF" mode. Will only return StORFs between 30 and 120 nt '
                              'that do not overlap longer StORFs - Only works with StORFs for now. "Nolap" will filter Short-StORFs which are'
                              'overlapped by StORFs and Olap will report Short-StORFs which do overlap StORFs. Overlap is defined by "-olap".')
-    parser.add_argument('-short_storfs_only', action="store", dest='short_storfs_only', default=False, type=eval, choices=[True, False],
+    optional.add_argument('-short_storfs_only', action="store", dest='short_storfs_only', default=False, type=eval, choices=[True, False],
                         help='Default - True. Only report Short-StORFs?')
-    parser.add_argument('-stop_ident', action="store", dest='stop_ident', default=False, choices=[True, False],
+    optional.add_argument('-stop_ident', action="store", dest='stop_ident', default=False, choices=[True, False],
                         help='Default - True: Identify Stop Codon positions with \'*\'')
-    parser.add_argument('-type', action='store', dest='feature_type', default='StORF', const='StORF', nargs='?',
+    optional.add_argument('-type', action='store', dest='feature_type', default='StORF', const='StORF', nargs='?',
                         choices=['StORF', 'CDS', 'ORF'],
                         help='Default - "StORF": Which GFF feature type for StORFs to be reported as in GFF')
-    parser.add_argument('-minorf', action="store", dest='min_orf', default=100, type=int,
+    optional.add_argument('-minorf', action="store", dest='min_orf', default=100, type=int,
                         help='Default - 100: Minimum StORF size in nt')
-    parser.add_argument('-maxorf', action="store", dest='max_orf', default=50000, type=int,
+    optional.add_argument('-maxorf', action="store", dest='max_orf', default=50000, type=int,
                         help='Default - 50kb: Maximum StORF size in nt')
-    parser.add_argument('-codons', action="store", dest='stop_codons', default="TAG,TGA,TAA",
+    optional.add_argument('-codons', action="store", dest='stop_codons', default="TAG,TGA,TAA",
                         help='Default - (\'TAG,TGA,TAA\'): List Stop Codons to use')
-    parser.add_argument('-olap', action="store", dest='overlap_nt', default=50, type=int,
+    optional.add_argument('-olap', action="store", dest='overlap_nt', default=50, type=int,
                         help='Default - 50: Maximum number of nt of a StORF which can overlap another StORF.')
-    parser.add_argument('-gff', action='store', dest='gff', default=True, type=eval, choices=[True, False],
-                        help='Default - True: StORF Output a GFF file')
-    parser.add_argument('-s', action="store", dest='suffix', required=False,
+    optional.add_argument('-s', action="store", dest='suffix', required=False,
                         help='Default - Do not append suffix to genome ID')
-    parser.add_argument('-so', action="store", dest='storf_order', default='start_pos', nargs='?', choices=['start_pos','strand'],
+    optional.add_argument('-so', action="store", dest='storf_order', default='start_pos', nargs='?', choices=['start_pos','strand'],
                         required=False,
                         help='Default - Start Position: How should StORFs be ordered when >1 reported in a single UR.')
-    parser.add_argument('-spos', action="store", dest='stop_inclusive', default=True, type=eval, choices=[True, False],
+    optional.add_argument('-spos', action="store", dest='stop_inclusive', default=True, type=eval, choices=[True, False],
                         help='Default - False: Print out StORF positions inclusive of first stop codon')
-    parser.add_argument('-o', action="store", dest='out_file', required=False,
+    optional.add_argument('-o', action="store", dest='out_file', required=False,
                         help='Default - False: Without filetype - default appends \'_StORF-R\' to end of input gff filename (replaces \'.gff\')')
-    parser.add_argument('-af', action="store", dest='affix', required=False,
+    optional.add_argument('-af', action="store", dest='affix', required=False,
                         help='Default - None: \'-af Con-StORFs\' can be used to append an identifier to output filename '
                              'to distinguish Con-StORF from StORF runs)')
-    parser.add_argument('-lw', action="store", dest='line_wrap', default=True, type=eval, choices=[True, False],
+
+    output = parser.add_argument_group('Output')
+    output.add_argument('-gff', action='store', dest='gff', default=True, type=eval, choices=[True, False],
+                        help='Default - True: Output a GFF file')
+    output.add_argument('-aa', action="store", dest='translate', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Report StORFs as amino acid sequences')
+    output.add_argument('-aa_only', action="store", dest='aa_only', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Only output Amino Acid Fasta')
+    output.add_argument('-lw', action="store", dest='line_wrap', default=True, type=eval, choices=[True, False],
                         help='Default - True: Line wrap FASTA sequence output at 60 chars')
-    parser.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
+    output.add_argument('-gff_fasta', action="store", dest='gff_fasta', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Report all gene sequences (nt) at the bottom of GFF files in PROKKA output mode')
+    output.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
-    parser.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
-                        help='Default - False: Print out runtime status')
-    parser.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
+    optional.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
                         help=argparse.SUPPRESS)
+
+    misc = parser.add_argument_group('Misc')
+    misc.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
+                        help='Default - False: Print out runtime status')
+
     options = parser.parse_args()
     #ns_nt = defaultdict  # Used to Record non-standard nucleotides - not implemented yet
     ##### Load in fasta file
@@ -700,7 +743,8 @@ def main():
     if not options.gz: # Clear fasta and gff files if not empty - Needs an elegant solution
         if not options.aa_only:
             gff_out = open(options.out_file + affix + '.gff', 'w', newline='\n', encoding='utf-8')
-            gff_out.write("##gff-version\t3\n#\tStORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+            gff_out.write("##gff-version\t3\n#\tStORF-Reporter - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+            gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
             gff_out.write("##Original File: " + options.fasta + '\n\n')
@@ -714,7 +758,8 @@ def main():
     elif options.gz:
         if not options.aa_only:
             gff_out = gzip.open(options.out_file + affix + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
-            gff_out.write("##gff-version\t3\n#\tStORF Stop - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+            gff_out.write("##gff-version\t3\n#\tStORF-Reporter - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+            gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
             gff_out.write("##Original File: " + options.fasta + '\n\n')
