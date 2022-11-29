@@ -116,30 +116,50 @@ Misc:
 ### Subpackage to run UR-Extractor and StORF-Finder together on a PROKKA annotation and produce output which can be used in tools such as Roary that by default accepts PROKKA's output format: 
 #### For use on a single PROKKA output directory - 
 ```console
-StORF-Reporter -anno PROKKA -pd ../PROKKA_04062022/
+StORF-Reporter -anno PROKKA -it PROKKA_Out -p ../PROKKA_04062022/
 ```
 #### For use on a directory containing multiple PROKKA output gffs
 ```console
-StORF-Reporter -anno PROKKA -p_gff ../PROKKA_Outputs/
+StORF-Reporter -anno PROKKA -it PROKKA_GFFs -p ../PROKKA_Outputs/
 ```
+
+#### For use on a GFF file from another tool such as Prodigal - Provide original genomic FASTA and annotation GFF separated by comma
+```console
+StORF-Reporter -anno CDS -it Single_GFF -p ../E-coli.fa,../Prodigal_E-coli.gff
+```
+
 
 ### Menu - (StORF-Reporter -h):
 ```python
-usage: StORF_Reporter.py [-h] -anno [{PROKKA,Ensembl,Gene}] -dt [{PROKKA_Out,PROKKA_GFFs}] -pd PROKKA_DIR [-comb COMBINED_GFFS] [-spos {True,False}] [-rs {True,False}] [-sout {True,False}] [-con_storfs {True,False}]
-                         [-con_only {True,False}] [-short_storfs {False,Nolap,Olap}] [-short_storfs_only {True,False}] [-min_len MINLEN] [-max_len MAXLEN] [-ex_len EXLEN] [-minorf MIN_ORF] [-olap_filt [{none,single-strand,both-strand}]]
-                         [-start_filt {True,False}] [-type [{StORF,CDS,ORF}]] [-olap OVERLAP_NT] [-ao ALLOWED_OVERLAP] [-lw {True,False}] [-aa {True,False}] [-gff_fasta {True,False}] [-gz {True,False}] [-v {True,False}]
+Thank you for using StORF-Reporter
+Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues
+#####
+usage: StORF-Reporter [-h] -anno [{PROKKA,Ensembl,CDS}] -it [{PROKKA_Out,PROKKA_GFFs,Single_GFF,}] -p PATH
+                      [-comb COMBINED_GFFS] [-spos {True,False}] [-rs {True,False}] [-sout {True,False}]
+                      [-con_storfs {True,False}] [-con_only {True,False}] [-short_storfs {False,Nolap,Olap}]
+                      [-short_storfs_only {True,False}] [-min_len MINLEN] [-max_len MAXLEN] [-ex_len EXLEN]
+                      [-minorf MIN_ORF] [-olap_filt [{none,single-strand,both-strand}]] [-start_filt {True,False}]
+                      [-type [{StORF,CDS,ORF}]] [-olap OVERLAP_NT] [-ao ALLOWED_OVERLAP] [-lw {True,False}]
+                      [-aa {True,False}] [-gff_fasta {True,False}] [-gz {True,False}] [-v {True,False}]
 
-StORF-Reporter v0.6.0: StORF-Reporter Run Parameters.
+StORF-Reporter v0.6.1: StORF-Reporter Run Parameters.
 
 Required Arguments:
-  -anno [{PROKKA,Ensembl,Gene}]
-                        Annotation type to be StORF-Reported - Options: PROKKA = "misc_RNA,gene,mRNA,CDS,tRNA,tmRNA,CRISPR";Ensembl = "ID=gene" ;Gene = "gene"
-  -dt [{PROKKA_Out,PROKKA_GFFs}]
-                        Type of directory to be loaded by StORF-Reported: Options: PROKKA_Out = Single PROKKA output directory; PROKKA_GFFs = Directory containing multiple PROKKA GFF files
-  -pd PROKKA_DIR        PROKKA output directory to be used - Produces a new GFF and FASTA containing all Coding and Non-Coding Seqs for each PROKKA output GFF
+  -anno [{PROKKA,Ensembl,CDS}]
+                        Annotation type to be StORF-Reported - Options: PROKKA =
+                        "misc_RNA,gene,mRNA,CDS,tRNA,tmRNA,CRISPR";Ensembl = "ID=gene" ;CDS = "CDS"
+  -it [{PROKKA_Out,PROKKA_GFFs,Single_GFF,}]
+                        Type of directory to be loaded by StORF-Reported: Options: PROKKA_Out = Single PROKKA output
+                        directory; PROKKA_GFFs = Directory containing multiple PROKKA GFF files
+  -p PATH               Provide either the directory with the PROKKA output (Produces a new GFF and FASTA containing
+                        all Coding and Non-Coding Seqs for each PROKKA output GFF), a directory with multiple GFFs
+                        to be processed (a new GFF will be produced for each original) or the full paths to a
+                        matching genomic FASTA and GFF separated with a comma - Use with -it Single_GFF (a new GFF
+                        will be produced).
 
 Optional Arguments:
-  -comb COMBINED_GFFS   Provide directory containing GFFs with sequences combined into single file to be StORFed - Only produces modified GFFs
+  -comb COMBINED_GFFS   Provide directory containing GFFs with sequences combined into single file to be StORFed -
+                        Only produces modified GFFs
   -spos {True,False}    Default - False: Print out StORF positions inclusive of first stop codon
   -rs {True,False}      Default - True: Remove stop "*" from StORF amino acid sequences
   -sout {True,False}    Default - False: Print out StORF sequences separately?
@@ -148,8 +168,10 @@ Optional Arguments:
   -con_only {True,False}
                         Default - False: Only output Consecutive StORFs
   -short_storfs {False,Nolap,Olap}
-                        Default - False: Run StORF-Finder in "Short-StORF" mode. Will only return StORFs between 30 and 120 nt that do not overlap longer StORFs - Only works with StORFs for now. "Nolap" will filter Short-StORFs which
-                        areoverlapped by StORFs and Olap will report Short-StORFs which do overlap StORFs. Overlap is defined by "-olap".
+                        Default - False: Run StORF-Finder in "Short-StORF" mode. Will only return StORFs between 30
+                        and 120 nt that do not overlap longer StORFs - Only works with StORFs for now. "Nolap" will
+                        filter Short-StORFs which areoverlapped by StORFs and Olap will report Short-StORFs which do
+                        overlap StORFs. Overlap is defined by "-olap".
   -short_storfs_only {True,False}
                         Default - True. Only report Short-StORFs?
   -min_len MINLEN       Default - 30: Minimum UR Length
@@ -157,11 +179,14 @@ Optional Arguments:
   -ex_len EXLEN         Default - 50: UR Extension Length
   -minorf MIN_ORF       Default - 100: Minimum StORF size in nt
   -olap_filt [{none,single-strand,both-strand}]
-                        Default - "both-strand": Filtering level "none" is not recommended, "single-strand" for single strand filtering and both-strand for both-strand longest-first tiling
+                        Default - "both-strand": Filtering level "none" is not recommended, "single-strand" for
+                        single strand filtering and both-strand for both-strand longest-first tiling
   -start_filt {True,False}
-                        Default - False: Filter out StORFs without at least one of the 3 common start codons (best used for short-storfs).
+                        Default - False: Filter out StORFs without at least one of the 3 common start codons (best
+                        used for short-storfs).
   -type [{StORF,CDS,ORF}]
-                        Default - "CDS": Which GFF feature type for StORFs to be reported as in GFF - "CDS" is probably needed for use in tools such as Roary
+                        Default - "CDS": Which GFF feature type for StORFs to be reported as in GFF - "CDS" is
+                        probably needed for use in tools such as Roary
   -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which can overlap another StORF.
   -ao ALLOWED_OVERLAP   Default - 50 nt: Maximum overlap between a StORF and an original gene.
 
@@ -169,11 +194,13 @@ Output::
   -lw {True,False}      Default - True: Line wrap FASTA sequence output at 60 chars
   -aa {True,False}      Default - False: Report StORFs as amino acid sequences
   -gff_fasta {True,False}
-                        Default - False: Report all gene sequences (nt) at the bottom of GFF files in PROKKA output mode
+                        Default - False: Report all gene sequences (nt) at the bottom of GFF files in PROKKA output
+                        mode
   -gz {True,False}      Default - False: Output as .gz
 
 Misc::
   -v {True,False}       Default - False: Print out runtime status
+
 
 ```
 

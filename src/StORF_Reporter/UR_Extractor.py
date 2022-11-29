@@ -3,7 +3,13 @@ import collections
 from datetime import date
 import gzip
 import sys
-from Constants import *
+
+
+try:
+    # Calling from ORForise via pip
+    from .Constants import *
+except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
+    from Constants import *
 
 #Output FASTA and GFF separately using the same out_filename but with respective extensions - gz output optional
 def write_fasta(dna_regions, options):

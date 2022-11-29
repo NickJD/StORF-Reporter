@@ -1,7 +1,7 @@
 ##gff-version	3
 #	UR Extractor 
-#	Run Date:2022-11-22
-##StORF-Reporter v0.6.0
+#	Run Date:2022-11-29
+##StORF-Reporter v0.6.1
 ##sequence-region	Chromosome 1 4558660
 ##Original Files: /home/nick/Git/StORF-Reporter/Genomes/E-coli/E-coli.fa | /home/nick/Git/StORF-Reporter/Genomes/E-coli/E-coli.gff
 

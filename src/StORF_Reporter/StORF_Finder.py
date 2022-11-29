@@ -5,12 +5,15 @@ from collections import defaultdict, OrderedDict
 from datetime import date
 import textwrap
 import gzip
-from Constants import *
+
 
 try:
     from ORForise.utils import sortORFs  # Calling from ORForise via pip
+    from .Constants import *
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
     from ORForise.src.ORForise.utils import sortORFs  # Calling from ORForise locally (StORF_Reporter and ORForise in same dir)
+    from Constants import *
+
 
 
 

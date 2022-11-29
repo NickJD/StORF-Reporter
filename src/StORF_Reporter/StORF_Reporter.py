@@ -4,15 +4,16 @@ import pathlib
 import collections
 import textwrap
 import hashlib
-from Constants import *
-
 
 try:
-    from UR_Extractor import extractor
-    from StORF_Finder import StORF_Reported
-except ImportError:
+    # Calling from ORForise via pip
     from .UR_Extractor import extractor
     from .StORF_Finder import StORF_Reported
+    from .Constants import *
+except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
+    from UR_Extractor import extractor
+    from StORF_Finder import StORF_Reported
+    from Constants import *
 
 
 # class StORF_obj: # TODO
@@ -152,11 +153,11 @@ def FASTA_Load(faa_infile,ffn_infile):
     return PROKKA_AA,PROKKA_NT
 
 
-def run_UR_Extractor_PROKKA_DIR(Reporter_options): # When given a single PROKKA Directory
-    fasta = list(pathlib.Path(Reporter_options.prokka_dir).glob('*.fna'))
+def run_UR_Extractor_path(Reporter_options): # When given a single PROKKA Directory
+    fasta = list(pathlib.Path(Reporter_options.path).glob('*.fna'))
     fasta = str(fasta[0])
     Reporter_options.fasta = fasta
-    gff_list = list(pathlib.Path(Reporter_options.prokka_dir).glob('*.gff'))
+    gff_list = list(pathlib.Path(Reporter_options.path).glob('*.gff'))
     for gff in gff_list: # Poor checking method - must change
         if '_StORF-Reporter' not in str(gff): # Might fall over
             gff = str(gff)
@@ -170,6 +171,15 @@ def run_UR_Extractor_PROKKA_GFFs(Reporter_options,gff): # When given a directory
         gff = str(gff)
         Reporter_options.gff = gff
     Reporter_options.fasta = gff
+    URs = extractor(Reporter_options)
+    return URs,Reporter_options
+
+def run_UR_Extractor_GFF(Reporter_options, fasta, gff): # When given a directory with multiple PROKKA GFFs but without accompianing .fna
+    if '_StORF-Reporter' not in str(gff): #Might fall over
+        gff = str(gff)
+        Reporter_options.gff = gff
+    fasta = str(fasta)
+    Reporter_options.fasta = fasta
     URs = extractor(Reporter_options)
     return URs,Reporter_options
 
@@ -285,7 +295,7 @@ def StORF_Filler(StORF_options, Reporter_options, Reported_StORFs):
 
         Contig_URS[Contig] = Contig_StORFs
     ### Rename .gff to .fasta / faa and load in fasta file
-    if StORF_options.prokka_dir == True: # If normal PROKKA Dir run
+    if StORF_options.path == True: # If normal PROKKA Dir run
         fasta_outfile = StORF_options.gff.replace('.gff','')
         fasta_outfile = open(fasta_outfile + '_StORF-Reporter_Combined.fasta','w')
         faa_infile = StORF_options.gff.replace('.gff', '.faa')
@@ -307,7 +317,7 @@ def StORF_Filler(StORF_options, Reporter_options, Reported_StORFs):
                         for StORF in StORFs:
                             GFF_StoRF_write(StORF_options, Reporter_options, track_prev_contig, outfile, StORF,
                                             StORF_Num)  # To keep consistency
-                            if StORF_options.prokka_dir == True:
+                            if StORF_options.path == True:
                                 FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF,StORF_Num)
                             StORF_Num += 1
                 track_prev_start, track_prev_stop = 0, 0
@@ -320,7 +330,7 @@ def StORF_Filler(StORF_options, Reporter_options, Reported_StORFs):
             track_prev_start = track_current_start
             track_prev_stop = track_current_stop
             ##### Print out PROKKA Protein
-            if 'gene' in data[2] and StORF_options.prokka_dir == True:
+            if 'gene' in data[2] and StORF_options.path == True:
                 PROKKA_ID = data[8].split(';')[0].replace('ID=','').replace('_gene','')
                 try:
                     PROKKA_Seq = PROKKA_NT[PROKKA_ID] # used to be AA but changed for to NT. CHECK
@@ -336,7 +346,7 @@ def StORF_Filler(StORF_options, Reporter_options, Reported_StORFs):
             if StORFs:
                 for StORF in StORFs:  # ([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand, StORF_Length, StORF_UR_Num, StORF_Seq)]
                     GFF_StoRF_write(StORF_options, Reporter_options, track_contig, outfile, StORF, StORF_Num)  # To keep consistency
-                    if StORF_options.prokka_dir == True:
+                    if StORF_options.path == True:
                         FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF,StORF_Num)
                     StORF_Num += 1
             if line != written_line:
@@ -349,7 +359,7 @@ def StORF_Filler(StORF_options, Reporter_options, Reported_StORFs):
             if StORFs:
                 for StORF in StORFs:
                     GFF_StoRF_write(StORF_options, Reporter_options, track_prev_contig, outfile, StORF, StORF_Num)  # To keep consistency
-                    if StORF_options.prokka_dir == True:
+                    if StORF_options.path == True:
                         FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF,StORF_Num)
                     StORF_Num += 1
             if line != written_line:
@@ -371,19 +381,22 @@ def main():
 
     required = parser.add_argument_group('Required Arguments')
     required.add_argument('-anno', action='store', dest='annotation_type', required=True,
-                        choices=['PROKKA', 'Ensembl', 'Gene'], nargs='?',
+                        choices=['PROKKA', 'Ensembl', 'CDS'], nargs='?',
                         help='Annotation type to be StORF-Reported - '
                              'Options: PROKKA = "misc_RNA,gene,mRNA,CDS,tRNA,tmRNA,CRISPR"'
-                             ';Ensembl = "ID=gene" ;Gene = "gene"')
+                             ';Ensembl = "ID=gene" ;CDS = "CDS"')
 
-    required.add_argument('-dt', action='store', dest='directory_type', required=True,
-                        choices=['PROKKA_Out', 'PROKKA_GFFs'], nargs='?',
+    required.add_argument('-it', action='store', dest='input_type', required=True,
+                        choices=['PROKKA_Out', 'PROKKA_GFFs', 'Single_GFF',''], nargs='?',
                         help='Type of directory to be loaded by StORF-Reported: '
                              'Options: PROKKA_Out = Single PROKKA output directory'
                              '; PROKKA_GFFs = Directory containing multiple PROKKA GFF files')
-    required.add_argument('-pd', action='store', dest='prokka_dir', default='', required=True,
-                        help='PROKKA output directory to be used - Produces a new GFF and FASTA containing '
-                             'all Coding and Non-Coding Seqs for each PROKKA output GFF')
+
+    required.add_argument('-p', action='store', dest='path', default='', required=True,
+                        help='Provide either the directory with the PROKKA output (Produces a new GFF and FASTA containing '
+                             'all Coding and Non-Coding Seqs for each PROKKA output GFF), a directory with multiple GFFs to be '
+                             'processed (a new GFF will be produced for each original) or the full paths to a matching genomic FASTA and GFF separated with a comma'
+                             ' - Use with -it Single_GFF (a new GFF will be produced).')
 
     optional = parser.add_argument_group('Optional Arguments')
     # optional.add_argument('-col', action='store', dest='genome_collection', default='', required=False,
@@ -454,10 +467,10 @@ def main():
 
 
     ######### Setup for PROKKA
-    if Reporter_options.annotation_type == 'PROKKA' and Reporter_options.prokka_dir != "":
+    if Reporter_options.annotation_type == 'PROKKA' and Reporter_options.input_type == "PROKKA_Out":
         Reporter_options.gene_ident = "misc_RNA,gene,mRNA,CDS,tRNA,tmRNA,CRISPR"
         Reporter_options.nout = True
-        Contigs, Reporter_options = run_UR_Extractor_PROKKA_DIR(Reporter_options)
+        Contigs, Reporter_options = run_UR_Extractor_path(Reporter_options)
         ################## Find StORFs in URs - Setup StORF_Reporter-Finder Run
         StORF_options = Namespace(reporter=True, gff=Reporter_options.gff, stop_codons="TGA,TAA,TAG",
                                   partial_storf=False, whole_contig=False, storf_order='start_pos',
@@ -465,7 +478,7 @@ def main():
                                   con_storfs=Reporter_options.con_storfs, con_only=Reporter_options.con_only,
                                   max_orf=50000, olap_filtering='both-strand', start_filtering=False, stop_inclusive=False,
                                   feature_type=Reporter_options.feature_type, overlap_nt=Reporter_options.overlap_nt,
-                                  allowed_overlap=Reporter_options.allowed_overlap, prokka_dir=True, prokka_gffs='',
+                                  allowed_overlap=Reporter_options.allowed_overlap, path=True, prokka_gffs='',
                                   gff_fasta=Reporter_options.gff_fasta,
                                   minlen=30, maxlen=100000, min_orf=Reporter_options.min_orf, verbose=False, nout=True)
 
@@ -473,7 +486,7 @@ def main():
         StORF_Filler(StORF_options, Reporter_options, Reporter_StORFs)
         print("Finished: " + Reporter_options.gff)
         ####
-    elif Reporter_options.annotation_type == 'PROKKA' and Reporter_options.prokka_gffs != "":
+    elif Reporter_options.annotation_type == 'PROKKA' and Reporter_options.input_type  == "PROKKA_GFFs":
         Reporter_options.gene_ident = "misc_RNA,gene,mRNA,CDS,tRNA,tmRNA,CRISPR"
         Reporter_options.nout = True
         gff_list = list(pathlib.Path(Reporter_options.prokka_gffs).glob('*.gff'))
@@ -486,7 +499,7 @@ def main():
                                       con_storfs=Reporter_options.con_storfs, con_only=Reporter_options.con_only,
                                       max_orf=50000, olap_filtering='both-strand', start_filtering=False,
                                       feature_type=Reporter_options.feature_type, storf_order='start_pos',
-                                      overlap_nt=Reporter_options.overlap_nt, prokka_dir='', prokka_gffs=True,
+                                      overlap_nt=Reporter_options.overlap_nt, path='', prokka_gffs=True,
                                       allowed_overlap=Reporter_options.allowed_overlap,
                                       gff_fasta=Reporter_options.gff_fasta,
                                       minlen=30, maxlen=100000, min_orf=Reporter_options.min_orf, verbose=False, nout=True)
@@ -503,7 +516,37 @@ def main():
     #     gff_list = list(pathlib.Path(gff_dir).glob('*.gff*'))
     #     Reporter_options.gene_ident = "gene"
     #     for fasta in fasta_dir:
-    #         Contigs, Reporter_options = run_UR_Extractor_PROKKA_DIR(Reporter_options)
+    #         Contigs, Reporter_options = run_UR_Extractor_path(Reporter_options)
+    ###########
+    elif Reporter_options.annotation_type == 'CDS' and Reporter_options.input_type  == "Single_GFF":
+        Reporter_options.gene_ident = "CDS"
+        Reporter_options.nout = True
+        fasta = Reporter_options.path.split(',')[0]
+        gff = Reporter_options.path.split(',')[1]
+        if gff and fasta and Reporter_options.verbose == True:
+            print("Starting: " + str(gff))
+        if gff and fasta:
+            Contigs, Reporter_options = run_UR_Extractor_GFF(Reporter_options, fasta, gff)
+            ################## Find StORFs in URs - Setup StORF_Reporter-Finder Run
+            StORF_options = Namespace(reporter=True, gff=Reporter_options.gff, stop_codons="TGA,TAA,TAG",
+                                      partial_storf=False, whole_contig=False,
+                                      short_storfs=Reporter_options.short_storfs,short_storfs_only=Reporter_options.short_storfs_only,
+                                      con_storfs=Reporter_options.con_storfs, con_only=Reporter_options.con_only,
+                                      max_orf=50000, olap_filtering='both-strand', start_filtering=False, stop_inclusive=False,
+                                      feature_type=Reporter_options.feature_type, storf_order='start_pos',
+                                      overlap_nt=Reporter_options.overlap_nt, path='', prokka_gffs=True,
+                                      allowed_overlap=Reporter_options.allowed_overlap,
+                                      gff_fasta=Reporter_options.gff_fasta,
+                                      minlen=30, maxlen=100000, min_orf=Reporter_options.min_orf, verbose=False, nout=True)
+            Reporter_StORFs = StORF_Reported(StORF_options, Contigs)
+            #sequence_id, all_StORFs = StORF_Reported(URs, StORF_options)
+            StORF_Filler(StORF_options, Reporter_options, Reporter_StORFs)  # Append StORFs to current GFF file from provided genome annotation
+            if Reporter_options.verbose == True:
+                print("Finished: " + gff) # Will add number of additional StORFs here
+
+
+
+    ############
     elif Reporter_options.combined_gffs != "": # needs cleaning
         Reporter_options.gene_ident = "gene"
         Reporter_options.nout = True
@@ -519,7 +562,7 @@ def main():
                                       con_storfs=Reporter_options.con_storfs, con_only=Reporter_options.con_only,
                                       max_orf=50000, olap_filtering='both-strand', start_filtering=False, stop_inclusive=False,
                                       feature_type=Reporter_options.feature_type, storf_order='start_pos',
-                                      overlap_nt=Reporter_options.overlap_nt, prokka_dir='', prokka_gffs=True,
+                                      overlap_nt=Reporter_options.overlap_nt, path='', prokka_gffs=True,
                                       allowed_overlap=Reporter_options.allowed_overlap,
                                       gff_fasta=Reporter_options.gff_fasta,
                                       minlen=30, maxlen=100000, min_orf=Reporter_options.min_orf, verbose=False, nout=True)
@@ -528,6 +571,8 @@ def main():
             StORF_Filler(StORF_options, Reporter_options, Reporter_StORFs)  # Append StORFs to current GFF file from provided genome annotation
             if Reporter_options.verbose == True:
                 print("Finished: " + Reporter_options.gff) # Will add number of additional StORFs here
+
+    print("Complete")
 
 
 
