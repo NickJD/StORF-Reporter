@@ -21,6 +21,7 @@ def write_fasta(dna_regions, options):
         out = gzip.open(options.out_file + '_UR.fasta.gz', 'wt', newline='\n', encoding='utf-8')
 
     out.write("##\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
+    out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
     out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n')
     for dna_region, dna_region_ur in dna_regions.items():
         out.write('\n##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
@@ -101,8 +102,25 @@ def fasta_load(fasta_in):
 
     return dna_regions
 
+def pyrodigal_virtual_gff_load(gff_in,dna_regions):
+    with open(gff_in.name, "r") as gff:
+        tmp = gff.read()
+        for line in tmp.splitlines():
+            line_data = line.split()
+            if line.startswith('\n') or line.startswith('#'):  # Not to crash on empty lines in GFF
+                continue
+            else:
+                try:
+                    if line_data[0] in dna_regions:
+                        if 'CDS' in line_data[2]: # line[2] for normal run
+                            pos = line_data[3] + '_' + line_data[4]
+                            if pos not in dna_regions[line_data[0]][2]:
+                                dna_regions[line_data[0]][2].append(pos) # This will add to list
+                except IndexError:
+                    continue
+    return dna_regions
+
 def gff_load(options,gff_in,dna_regions):
-    #Will code in different versions for different types of GFF3 files (Prodigal,Ensembl etc)
     for line in gff_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
         line_data = line.split()
         if line.startswith('\n') or line.startswith('##'):  # Not to crash on empty lines in GFF
@@ -112,10 +130,10 @@ def gff_load(options,gff_in,dna_regions):
                 pos = line_data[3] + '_' + line_data[4]
                 dna_regions[line_data[0]][2].append(pos) # This will add to list
         else:
-            gene_types = options.gene_ident.split(',')
+            gene_types = options.gene_ident.split(',') # Not ensembl but 'CDS,rRNA,tRNA' etc in 3rd column
             try:
                 if line_data[0] in dna_regions:
-                    if any(gene_type in line_data[2] for gene_type in gene_types): # line[2] for normalrun
+                    if any(gene_type in line_data[2] for gene_type in gene_types): # line[2] for normal run
                         if options.verbose == True:
                             print(line_data[2])
                         pos = line_data[3] + '_' + line_data[4]
@@ -123,25 +141,33 @@ def gff_load(options,gff_in,dna_regions):
                             dna_regions[line_data[0]][2].append(pos) # This will add to list
             except IndexError:
                 continue
-
     return dna_regions
 
 def extractor(options):
-    try:
-        try: # Detect whether fasta/gff files are .gz or text and read accordingly
-            fasta_in = gzip.open(options.fasta,'rt')
+    if options.pyrodigal == True:
+        try:  # Detect whether fasta/gff files are .gz or text and read accordingly
+            fasta_in = gzip.open(options.fasta, 'rt')
             dna_regions = fasta_load(fasta_in)
         except:
-            fasta_in = open(options.fasta,'r',encoding='unicode_escape') # Not sure if needed in long term
+            fasta_in = open(options.fasta, 'r', encoding='unicode_escape')  # Not sure if needed in long term
             dna_regions = fasta_load(fasta_in)
+        dna_regions = pyrodigal_virtual_gff_load(options.gff, dna_regions)
+    else:
         try:
-            gff_in = gzip.open(options.gff,'rt')
-            dna_regions = gff_load(options,gff_in,dna_regions)
-        except:
-            gff_in = open(options.gff,'r',encoding='unicode_escape') # Not sure if needed in long term
-            dna_regions = gff_load(options,gff_in,dna_regions)
-    except AttributeError:
-        sys.exit("Attribute Error:\nStORF'ed GFF probably already exists - Must be deleted before running")
+            try: # Detect whether fasta/gff files are .gz or text and read accordingly
+                fasta_in = gzip.open(options.fasta,'rt')
+                dna_regions = fasta_load(fasta_in)
+            except:
+                fasta_in = open(options.fasta,'r',encoding='unicode_escape') # Not sure if needed in long term
+                dna_regions = fasta_load(fasta_in)
+            try:
+                gff_in = gzip.open(options.gff,'rt')
+                dna_regions = gff_load(options,gff_in,dna_regions)
+            except:
+                gff_in = open(options.gff,'r',encoding='unicode_escape') # Not sure if needed in long term
+                dna_regions = gff_load(options,gff_in,dna_regions)
+        except AttributeError:
+            sys.exit("Attribute Error:\nStORF'ed GFF probably already exists - Must be deleted before running")
 
 
     for (key,(seq,seq_length,posns,URs))  in dna_regions.items(): #Extract URs from 1 dna_region at a time
@@ -217,12 +243,17 @@ def main():
                         help='Output file - Without filetype - default appends "_UR" to end of input gff filename (replaces \'.gff\')')
     output.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
-    parser.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
-                        help=argparse.SUPPRESS)
+
 
     misc = parser.add_argument_group('Misc')
     misc.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
                         help='Default - False: Print out runtime status')
+    parser.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
+                        help=argparse.SUPPRESS)
+    parser.add_argument('-pyrodigal', action='store', dest='pyrodigal', default='False', type=eval, choices=[True, False],
+                        help=argparse.SUPPRESS)
+    parser.add_argument('-nout_pyrodigal', action='store', dest='nout_pyrodigal', default='True', type=eval, choices=[True, False],
+                        help=argparse.SUPPRESS)
 
 
     options = parser.parse_args()
@@ -234,3 +265,7 @@ def main():
 if __name__ == "__main__":
     main()
     print("Complete")
+
+
+
+

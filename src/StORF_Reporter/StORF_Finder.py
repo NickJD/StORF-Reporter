@@ -5,13 +5,15 @@ from collections import defaultdict, OrderedDict
 from datetime import date
 import textwrap
 import gzip
-
+import os
+import sys
 
 try:
     from ORForise.utils import sortORFs  # Calling from ORForise via pip
     from .Constants import *
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
-    from ORForise.src.ORForise.utils import sortORFs  # Calling from ORForise locally (StORF_Reporter and ORForise in same dir)
+    sys.path.insert(0, '../../../ORForise/src/ORForise/') # Calling from ORForise locally (StORF_Reporter and ORForise in same dir)
+    from utils import sortORFs
     from Constants import *
 
 
@@ -346,7 +348,7 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                                                                                                StORF_idx]})
                                 #####
                                 StORF_idx +=1
-                                seen_stops.append(next_stop  + 3)
+                                seen_stops.append(next_stop)#  + 3)
                                 prev_storf = storf
                                 prev_stop = stop
                                 prev_next_stop = next_stop # Check
@@ -719,6 +721,8 @@ def main():
                         help='Default - False: Print out runtime status')
 
     options = parser.parse_args()
+
+
     #ns_nt = defaultdict  # Used to Record non-standard nucleotides - not implemented yet
     ##### Load in fasta file
     sequences = OrderedDict()
