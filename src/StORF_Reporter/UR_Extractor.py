@@ -78,7 +78,7 @@ def fasta_load(fasta_in):
         dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
     elif '##' in  fasta_in.readline().rstrip(): # Clunky and may fall over
         fasta_in.seek(0)
-        #### Called when presented with PROKKA GFF file so must get fasta from inside it
+        #### Called when presented with Prokka GFF file so must get fasta from inside it
         ### Get to genome seq
         at_FASTA = False
         for line in fasta_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
@@ -134,8 +134,6 @@ def gff_load(options,gff_in,dna_regions):
             try:
                 if line_data[0] in dna_regions:
                     if any(gene_type in line_data[2] for gene_type in gene_types): # line[2] for normal run
-                        if options.verbose == True:
-                            print(line_data[2])
                         pos = line_data[3] + '_' + line_data[4]
                         if pos not in dna_regions[line_data[0]][2]:
                             dna_regions[line_data[0]][2].append(pos) # This will add to list
@@ -149,7 +147,7 @@ def extractor(options):
             fasta_in = gzip.open(options.fasta, 'rt')
             dna_regions = fasta_load(fasta_in)
         except:
-            fasta_in = open(options.fasta, 'r', encoding='unicode_escape')  # Not sure if needed in long term
+            fasta_in = open(options.fasta, 'r', encoding='unicode_escape')
             dna_regions = fasta_load(fasta_in)
         dna_regions = pyrodigal_virtual_gff_load(options.gff, dna_regions)
     else:
@@ -158,13 +156,13 @@ def extractor(options):
                 fasta_in = gzip.open(options.fasta,'rt')
                 dna_regions = fasta_load(fasta_in)
             except:
-                fasta_in = open(options.fasta,'r',encoding='unicode_escape') # Not sure if needed in long term
+                fasta_in = open(options.fasta,'r',encoding='unicode_escape')
                 dna_regions = fasta_load(fasta_in)
             try:
                 gff_in = gzip.open(options.gff,'rt')
                 dna_regions = gff_load(options,gff_in,dna_regions)
             except:
-                gff_in = open(options.gff,'r',encoding='unicode_escape') # Not sure if needed in long term
+                gff_in = open(options.gff,'r',encoding='unicode_escape')
                 dna_regions = gff_load(options,gff_in,dna_regions)
         except AttributeError:
             sys.exit("Attribute Error:\nStORF'ed GFF probably already exists - Must be deleted before running")
@@ -259,8 +257,6 @@ def main():
     options = parser.parse_args()
     extractor(options)
 
-    # Contig name could have a ';' which will mess up later on in StORF_Reporter-R
-    # UR output should state original non extended
 
 if __name__ == "__main__":
     main()

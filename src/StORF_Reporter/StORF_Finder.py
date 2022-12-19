@@ -710,7 +710,7 @@ def main():
     output.add_argument('-lw', action="store", dest='line_wrap', default=True, type=eval, choices=[True, False],
                         help='Default - True: Line wrap FASTA sequence output at 60 chars')
     output.add_argument('-gff_fasta', action="store", dest='gff_fasta', default=False, type=eval, choices=[True, False],
-                        help='Default - False: Report all gene sequences (nt) at the bottom of GFF files in PROKKA output mode')
+                        help='Default - False: Report all gene sequences (nt) at the bottom of GFF files in Prokka output mode')
     output.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
     optional.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
