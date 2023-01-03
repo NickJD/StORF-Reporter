@@ -640,7 +640,7 @@ def StORF_Reported(options, Contigs):
 
 
 def main():
-    print("Thank you for using StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
+    print("Thank you for using StORF-Reporter -- A detailed user menu can be found at https://github.com/NickJD/StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Finder Run Parameters.')
     parser._action_groups.pop()
@@ -676,13 +676,13 @@ def main():
                         help='Default - True. Only report Short-StORFs?')
     optional.add_argument('-stop_ident', action="store", dest='stop_ident', default=False, choices=[True, False],
                         help='Default - True: Identify Stop Codon positions with \'*\'')
-    optional.add_argument('-type', action='store', dest='feature_type', default='StORF', const='StORF', nargs='?',
+    optional.add_argument('-f_type', action='store', dest='feature_type', default='StORF', const='StORF', nargs='?',
                         choices=['StORF', 'CDS', 'ORF'],
                         help='Default - "StORF": Which GFF feature type for StORFs to be reported as in GFF')
-    optional.add_argument('-minorf', action="store", dest='min_orf', default=100, type=int,
-                        help='Default - 100: Minimum StORF size in nt')
-    optional.add_argument('-maxorf', action="store", dest='max_orf', default=50000, type=int,
-                        help='Default - 50kb: Maximum StORF size in nt')
+    optional.add_argument('-minorf', action="store", dest='min_orf', default=99, type=int,
+                        help='Default - 99: Minimum StORF size in nt')
+    optional.add_argument('-maxorf', action="store", dest='max_orf', default=60000, type=int,
+                        help='Default - 60kb: Maximum StORF size in nt')
     optional.add_argument('-codons', action="store", dest='stop_codons', default="TAG,TGA,TAA",
                         help='Default - (\'TAG,TGA,TAA\'): List Stop Codons to use')
     optional.add_argument('-olap', action="store", dest='overlap_nt', default=50, type=int,
@@ -694,13 +694,16 @@ def main():
                         help='Default - Start Position: How should StORFs be ordered when >1 reported in a single UR.')
     optional.add_argument('-spos', action="store", dest='stop_inclusive', default=True, type=eval, choices=[True, False],
                         help='Default - False: Print out StORF positions inclusive of first stop codon')
-    optional.add_argument('-o', action="store", dest='out_file', required=False,
-                        help='Default - False: Without filetype - default appends \'_StORF-R\' to end of input gff filename (replaces \'.gff\')')
-    optional.add_argument('-af', action="store", dest='affix', required=False,
-                        help='Default - None: \'-af Con-StORFs\' can be used to append an identifier to output filename '
-                             'to distinguish Con-StORF from StORF runs)')
+
 
     output = parser.add_argument_group('Output')
+    output.add_argument('-oname', action="store", dest='o_name', required=False,
+                        help='Default - Appends \'_StORF-R\' to end of input FASTA filename')
+    output.add_argument('-odir', action="store", dest='o_dir', required=False,
+                        help='Default -  Same directory as input FASTA')
+    # output.add_argument('-af', action="store", dest='affix', required=False,
+    #                     help='Default - \'StORF-R\': can be used to append an identifier to output filename '
+    #                          'to distinguish Con-StORF from StORF runs)')
     output.add_argument('-gff', action='store', dest='gff', default=True, type=eval, choices=[True, False],
                         help='Default - True: Output a GFF file')
     output.add_argument('-aa', action="store", dest='translate', default=False, type=eval, choices=[True, False],
@@ -736,47 +739,53 @@ def main():
             sequence_regions, sequences =  fasta_load(fasta_in, sequence_regions, sequences)
         if options.verbose == True:
             print(fasta_in.name)
-    ####
-    if options.out_file == None: # Clunky
-        tmp_outfile = options.fasta.split('.')[-1]
-        options.out_file = options.fasta.replace(tmp_outfile,'')
-        options.out_file = options.out_file[:-1]
-
-    if options.affix == None: # Also Clunky
-        affix = '_StORF-R'
-    else:
-        affix = '_StORF-R_' + options.affix
+    #### Output Directory and Filename handling
+    if options.o_dir == None and options.o_name == None:
+        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
+        output_file = options.fasta.replace('.' + tmp_extension, '')
+        output_file = output_file + '_StORF-R'
+    elif options.o_dir != None and options.o_name != None:
+        output_file = options.o_dir
+        output_file = output_file + options.o_name
+    elif options.o_dir != None:
+        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
+        output_file = options.fasta.replace('.' + tmp_extension, '').split('/')[-1]
+        output_file = options.o_dir + output_file + '_StORF-R'
+    elif options.o_name != None:
+        tmp_filename = options.fasta.split('/')[-1]  # could be .fa/.fasta etc
+        output_file = options.fasta.replace(tmp_filename, '')
+        output_file = output_file + options.o_name
 
     if not options.gz: # Clear fasta and gff files if not empty - Needs an elegant solution
         if not options.aa_only:
-            gff_out = open(options.out_file + affix + '.gff', 'w', newline='\n', encoding='utf-8')
+            gff_out = open(output_file + '.gff', 'w', newline='\n', encoding='utf-8')
             gff_out.write("##gff-version\t3\n#\tStORF-Reporter - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
             gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
             gff_out.write("##Original File: " + options.fasta + '\n\n')
-            fasta_out = open(options.out_file + affix + '.fasta', 'w', newline='\n', encoding='utf-8')
+            fasta_out = open(output_file + '.fasta', 'w', newline='\n', encoding='utf-8')
             if options.translate:
-                aa_fasta_out = open(options.out_file + affix + '_aa.fasta', 'w', newline='\n', encoding='utf-8')
+                aa_fasta_out = open(output_file + '_aa.fasta', 'w', newline='\n', encoding='utf-8')
             else:
                 aa_fasta_out = None
         elif options.aa_only:
-            aa_fasta_out = open(options.out_file + affix + '_aa.fasta', 'w', newline='\n', encoding='utf-8')
+            aa_fasta_out = open(output_file + '_aa.fasta', 'w', newline='\n', encoding='utf-8')
     elif options.gz:
         if not options.aa_only:
-            gff_out = gzip.open(options.out_file + affix + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
+            gff_out = gzip.open(output_file + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
             gff_out.write("##gff-version\t3\n#\tStORF-Reporter - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
             gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
             gff_out.write("##Original File: " + options.fasta + '\n\n')
-            fasta_out = gzip.open(options.out_file + affix + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+            fasta_out = gzip.open(output_file + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
             if options.translate:
-                aa_fasta_out = gzip.open(options.out_file + affix + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+                aa_fasta_out = gzip.open(output_file + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8')
             else:
                 aa_fasta_out = None
         elif options.aa_only:
-            aa_fasta_out = gzip.open(options.out_file + affix + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+            aa_fasta_out = gzip.open(output_file + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8')
 
     for sequence_id, sequence_info in sequences.items():
         if len(sequence_info[1]) >= options.min_orf:

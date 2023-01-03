@@ -11,40 +11,27 @@ try:
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
     from Constants import *
 
-#Output FASTA and GFF separately using the same out_filename but with respective extensions - gz output optional
-def write_fasta(dna_regions, options):
-    if options.out_file == None:
-        options.out_file = options.gff.split('.gff')[0]
-    if options.gz == False:
-        out =  open(options.out_file + '_UR.fasta','w', newline='\n', encoding='utf-8')
-    elif options.gz == True:
-        out = gzip.open(options.out_file + '_UR.fasta.gz', 'wt', newline='\n', encoding='utf-8')
-
-    out.write("##\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
-    out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
-    out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n')
+#Output FASTA and GFF separately using the same filename but with respective extensions - gz output optional
+def write_fasta(dna_regions, options, fasta_out):
+    fasta_out.write("##\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
+    fasta_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
+    fasta_out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n')
     for dna_region, dna_region_ur in dna_regions.items():
-        out.write('\n##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
+        fasta_out.write('\n##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
         ur_ident = dna_region + options.ident # Add user ident onto name of dna regions
         if dna_region_ur[3]:
             for ex_ur, data in dna_region_ur[3].items():
                 original_ur = data[0]
                 ur_seq = data[1]
-                out.write('>' + ur_ident + '_' + ex_ur + '\n' + ur_seq + '\n')
-    out.close()
+                fasta_out.write('>' + ur_ident + '_' + ex_ur + '\n' + ur_seq + '\n')
+    fasta_out.close()
 
-def write_gff(dna_regions,options):
-    if options.out_file == None:
-        options.out_file = options.gff.split('.gff')[0]
-    if options.gz == False:
-        out =  open(options.out_file + '_UR.gff','w', newline='\n', encoding='utf-8')
-    elif options.gz == True:
-        out = gzip.open(options.out_file + '_UR.gff.gz', 'wt', newline='\n', encoding='utf-8')
-    out.write("##gff-version\t3\n#\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
-    out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
+def write_gff(dna_regions,options,gff_out):
+    gff_out.write("##gff-version\t3\n#\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
+    gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
     for seq_reg in dna_regions:
-        out.write('##sequence-region\t' + seq_reg + ' 1 ' + str(dna_regions[seq_reg][1]) + '\n')
-    out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n\n')
+        gff_out.write('##sequence-region\t' + seq_reg + ' 1 ' + str(dna_regions[seq_reg][1]) + '\n')
+    gff_out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n\n')
     for dna_region, dna_region_ur in dna_regions.items():
         ur_ident = dna_region + options.ident
         if dna_region_ur[3]:
@@ -52,8 +39,8 @@ def write_gff(dna_regions,options):
                 length = len(data[1])
                 ex_ur_pos = ex_ur.replace('_','\t')
                 entry = (dna_region + '\tUR_Extractor\tunannotated_region\t' + ex_ur_pos + '\t.\t.\t.\tID='+ur_ident+'_'+ex_ur+';' + 'Original_UR=' + str(data[0]) + ';Note=UR_Length(Extended):' + str(length) + '\n')
-                out.write(entry)
-    out.close()
+                gff_out.write(entry)
+    gff_out.close()
 
 def fasta_load(fasta_in):
     dna_regions = collections.OrderedDict()
@@ -142,7 +129,7 @@ def gff_load(options,gff_in,dna_regions):
     return dna_regions
 
 def extractor(options):
-    if options.pyrodigal == True:
+    if options.annotation_type[0] == 'Pyrodigal':
         try:  # Detect whether fasta/gff files are .gz or text and read accordingly
             fasta_in = gzip.open(options.fasta, 'rt')
             dna_regions = fasta_load(fasta_in)
@@ -204,14 +191,14 @@ def extractor(options):
 
 
     if options.nout == False:
-        write_fasta(dna_regions, options)
-        write_gff(dna_regions, options)
+        write_fasta(dna_regions, options, options.fasta_out)
+        write_gff(dna_regions, options, options.gff_out)
     else:
         return dna_regions
 
 
 def main():
-    print("Thank you for using StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
+    print("Thank you for using StORF-Reporter -- A detailed user menu can be found at https://github.com/NickJD/StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
     parser._action_groups.pop()
@@ -237,8 +224,10 @@ def main():
                              '"ID=gene" or "-gene_ident CDS" for "most" genome annotations')
 
     output = parser.add_argument_group('Output')
-    output.add_argument('-o', action='store', dest='out_file', required=False,
-                        help='Output file - Without filetype - default appends "_UR" to end of input gff filename (replaces \'.gff\')')
+    output.add_argument('-oname', action="store", dest='o_name', required=False,
+                        help='Default - Appends \'_UR\' to end of input FASTA filename')
+    output.add_argument('-odir', action="store", dest='o_dir', required=False,
+                        help='Default -  Same directory as input FASTA')
     output.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
 
@@ -255,6 +244,32 @@ def main():
 
 
     options = parser.parse_args()
+
+    #### Output Directory and Filename handling
+    if options.o_dir == None and options.o_name == None:
+        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
+        output_file = options.fasta.replace('.' + tmp_extension, '')
+        output_file = output_file + '_UR'
+    elif options.o_dir != None and options.o_name != None:
+        output_file = options.o_dir
+        output_file = output_file + '/' if not output_file.endswith('/') else output_file
+        output_file = output_file + options.o_name
+    elif options.o_dir != None:
+        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
+        output_file = options.fasta.replace('.' + tmp_extension, '').split('/')[-1]
+        output_file = options.o_dir + output_file + '_UR'
+    elif options.o_name != None:
+        tmp_filename = options.fasta.split('/')[-1]  # could be .fa/.fasta etc
+        output_file = options.fasta.replace(tmp_filename, '')
+        output_file = output_file + options.o_name
+
+    if options.gz == False:
+        options.fasta_out = open(output_file + '.fasta','w', newline='\n', encoding='utf-8')
+        options.gff_out =  open(output_file + '.gff','w', newline='\n', encoding='utf-8')
+    elif options.gz == True:
+        options.fasta_out = open(output_file + '.fasta.gz','wt', newline='\n', encoding='utf-8')
+        options.gff_out =  open(output_file + '.gff.gz','wt', newline='\n', encoding='utf-8')
+
     extractor(options)
 
 
