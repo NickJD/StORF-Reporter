@@ -6,16 +6,15 @@ import sys
 
 
 try:
-    # Calling from ORForise via pip
     from .Constants import *
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
     from Constants import *
 
 #Output FASTA and GFF separately using the same filename but with respective extensions - gz output optional
 def write_fasta(dna_regions, options, fasta_out):
-    fasta_out.write("##\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
+    fasta_out.write("##\tUR-Extractor \n#\tRun Date:" + str(date.today()) + '\n')
     fasta_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
-    fasta_out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n')
+    fasta_out.write("##Original Files: " + options.fasta.split('/')[-1] + ' | ' + options.gff.split('/')[-1] + '\n')
     for dna_region, dna_region_ur in dna_regions.items():
         fasta_out.write('\n##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
         ur_ident = dna_region + options.ident # Add user ident onto name of dna regions
@@ -27,11 +26,11 @@ def write_fasta(dna_regions, options, fasta_out):
     fasta_out.close()
 
 def write_gff(dna_regions,options,gff_out):
-    gff_out.write("##gff-version\t3\n#\tUR Extractor \n#\tRun Date:" + str(date.today()) + '\n')
+    gff_out.write("##gff-version\t3\n#\tUR-Extractor \n#\tRun Date:" + str(date.today()) + '\n')
     gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
     for seq_reg in dna_regions:
         gff_out.write('##sequence-region\t' + seq_reg + ' 1 ' + str(dna_regions[seq_reg][1]) + '\n')
-    gff_out.write("##Original Files: " + options.fasta + ' | ' + options.gff + '\n\n')
+    gff_out.write("##Original Files: " + options.fasta.split('/')[-1] + ' | ' + options.gff.split('/')[-1] + '\n\n')
     for dna_region, dna_region_ur in dna_regions.items():
         ur_ident = dna_region + options.ident
         if dna_region_ur[3]:
@@ -110,17 +109,16 @@ def pyrodigal_virtual_gff_load(gff_in,dna_regions):
 def gff_load(options,gff_in,dna_regions):
     for line in gff_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
         line_data = line.split()
-        if line.startswith('\n') or line.startswith('##'):  # Not to crash on empty lines in GFF
+        if line.startswith('\n') or line.startswith('#'):  # Not to crash on empty lines in GFF
             continue
-        elif options.gene_ident == 'ID=gene':
-            if line_data[0] in dna_regions and options.gene_ident in line_data[8]:
+        elif options.gene_ident[0] == 'ID=gene':
+            if line_data[0] in dna_regions and options.gene_ident[0] in line_data[8]:
                 pos = line_data[3] + '_' + line_data[4]
                 dna_regions[line_data[0]][2].append(pos) # This will add to list
         else:
-            gene_types = options.gene_ident.split(',') # Not ensembl but 'CDS,rRNA,tRNA' etc in 3rd column
             try:
                 if line_data[0] in dna_regions:
-                    if any(gene_type in line_data[2] for gene_type in gene_types): # line[2] for normal run
+                    if any(gene_type in line_data[2] for gene_type in options.gene_ident): # line[2] for normal run
                         pos = line_data[3] + '_' + line_data[4]
                         if pos not in dna_regions[line_data[0]][2]:
                             dna_regions[line_data[0]][2].append(pos) # This will add to list
@@ -198,7 +196,7 @@ def extractor(options):
 
 
 def main():
-    print("Thank you for using StORF-Reporter -- A detailed user menu can be found at https://github.com/NickJD/StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
+    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
     parser._action_groups.pop()
@@ -244,6 +242,7 @@ def main():
 
 
     options = parser.parse_args()
+    options.annotation_type = [None,None]
 
     #### Output Directory and Filename handling
     if options.o_dir == None and options.o_name == None:
@@ -270,6 +269,7 @@ def main():
         options.fasta_out = open(output_file + '.fasta.gz','wt', newline='\n', encoding='utf-8')
         options.gff_out =  open(output_file + '.gff.gz','wt', newline='\n', encoding='utf-8')
 
+    options.gene_ident = options.gene_ident.split(',')
     extractor(options)
 
 

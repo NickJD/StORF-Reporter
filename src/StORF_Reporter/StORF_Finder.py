@@ -640,7 +640,7 @@ def StORF_Reported(options, Contigs):
 
 
 def main():
-    print("Thank you for using StORF-Reporter -- A detailed user menu can be found at https://github.com/NickJD/StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
+    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Finder Run Parameters.')
     parser._action_groups.pop()
@@ -676,7 +676,7 @@ def main():
                         help='Default - True. Only report Short-StORFs?')
     optional.add_argument('-stop_ident', action="store", dest='stop_ident', default=False, choices=[True, False],
                         help='Default - True: Identify Stop Codon positions with \'*\'')
-    optional.add_argument('-f_type', action='store', dest='feature_type', default='StORF', const='StORF', nargs='?',
+    optional.add_argument('-f_type', action='store', dest='feature_type', default='CDS', const='StORF', nargs='?',
                         choices=['StORF', 'CDS', 'ORF'],
                         help='Default - "StORF": Which GFF feature type for StORFs to be reported as in GFF')
     optional.add_argument('-minorf', action="store", dest='min_orf', default=99, type=int,
@@ -763,7 +763,7 @@ def main():
             gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
-            gff_out.write("##Original File: " + options.fasta + '\n\n')
+            gff_out.write("##Original File: " + options.fasta.split('/')[-1] + '\n\n')
             fasta_out = open(output_file + '.fasta', 'w', newline='\n', encoding='utf-8')
             if options.translate:
                 aa_fasta_out = open(output_file + '_aa.fasta', 'w', newline='\n', encoding='utf-8')
