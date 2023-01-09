@@ -266,8 +266,8 @@ def main():
         options.fasta_out = open(output_file + '.fasta','w', newline='\n', encoding='utf-8')
         options.gff_out =  open(output_file + '.gff','w', newline='\n', encoding='utf-8')
     elif options.gz == True:
-        options.fasta_out = open(output_file + '.fasta.gz','wt', newline='\n', encoding='utf-8')
-        options.gff_out =  open(output_file + '.gff.gz','wt', newline='\n', encoding='utf-8')
+        options.fasta_out = gzip.open(output_file + '.fasta.gz','wt', newline='\n', encoding='utf-8')
+        options.gff_out =  gzip.open(output_file + '.gff.gz','wt', newline='\n', encoding='utf-8')
 
     options.gene_ident = options.gene_ident.split(',')
     extractor(options)

@@ -403,7 +403,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
         if Reporter_options.gz == False:
                 fasta_outfile = open(Reporter_options.output_file + '.fasta', 'w', newline='\n', encoding='utf-8')
         elif Reporter_options.gz == True:
-                fasta_outfile = open(Reporter_options.output_file + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+                fasta_outfile = gzip.open(Reporter_options.output_file + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
         faa_infile = Reporter_options.gff.replace('.gff3', '.faa').replace('.gff','.faa')
         ffn_infile = Reporter_options.gff.replace('.gff3', '.ffn').replace('.gff','.ffn')
         Original_AA,Original_NT = FASTA_Load(faa_infile,ffn_infile)

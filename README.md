@@ -2,7 +2,7 @@
 
 ### StORF-Reporter, a toolkit that returns missed CDS genes from the Unannotated Regions (URs) of prokaryotic genomes.
 
-# Please use `pip3 install StORF-Reporter' to install StORF-Reporter.
+# Please use `pip3 install StORF-Reporter' to install StORF-Reporter v0.7.1.
 ### This will also install the python-standard library numpy (>=1.22.0), Pyrodigal (>=2.0.0 - https://github.com/althonos/pyrodigal) and ORForise (>=1.2.2 - https://github.com/NickJD/ORForise). 
 
 ### Consider using '--no-cache-dir' with pip to ensure the download of the newest version of StORF-Reporter.
