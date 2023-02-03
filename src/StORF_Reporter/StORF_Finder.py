@@ -170,8 +170,12 @@ def prepare_out(options, storfs, seq_id):
         pos_ = pos.split(',')
         start_stop = sequence[0:3]
         if len(pos_) == 3:
-            mid = int(pos_[1]) - int(pos_[0])
-            mid_stop = sequence[mid-3:mid]
+            if strand == '-':
+                mid = int(pos_[2]) - int(pos_[1])
+                mid_stop = sequence[mid:mid + 3]
+            else:
+                mid = int(pos_[1]) - int(pos_[0])
+                mid_stop = sequence[mid:mid + 3]
         else:
             mid_stop = 'N/A'
         end_stop = sequence[-3:]
@@ -287,7 +291,7 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                         if not first and stop == prev_next_stop:
                             if prev_next_stop != con_StORF_tracker:
                                 con_StORF_tracker = next_stop
-                                seq = sequence[prev_stop:next_stop]
+                                seq = sequence[prev_stop:next_stop + 3]
                                 length = next_stop - prev_stop
                                 ##### Needed to correct for negative frame loci
                                 if working_frame == 'negative':
@@ -303,7 +307,8 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                                 con_StORF_tracker = next_stop
                                 prev_con_StORF = next(reversed(con_StORFs.keys())) #Get last key
                                 seq_start = int(prev_con_StORF.split(',')[0])
-                                seq = sequence[seq_start:next_stop  + 3]
+                                #seq = sequence[seq_start:next_stop  + 3]
+                                seq = sequence[int(prev_con_StORF.split(',')[0]):next_stop + 3]
                                 length = next_stop - seq_start # Check
                                 prev_con_StORF = prev_con_StORF_CHECKER(prev_con_StORF,sequence,options)
                                 ##### Needed to correct for negative frame loci
@@ -640,13 +645,11 @@ def StORF_Reported(options, Contigs):
 
 
 def main():
-    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
-
     parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Finder Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
-    required.add_argument('-f', action="store", dest='fasta', required=True,
+    required.add_argument('-f', action="store", dest='fasta', required=False,
                         help='Input FASTA File - (UR_Extractor output)')
 
     optional = parser.add_argument_group('Optional Arguments')
@@ -720,10 +723,21 @@ def main():
                         help=argparse.SUPPRESS)
 
     misc = parser.add_argument_group('Misc')
-    misc.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
-                        help='Default - False: Print out runtime status')
+    misc.add_argument('-verbose', action='store', dest='verbose', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Print out runtime messages')
+    misc.add_argument('-v', action='store_true', dest='version',
+                        help='Default - False: Print out version number and exit')
 
     options = parser.parse_args()
+
+    if options.fasta == None:
+        if options.version:
+            sys.exit(StORF_Reporter_Version)
+        else:
+            exit('StORF-Finder: error: the following arguments are required: -f')
+
+    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+          "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
 
     #ns_nt = defaultdict  # Used to Record non-standard nucleotides - not implemented yet
@@ -741,19 +755,19 @@ def main():
             print(fasta_in.name)
     #### Output Directory and Filename handling
     if options.o_dir == None and options.o_name == None:
-        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
-        output_file = options.fasta.replace('.' + tmp_extension, '')
+        tmp_extension = options.gff.split('.')[-1]  # could be .fa/.fasta etc
+        output_file = options.gff.replace('.' + tmp_extension, '')
         output_file = output_file + '_StORF-R'
     elif options.o_dir != None and options.o_name != None:
         output_file = options.o_dir
         output_file = output_file + options.o_name
     elif options.o_dir != None:
-        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
-        output_file = options.fasta.replace('.' + tmp_extension, '').split('/')[-1]
+        tmp_extension = options.gff.split('.')[-1]  # could be .fa/.fasta etc
+        output_file = options.gff.replace('.' + tmp_extension, '').split('/')[-1]
         output_file = options.o_dir + output_file + '_StORF-R'
     elif options.o_name != None:
-        tmp_filename = options.fasta.split('/')[-1]  # could be .fa/.fasta etc
-        output_file = options.fasta.replace(tmp_filename, '')
+        tmp_filename = options.gff.split('/')[-1]  # could be .fa/.fasta etc
+        output_file = options.gff.replace(tmp_filename, '')
         output_file = output_file + options.o_name
 
     if not options.gz: # Clear fasta and gff files if not empty - Needs an elegant solution
@@ -763,7 +777,7 @@ def main():
             gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
-            gff_out.write("##Original File: " + options.fasta.split('/')[-1] + '\n\n')
+            gff_out.write("##Original File: " + options.gff.split('/')[-1] + '\n\n')
             fasta_out = open(output_file + '.fasta', 'w', newline='\n', encoding='utf-8')
             if options.translate:
                 aa_fasta_out = open(output_file + '_aa.fasta', 'w', newline='\n', encoding='utf-8')
@@ -778,7 +792,7 @@ def main():
             gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
-            gff_out.write("##Original File: " + options.fasta + '\n\n')
+            gff_out.write("##Original File: " + options.gff + '\n\n')
             fasta_out = gzip.open(output_file + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
             if options.translate:
                 aa_fasta_out = gzip.open(output_file + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8')

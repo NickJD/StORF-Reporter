@@ -69,9 +69,13 @@ def GFF_StoRF_write(StORF_options, Reporter_options, track_contig, gff_out, StOR
     stop = StORF[4]
     UR_Start = int(StORF[0].split('_')[0])
     start_stop = StORF[12][0:3]
-    if len(StORF[11]) == 3: # fix for con-storfs
-        mid = int(StORF[11]) - int(StORF[11])
-        mid_stop = StORF[12][mid - 3:mid]
+    if len(StORF[11].split(',')) == 3: # fix for con-storfs
+        if StORF[7] == '-':
+            mid = int(StORF[11].split(',')[2]) - int(StORF[11].split(',')[1])
+            mid_stop = StORF[12][mid:mid + 3]
+        else:
+            mid = int(StORF[11].split(',')[1]) - int(StORF[11].split(',')[0])
+            mid_stop = StORF[12][mid:mid + 3]
     else:
         mid_stop = 'N/A'
     end_stop = StORF[12][-3:]
@@ -510,13 +514,11 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
 
 
 def main():
-    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
-
     parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Reporter Run Parameters.', formatter_class=SmartFormatter)
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Options')
-    required.add_argument('-anno', action='store', dest='annotation_type', required=True,
+    required.add_argument('-anno', action='store', dest='annotation_type', required=False,
                         choices=['Prokka', 'Bakta', 'Out_Dir', 'Single_GFF', 'Multiple_GFFs', 'Ensembl', 'Feature_Types',
                                   'Single_Genome', 'Multiple_Genomes','Single_Combined_GFF', 'Multiple_Combined_GFFs',
                                  'Pyrodigal', 'Single_FASTA', 'Multiple_FASTA'], nargs='*',
@@ -544,7 +546,7 @@ def main():
                              '\tSingle_FASTA = To provide a single FASTA file; \n'
                              '\tMultiple_FASTA = To provide a directory containing multiple FASTA files (will detect .fna,.fa,.fasta); \n\n')
 
-    required.add_argument('-p', action='store', dest='path', default='', required=True,
+    required.add_argument('-p', action='store', dest='path', default='', required=False,
                         help='Provide input file or directory path')
     ###
     StORF_Reporter_args = parser.add_argument_group('StORF-Reporter Options')
@@ -644,16 +646,26 @@ def main():
 
     misc.add_argument('-overwrite', action='store', dest='overwrite', default=False, type=eval, choices=[True, False],
                         help='Default - False: Overwrite StORF-Reporter output if already present')
-    misc.add_argument('-v', action='store', dest='verbose', default=False, type=eval, choices=[True, False],
+    misc.add_argument('-verbose', action='store', dest='verbose', default=False, type=eval, choices=[True, False],
                         help='Default - False: Print out runtime messages')
-    parser.add_argument('-nout', action='store', dest='nout', default=True, type=eval, choices=[True, False],
+    misc.add_argument('-v', action='store_true', dest='version',
+                        help='Default - False: Print out version number and exit')
+    misc.add_argument('-nout', action='store', dest='nout', default=True, type=eval, choices=[True, False],
                         help=argparse.SUPPRESS)
-    parser.add_argument('-nout_pyrodigal', action='store', dest='nout_pyrodigal', default=True, type=eval, choices=[True, False],
+    misc.add_argument('-nout_pyrodigal', action='store', dest='nout_pyrodigal', default=True, type=eval, choices=[True, False],
                         help=argparse.SUPPRESS)
 
     Reporter_options = parser.parse_args()
     Reporter_options.gff_fasta = None # To be done
     Reporter_options.reporter = True
+
+    if Reporter_options.annotation_type == None or Reporter_options.path == None:
+        if Reporter_options.version:
+            sys.exit(StORF_Reporter_Version)
+        else:
+            exit('StORF-Reporter: error: the following arguments are required: -anno, -p')
+    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+          "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     ##############
     ## Print out user chosen annotation options
@@ -670,7 +682,7 @@ def main():
 
     if Reporter_options.o_dir == None and Reporter_options.o_name == None:
         if Reporter_options.annotation_type[1] == 'Out_Dir':
-            output_file = Reporter_options.path.split('.')[-1]
+            output_file = Reporter_options.path#.split('.')[-1]
             output_file = output_file + output_file.split('/')[-2] + '_StORF-Reporter_Extended'
         else:
             tmp_extension = Reporter_options.path.split('.')[-1]  # could be .fa/.fasta etc
@@ -684,11 +696,19 @@ def main():
         output_file = output_file + '/' if not output_file.endswith('/') else output_file
         output_file = output_file + Reporter_options.o_name
     elif Reporter_options.o_dir != None:
-        tmp_extension = Reporter_options.path.split('.')[-1]  # could be .fa/.fasta etc
-        output_file = Reporter_options.path.replace('.' + tmp_extension, '').split('/')[-1]
-        if Reporter_options.annotation_type[0] == 'Pyrodigal':
+        if Reporter_options.annotation_type[1] == 'Out_Dir':
+            Reporter_options.o_dir = Reporter_options.o_dir + '/' if not Reporter_options.o_dir.endswith('/') else Reporter_options.o_dir
+            output_file = Reporter_options.path#.split('.')[-1]
+            output_file = output_file + output_file.split('/')[-2] + '_StORF-Reporter_Extended'
+            output_file = output_file.split('/')[-1]
+            output_file = Reporter_options.o_dir + output_file
+        elif Reporter_options.annotation_type[0] == 'Pyrodigal':
+            tmp_extension = Reporter_options.path.split('.')[-1]  # could be .fa/.fasta etc
+            output_file = Reporter_options.path.replace('.' + tmp_extension, '').split('/')[-1]
             output_file = Reporter_options.o_dir + output_file + '_Pyrodigal_StORF-Reporter_Extended'
         else:
+            tmp_extension = Reporter_options.path.split('.')[-1]  # could be .fa/.fasta etc
+            output_file = Reporter_options.path.replace('.' + tmp_extension, '').split('/')[-1]
             output_file = Reporter_options.o_dir + output_file + '_StORF-Reporter_Extended'
     elif Reporter_options.o_name != None:
         tmp_filename = Reporter_options.path.split('/')[-1]  # could be .fa/.fasta etc

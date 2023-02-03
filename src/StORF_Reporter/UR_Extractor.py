@@ -160,7 +160,7 @@ def extractor(options):
             for pos in posns: # Iterate over GFF loci and measure flanking regions for potential URs
                 start = int(pos.split('_')[0])
                 stop = int(pos.split('_')[1])
-                ###### This hack is to get over GFF errors where genome-long annotations
+                ###### This hack is to account for GFF errors which contain genome-long annotations
                 if stop-start >= 100000:
                     if options.verbose == True:
                         print("UR " + pos + " is more than 100,000 kbs - Please Check Annotation")
@@ -196,16 +196,15 @@ def extractor(options):
 
 
 def main():
-    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
-    required.add_argument('-f', action='store', dest='fasta', required=True,
+    required.add_argument('-f', action='store', dest='fasta', required=False,
                         help='FASTA file for Unannotated Region seq extraction')
     required.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',
-                        required=True)
+                        required=False)
 
     optional = parser.add_argument_group('Optional Arguments')
     optional.add_argument('-ident', action='store', dest='ident', default='_UR',
@@ -223,43 +222,53 @@ def main():
 
     output = parser.add_argument_group('Output')
     output.add_argument('-oname', action="store", dest='o_name', required=False,
-                        help='Default - Appends \'_UR\' to end of input FASTA filename')
+                        help='Default - Appends \'_UR\' to end of input GFF filename')
     output.add_argument('-odir', action="store", dest='o_dir', required=False,
-                        help='Default -  Same directory as input FASTA')
+                        help='Default -  Same directory as input GFF')
     output.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
                         help='Default - False: Output as .gz')
 
 
     misc = parser.add_argument_group('Misc')
-    misc.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
-                        help='Default - False: Print out runtime status')
-    parser.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
+    misc.add_argument('-verbose', action='store', dest='verbose', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Print out runtime messages')
+    misc.add_argument('-v', action='store_true', dest='version',
+                        help='Default - False: Print out version number and exit')
+    misc.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
                         help=argparse.SUPPRESS)
-    parser.add_argument('-pyrodigal', action='store', dest='pyrodigal', default='False', type=eval, choices=[True, False],
+    misc.add_argument('-pyrodigal', action='store', dest='pyrodigal', default='False', type=eval, choices=[True, False],
                         help=argparse.SUPPRESS)
-    parser.add_argument('-nout_pyrodigal', action='store', dest='nout_pyrodigal', default='True', type=eval, choices=[True, False],
+    misc.add_argument('-nout_pyrodigal', action='store', dest='nout_pyrodigal', default='True', type=eval, choices=[True, False],
                         help=argparse.SUPPRESS)
-
 
     options = parser.parse_args()
+    if options.fasta == None or options.gff == None:
+        if options.version:
+            sys.exit(StORF_Reporter_Version)
+        else:
+            exit('UR-Extractor: error: the following arguments are required: -f, -gff')
+
+    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+          "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
+
     options.annotation_type = [None,None]
 
     #### Output Directory and Filename handling
     if options.o_dir == None and options.o_name == None:
-        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
-        output_file = options.fasta.replace('.' + tmp_extension, '')
+        tmp_extension = options.gff.split('.')[-1]
+        output_file = options.gff.replace('.' + tmp_extension, '')
         output_file = output_file + '_UR'
     elif options.o_dir != None and options.o_name != None:
         output_file = options.o_dir
         output_file = output_file + '/' if not output_file.endswith('/') else output_file
         output_file = output_file + options.o_name
     elif options.o_dir != None:
-        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
-        output_file = options.fasta.replace('.' + tmp_extension, '').split('/')[-1]
+        tmp_extension = options.gff.split('.')[-1]
+        output_file = options.gff.replace('.' + tmp_extension, '').split('/')[-1]
         output_file = options.o_dir + output_file + '_UR'
     elif options.o_name != None:
-        tmp_filename = options.fasta.split('/')[-1]  # could be .fa/.fasta etc
-        output_file = options.fasta.replace(tmp_filename, '')
+        tmp_filename = options.gff.split('/')[-1]
+        output_file = options.gff.replace(tmp_filename, '')
         output_file = output_file + options.o_name
 
     if options.gz == False:

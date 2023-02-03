@@ -241,16 +241,15 @@ def storf_extractor(options, gff):
         write_gff(dna_regions, options, options.gff_outfile, gff)
 
 def main():
-    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\nPlease report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Extractor Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
-    required.add_argument('-storf_input', action='store', dest='storf_input', required=True,
+    required.add_argument('-storf_input', action='store', dest='storf_input', required=False,
                         choices=['Combined', 'Separate'],
                         help='Are StORFs to be extracted from Combined GFF/FASTA or Separate GFF/FASTA files?\n')
-    required.add_argument('-p', action='store', dest='path', default='', required=True,
+    required.add_argument('-p', action='store', dest='path', default='', required=False,
                         help='Provide input file or directory path')
 
     ### Not implemented yet
@@ -272,13 +271,26 @@ def main():
 
 
     misc = parser.add_argument_group('Misc')
-    misc.add_argument('-v', action='store', dest='verbose', default='False', type=eval, choices=[True, False],
-                        help='Default - False: Print out runtime status')
+    misc.add_argument('-verbose', action='store', dest='verbose', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Print out runtime messages')
+    misc.add_argument('-v', action='store_true', dest='version',
+                        help='Default - False: Print out version number and exit')
 
 
 
     options = parser.parse_args()
     options.tool_ident = ['StORF-Reporter']#options.tool_ident.split(',')
+
+
+    if options.storf_input == None or options.path == None:
+        if options.version:
+            sys.exit(StORF_Reporter_Version)
+        else:
+            exit('StORF-Extractor: error: the following arguments are required: -storf_input, -p')
+
+    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+          "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
+
 
     #### Output Directory and Filename handling
     if options.o_dir == None and options.o_name == None:
