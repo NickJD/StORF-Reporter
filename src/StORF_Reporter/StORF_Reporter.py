@@ -56,7 +56,7 @@ def translate_frame(sequence):
     return translate
 ############################
 
-def GFF_StoRF_write(StORF_options, Reporter_options, track_contig, gff_out, StORF, StORF_Num): # Consistency in outfile
+def GFF_StoRF_write(Reporter_options, track_contig, gff_out, StORF, StORF_Num): # Consistency in outfile
     ID = track_contig + '_UR_' + StORF[0] + '_' + StORF[10] + '_'+ str(StORF[9])
     try:
         to_hash = gff_out.split('.')[0] + '_' + ID # create unique hash from outfile name and ID
@@ -99,7 +99,7 @@ def GFF_StoRF_write(StORF_options, Reporter_options, track_contig, gff_out, StOR
 
     StORF_length = int(gff_stop) + 1 - int(gff_start) # +1 to adjust for base-1
 
-    gff_out.write(track_contig + '\tStORF-Reporter\t' + StORF_options.feature_type + '\t' +  str(gff_start) + '\t' + str(gff_stop) + '\t.\t' +
+    gff_out.write(track_contig + '\tStORF-Reporter\t' + Reporter_options.feature_type + '\t' +  str(gff_start) + '\t' + str(gff_stop) + '\t.\t' +
         StORF[7] + '\t0\tID=StORF_' + locus_tag + ';locus_tag=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Stop_Locations=' + StORF[11].replace(',','-') + ';Name=' +
            StORF[10] + '_' + str(StORF_Num) + ';' + StORF[10] + '_Num_In_UR=' + str(StORF[9]) + ';' + StORF[10] + '_Length=' + str(StORF_length) + ';' + StORF[10] +
            '_Frame=' + str(frame) + ';UR_' + StORF[10] + '_Frame=' + str(StORF[6]) +  ';Start_Stop=' + start_stop + ';Mid_Stops=' + mid_stop  + ';End_Stop='
@@ -433,7 +433,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
                 #     StORFs = find_after_StORFs(StORF_options, Contig_URS, track_prev_start, track_prev_stop,track_prev_contig) # Changed to prev stop because we are switching from previous contig
                 #     if StORFs:
                 #         for StORF in StORFs:
-                #             GFF_StoRF_write(StORF_options, Reporter_options, track_prev_contig, outfile, StORF,
+                #             GFF_StoRF_write( Reporter_options, track_prev_contig, outfile, StORF,
                 #                             StORF_Num)  # To keep consistency
                 #             if StORF_options.path == True:
                 #                 FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
@@ -472,7 +472,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
                         fasta_outfile.write(Original_Seq+'\n')
             if StORFs:
                 for StORF in StORFs:  # ([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand, StORF_Length, StORF_UR_Num, StORF_Seq)]
-                    GFF_StoRF_write(Reporter_options, Reporter_options, track_contig, Reporter_options.gff_outfile, StORF, StORF_Num)  # To keep consistency
+                    GFF_StoRF_write(Reporter_options, track_contig, Reporter_options.gff_outfile, StORF, StORF_Num)  # To keep consistency
                     if Reporter_options.annotation_type[1] == 'Out_Dir':
                         FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
                     StORF_Num += 1
@@ -485,8 +485,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
                                        track_prev_contig)  # Changed to prev stop because we are switching from previous contig
             if StORFs:
                 for StORF in StORFs:
-                    GFF_StoRF_write(Reporter_options, track_prev_contig, Reporter_options.gff_outfile, StORF,
-                                    StORF_Num)  # To keep consistency
+                    GFF_StoRF_write(Reporter_options, track_prev_contig, Reporter_options.gff_outfile, StORF, StORF_Num)  # To keep consistency
                     if Reporter_options.annotation_type[1] == 'Out_Dir':
                         FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
                     StORF_Num += 1
@@ -498,7 +497,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             # StORFs = find_after_StORFs(StORF_options, Contig_URS, track_prev_start, track_prev_stop, track_prev_contig)  # Changed to prev stop because we are switching from previous contig
             # if StORFs:
             #     for StORF in StORFs:
-            #         GFF_StoRF_write(StORF_options, Reporter_options, track_prev_contig, outfile, StORF)  # To keep consistency
+            #         GFF_StoRF_write(Reporter_options, track_prev_contig, outfile, StORF)  # To keep consistency
             #         if StORF_options.path == True:
             #             FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
             #         StORF_Num += 1
@@ -774,7 +773,7 @@ def main():
                 Reporter_options.output_file = output_file
             if Reporter_options.verbose == True:
                 print("Starting: " + str(gff))
-            Contigs, Reporter_options = run_UR_Extractor_Extended_GFFs(Reporter_options,gff)
+            Contigs, Reporter_options = run_UR_Extractor_Matched(Reporter_options,gff) # used to be extended
             ################## Find StORFs in URs - Setup StORF_Reporter-Finder Run
             Reporter_StORFs = StORF_Reported(Reporter_options, Contigs)
             StORF_Filler(Reporter_options, Reporter_StORFs)
