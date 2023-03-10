@@ -755,19 +755,19 @@ def main():
             print(fasta_in.name)
     #### Output Directory and Filename handling
     if options.o_dir == None and options.o_name == None:
-        tmp_extension = options.gff.split('.')[-1]  # could be .fa/.fasta etc
-        output_file = options.gff.replace('.' + tmp_extension, '')
+        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
+        output_file = options.fasta.replace('.' + tmp_extension, '')
         output_file = output_file + '_StORF-R'
     elif options.o_dir != None and options.o_name != None:
         output_file = options.o_dir
         output_file = output_file + options.o_name
     elif options.o_dir != None:
-        tmp_extension = options.gff.split('.')[-1]  # could be .fa/.fasta etc
-        output_file = options.gff.replace('.' + tmp_extension, '').split('/')[-1]
+        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
+        output_file = options.fasta.replace('.' + tmp_extension, '').split('/')[-1]
         output_file = options.o_dir + output_file + '_StORF-R'
     elif options.o_name != None:
-        tmp_filename = options.gff.split('/')[-1]  # could be .fa/.fasta etc
-        output_file = options.gff.replace(tmp_filename, '')
+        tmp_filename = options.fasta.split('/')[-1]  # could be .fa/.fasta etc
+        output_file = options.fasta.replace(tmp_filename, '')
         output_file = output_file + options.o_name
 
     if not options.gz: # Clear fasta and gff files if not empty - Needs an elegant solution
@@ -777,7 +777,7 @@ def main():
             gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
-            gff_out.write("##Original File: " + options.gff.split('/')[-1] + '\n\n')
+            gff_out.write("##Original File: " + options.fasta.split('/')[-1] + '\n\n')
             fasta_out = open(output_file + '.fasta', 'w', newline='\n', encoding='utf-8')
             if options.translate:
                 aa_fasta_out = open(output_file + '_aa.fasta', 'w', newline='\n', encoding='utf-8')

@@ -1,0 +1,3 @@
+4	Chromosome_UR_700064_701752_StORF_2:700819-700917;UR=Chromosome_UR_700064_701752;UR_Stop_Locations=754-853;Length=99;Strand=+;Frame=1;UR_Frame=2;Start_Stop=TGA;End_Stop=TAA;StORF_Type=StORF	100	22	0	0	1	22	10	31	1.14e-12	48.1
+7	Chromosome_UR_112714_113055_StORF_0:112807-112959;UR=Chromosome_UR_112714_113055;UR_Stop_Locations=92-245;Length=153;Strand=+;Frame=1;UR_Frame=3;Start_Stop=TAG;End_Stop=TAA;StORF_Type=StORF	100	43	0	0	1	43	7	49	7.73e-28	87.8
+16	Chromosome_UR_2453452_2454734_StORF_4:2454433-2454672;UR=Chromosome_UR_2453452_2454734;UR_Stop_Locations=980-1220;Length=240;Strand=+;Frame=1;UR_Frame=3;Start_Stop=TAA;End_Stop=TAG;StORF_Type=StORF	100	63	0	0	1	63	16	78	4.58e-46	135
