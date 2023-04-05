@@ -22,8 +22,8 @@ def get_Species(clustered):
     return str('_'.join(clustered_species)).capitalize()
 
 
-PEP_In = open('All_Ensem_Filtered_PEP.fa.gz_CD_c90_c60.clstr','r')
-StORF_In = open('All_Ensem_Filtered_PEP_Clustered_With_Unclustered_UR-StORFS_s.fa_CD_c90_s60.clstr','r') # Clusters for single Genera
+PEP_In = open('/home/nick/Documents/StORF-Reporter/All_Ensembl_PEP_CD_Clustered_90_60.clstr','r')
+StORF_In = open('/home/nick/Documents/StORF-Reporter/All_Ensem_PEP_CD_Clustered_90_60_Unclustered_UR_StORFs_AA_CD.clstr','r') # Clusters for single Genera
 
 clusters = collections.OrderedDict()
 
@@ -56,7 +56,7 @@ for line in PEP_In:
                 # pangenome_clusters_PEP_Genera.popitem()
                 # pangenome_clusters_PEP_SEQS.popitem()
                 # reps.popitem()
-            #if len(clusters[cluster_id]) == 4:
+            # if len(clusters[cluster_id]) == 1:
             #    break    # REMEMBER
         Ensem_genomes, Con_genomes = [], []
         cluster_id = line.strip('>')
@@ -118,8 +118,8 @@ for line in StORF_In:
         if first == False:
             cluster_size = len(Combined_clusters[cluster_id])
             Combined_reps.update({rep: cluster_size})
-            if len(Combined_pangenome_clusters_PEP_SEQS[cluster_id]) > 1:
-                print("Here")
+            # if len(Combined_pangenome_clusters_PEP_SEQS[cluster_id]) > 1:
+            #     print("Here")
             if len(Combined_pangenome_clusters_StORF_SEQS[cluster_id]) > 0 and len(Combined_pangenome_clusters_PEP_SEQS[cluster_id]) > 0:
                 if len(Combined_pangenome_clusters_PEP_SEQS[cluster_id]) > 1: # If we have clustered >1 PEP family, we need to record 1 as key and all others are val
                     all_but_first = Combined_pangenome_clusters_PEP_SEQS[cluster_id][1:]
@@ -168,7 +168,7 @@ for line in StORF_In:
             if '_' in clustered_strain[0]:  # Remove name error
                 clustered_strain = clustered_strain.split('_')[1]
 
-            if "Stop-ORF" in line:
+            if "StORF_Type" in line:
             #     if cluster_id not in clusters_With_Con_StORFs: # For counting?
             #         clusters_With_Con_StORFs.append(cluster_id)
                 if clustered_genus not in Combined_pangenome_clusters_StORF_Genera[cluster_id]:
@@ -222,7 +222,7 @@ for cluster, pep_genomes in pangenome_clusters_PEP_Genera.items():
         seen_clust_Genera = []
         num_clustered_PEP_Genera[cluster].append(rep + '_' + str(len(pep_genomes)))
         for clust in clustered_combined:
-            if 'Stop-ORF' not in clust:
+            if 'StORF_Type' not in clust:
                 ### Need to get the number of pep genomes for each pep clustered into this
                 Com_PEPs += 1
                 clustered_genus = get_Genus(clust)
@@ -236,7 +236,7 @@ for cluster, pep_genomes in pangenome_clusters_PEP_Genera.items():
                 except TypeError:
                     sys.exit("Broken")
 
-            elif 'Stop-ORF' in clust:
+            elif 'StORF_Type' in clust:
                 StORFs += 1
                 clustered_genus = get_Genus(clust)
                 #clust_Genome = clust.split('|')[0]

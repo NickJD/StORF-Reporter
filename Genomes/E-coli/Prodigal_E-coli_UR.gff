@@ -1,7 +1,10 @@
 ##gff-version	3
-#	UR Extractor 
-#	Run Date:2022-06-05
-##Original Files: ../../Genomes/E-coli/E-coli.fa | ../../Genomes/E-coli/Prodigal_E-coli.gff
+#	UR-Extractor 
+#	Run Date:2023-03-31
+##StORF-Reporter v0.7.4
+##sequence-region	Chromosome 1 4558660
+##Original Files: E-coli.fa | Prodigal_E-coli.gff
+
 Chromosome	UR_Extractor	unannotated_region	48	387	.	.	.	ID=Chromosome_UR_48_387;Original_UR=98_337;Note=UR_Length(Extended):339
 Chromosome	UR_Extractor	unannotated_region	4970	5284	.	.	.	ID=Chromosome_UR_4970_5284;Original_UR=5020_5234;Note=UR_Length(Extended):314
 Chromosome	UR_Extractor	unannotated_region	5480	5733	.	.	.	ID=Chromosome_UR_5480_5733;Original_UR=5530_5683;Note=UR_Length(Extended):253

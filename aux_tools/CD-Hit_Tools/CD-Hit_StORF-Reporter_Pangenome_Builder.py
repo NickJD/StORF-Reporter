@@ -4,15 +4,14 @@ import math
 from collections import Counter
 import sys
 import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 from  matplotlib.ticker import PercentFormatter
 
 
 #clusters_In = open('./E-coli/Escherichia_coli_PEP_UR-Con-StORFs_NO_STAR_CD_80_NEW.clstr','r') # Clusters for single Genera
 #clusters_In = open('./E-coli/Escherichia_coli_PEP_UR_StORFs_NO_STAR_CD_80_NEW.clstr','r') # Clusters for single Genera
-PEP_In = open('/home/nick/Nextcloud/Ensem/E-coli/Escherichia_coli_PEP.fa_CD_c90_s60.clstr','r')
-StORF_In = open('/home/nick/Nextcloud/Ensem/E-coli/Escherichia_coli_PEP_Clustered_With_Unclustered_UR-Con-StORFs.fa_CD_c90_s60.clstr','r')
+PEP_In = open('/home/nick/Documents/StORF-Reporter/E-coli/Filtered/Ecoli_Filtered_PEP_CD_c90_s60.clstr','r')
+StORF_In = open('/home/nick/Documents/StORF-Reporter/E-coli/Filtered/Ecoli_PEP_Clustered_CD_c90_s60_With_Unclustered_UR_StORFs_CD_c90_s60.clstr','r')
 
 
 
@@ -98,11 +97,12 @@ for line in StORF_In:
             for pep in Combined_pangenome_clusters_PEP_SEQS[cluster_id]:
                 if pep != []:
                     if pep in already_seen_PEP:# and Combined_pangenome_clusters_PEP_SEQS[cluster_id] != []:
-                        print("Already Counted")
+                        #print("Already Counted")
+                        continue
                     else:
                         already_seen_PEP.append(pep)
-            if len(Combined_pangenome_clusters_PEP[cluster_id]) > 1:
-                print("Here")
+          #  if len(Combined_pangenome_clusters_PEP[cluster_id]) > 1:
+          #      print("Here")
             if len(Combined_pangenome_clusters_StORF_SEQS[cluster_id]) > 0 and len(Combined_pangenome_clusters_PEP_SEQS[cluster_id]) > 0:
                 if len(Combined_pangenome_clusters_PEP_SEQS[cluster_id]) > 1: # If we have clustered >1 PEP family, we need to record 1 as key and all others are val
                     all_but_first = Combined_pangenome_clusters_PEP_SEQS[cluster_id][1:]
@@ -140,7 +140,7 @@ for line in StORF_In:
         if first == False:
             Combined_clusters[cluster_id].append(clustered)
             clustered_genome = clustered.split('|')[0]
-            if "Stop-ORF" in line:
+            if "StORF_Type=StORF" in line:
                 if cluster_id not in clusters_With_Con_StORFs: # For counting?
                     clusters_With_Con_StORFs.append(cluster_id)
                 if clustered_genome not in Combined_pangenome_clusters_StORF[cluster_id]:
@@ -178,7 +178,7 @@ for cluster, pep_genomes in pangenome_clusters_PEP.items():
         seen_clust_Genomes = []
         num_clustered_PEP[cluster].append(rep+'_'+str(len(pep_genomes)))
         for clust in clustered_combined:
-            if 'Stop-ORF' not in clust: # Not good enough at the moment
+            if 'StORF_Type=StORF' not in clust: # Not good enough at the moment
                 ### Need to get the number of pep genomes for each pep clustered into this
                 Com_PEPs +=1 #
                 recorded_PEP.append(clust)
@@ -190,7 +190,7 @@ for cluster, pep_genomes in pangenome_clusters_PEP.items():
                     if clust_Genome not in pep_genomes:
                         Com_PEP_Genomes +=1
                 num_clustered_PEP[cluster].append(clust+'_'+str(reps[clust][1]))
-            elif 'Stop-ORF' in clust:
+            elif 'StORF_Type=StORF' in clust:
                 StORFs +=1
                 clust_Genome = clust.split('|')[0]
                 if clust_Genome not in seen_StORFs:
@@ -224,20 +224,20 @@ for cluster, pep_genomes in pangenome_clusters_PEP.items():
 #####################
 #### write out Cluster IDs for clusters of specific types?? To then be eggnogged
 #sys.exit("Killed Ere")
-Without_StORF = open('./E-coli/Ensem_Clusters_Without_StORFs_To_Be_Nogged_min2','w')
-With_StORF = open('./E-coli/Ensem_Clusters_With_StORFs_To_Be_Nogged','w')
-#With_Extending_StORF = open('./E-coli/Ensem_Clusters_With_Extending_Con-StORFs_To_Be_Nogged','w')
-
-for key, value in pangenome_clusters_Type.items():
-    if value[4] == 0 and value[1] >=2:
-        Without_StORF.write(str(key)+',')
-    # elif value[3] != 0:
-    #     With_Extending_StORF.write(str(key)+',')
-    #     With_StORF.write(str(key) + ',')
-    elif value[4] >=1:
-        With_StORF.write(str(key) + ',')
-With_StORF.close()
-Without_StORF.close()
+# Without_StORF = open('./E-coli/Ensem_Clusters_Without_StORFs_To_Be_Nogged_min2','w')
+# With_StORF = open('./E-coli/Ensem_Clusters_With_StORFs_To_Be_Nogged','w')
+# #With_Extending_StORF = open('./E-coli/Ensem_Clusters_With_Extending_Con-StORFs_To_Be_Nogged','w')
+#
+# for key, value in pangenome_clusters_Type.items():
+#     if value[4] == 0 and value[1] >=2:
+#         Without_StORF.write(str(key)+',')
+#     # elif value[3] != 0:
+#     #     With_Extending_StORF.write(str(key)+',')
+#     #     With_StORF.write(str(key) + ',')
+#     elif value[4] >=1:
+#         With_StORF.write(str(key) + ',')
+# With_StORF.close()
+# Without_StORF.close()
 #With_Extending_StORF.close()
 
 
@@ -257,10 +257,10 @@ for cluster, genomes in Combined_pangenome_clusters_StORF.items():
 
 #######################################
 
-core_99 = 9.9/10 * len(genome_dict)
-core_95 = 9.5/10 * len(genome_dict)
-core_90 = 9/10 * len(genome_dict)
-core_15 = 1.5/10 * len(genome_dict)
+core_99 = math.floor(9.9/10 * len(genome_dict))
+core_95 = math.floor(9.5/10 * len(genome_dict))
+core_90 = math.floor(9/10 * len(genome_dict))
+core_15 = math.floor(1.5/10 * len(genome_dict))
 
 cores = collections.OrderedDict({'pep_core_99':0,'pep_core_95':0,'pep_core_15':0,'extended_99':0,'extended_95':0
          ,'extended_15':0,'comb_extended_99':0,'comb_extended_95':0,'comb_extended_15':0,'storf_core_99':0,'storf_core_95':0,'storf_core_15':0,
@@ -280,8 +280,13 @@ soft_core_list = []
 accessory_list = []
 
 storf_core_only = []
+
+list_all_pep_numbers = collections.defaultdict(int)
+
+
 ############################ Count PEP separately first to get TRUE Ensembl gene families
 def calc_pep_only_core(pep_num):
+    list_all_pep_numbers[pep_num] +=1
     if pep_num >= math.floor(core_99):# and StORF_num == 0:
         cores['pep_core_99'] += 1
     elif pep_num >= math.floor(core_95) and pep_num < math.floor(core_99):# and StORF_num == 0:
@@ -342,6 +347,7 @@ counter = 0
 
 Number_Of_StORF_Extending_But_Same_Genomes = 0
 
+
 print("Running")
 for cluster, numbers in pangenome_clusters_Type.items(): # put limits here to make sure storf and enembl only are in more than one genome.
     if numbers[3] >= 1:
@@ -386,9 +392,9 @@ STORF_ONLY = []
 ENSEM_ONLY = []
 COMBINED_ONLY = []
 
-StORF_Only_Out = open("./E-coli/E-coli_StORF_Only_Clusters_To_Be_Nogged_min2",'w')
+# StORF_Only_Out = open("./E-coli/E-coli_StORF_Only_Clusters_To_Be_Nogged_min2",'w')
 span = []
-
+#
 for cluster, data in Combined_pangenome_clusters_StORF_Type.items():
     #if data[1] >= 2:
     calc_StORF_only_core(data[1])  # ,numbers[3])multi_PEP_Combined_By_StORFs
@@ -396,7 +402,7 @@ for cluster, data in Combined_pangenome_clusters_ONLY_StORF_Type.items():
     if data[1] >= 2:
         STORF_ONLY.append(data[1])
         calc_only_StORF_only_core(cluster,data[1])  # ,numbers[3])
-        StORF_Only_Out.write(str(cluster) + ',')
+        #StORF_Only_Out.write(str(cluster) + ',')
         span.append(data[1])
 
         #if data[1] >= core_99:
@@ -411,11 +417,12 @@ print(cores)
 
 #print(extended)
 
+print(dict(sorted(list_all_pep_numbers.items())))
 
 pangenome_clusters_Type_list = []
 for clust, counts in pangenome_clusters_Type.items():
-    if counts[1] > 219:
-        counts[1] = 219
+    if counts[1] > 169:
+        counts[1] = 169
     ENSEM_ONLY.append(counts[1])
     if counts[3] != 0:
         tmp = counts[1]+counts[3]

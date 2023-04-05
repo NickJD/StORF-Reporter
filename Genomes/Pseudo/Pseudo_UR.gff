@@ -1,8 +1,11 @@
 ##gff-version	3
-#	UR Extractor 
-#	Run Date:2022-05-31
-##Original Files: ../../Genomes/Pseudo/Pseudo.fa | ../../Genomes/Pseudo/Pseudo.gff
-Chromosome	UR_Extractor	unannotated_region	0	111	.	.	.	ID=Chromosome_UR_0_111;Original_UR=0_61;Note=UR_Length(Extended):111
+#	UR-Extractor 
+#	Run Date:2023-03-31
+##StORF-Reporter v0.7.4
+##sequence-region	Chromosome 1 6064456
+##Original Files: Pseudo.fa | Pseudo.gff
+
+Chromosome	UR_Extractor	unannotated_region	1	111	.	.	.	ID=Chromosome_UR_1_111;Original_UR=1_61;Note=UR_Length(Extended):111
 Chromosome	UR_Extractor	unannotated_region	126	472	.	.	.	ID=Chromosome_UR_126_472;Original_UR=176_422;Note=UR_Length(Extended):346
 Chromosome	UR_Extractor	unannotated_region	2264	2409	.	.	.	ID=Chromosome_UR_2264_2409;Original_UR=2314_2359;Note=UR_Length(Extended):145
 Chromosome	UR_Extractor	unannotated_region	4067	4200	.	.	.	ID=Chromosome_UR_4067_4200;Original_UR=4117_4150;Note=UR_Length(Extended):133
@@ -3510,4 +3513,4 @@ Chromosome	UR_Extractor	unannotated_region	6058659	6059456	.	.	.	ID=Chromosome_U
 Chromosome	UR_Extractor	unannotated_region	6060894	6061075	.	.	.	ID=Chromosome_UR_6060894_6061075;Original_UR=6060944_6061025;Note=UR_Length(Extended):181
 Chromosome	UR_Extractor	unannotated_region	6061051	6061182	.	.	.	ID=Chromosome_UR_6061051_6061182;Original_UR=6061101_6061132;Note=UR_Length(Extended):131
 Chromosome	UR_Extractor	unannotated_region	6061157	6061498	.	.	.	ID=Chromosome_UR_6061157_6061498;Original_UR=6061207_6061448;Note=UR_Length(Extended):341
-Chromosome	UR_Extractor	unannotated_region	6064315	6064456	.	.	.	ID=Chromosome_UR_6064315_6064456;Original_UR=6061207_6061448;Note=UR_Length(Extended):141
+Chromosome	UR_Extractor	unannotated_region	6064315	6064456	.	.	.	ID=Chromosome_UR_6064315_6064456;Original_UR=6064365_6061498;Note=UR_Length(Extended):141

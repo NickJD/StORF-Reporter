@@ -1,8 +1,11 @@
 ##gff-version	3
-#	UR Extractor 
-#	Run Date:2022-06-05
-##Original Files: ../../Genomes/Bacillus/Bacillus.fa | ../../Genomes/Bacillus/Prodigal_Bacillus.gff
-Chromosome	UR_Extractor	unannotated_region	0	460	.	.	.	ID=Chromosome_UR_0_460;Original_UR=0_410;Note=UR_Length(Extended):460
+#	UR-Extractor 
+#	Run Date:2023-01-30
+##StORF-Reporter v0.7.0
+##sequence-region	Chromosome 1 4043042
+##Original Files: Bacillus.fa | Prodigal_Bacillus.gff
+
+Chromosome	UR_Extractor	unannotated_region	1	460	.	.	.	ID=Chromosome_UR_1_460;Original_UR=1_410;Note=UR_Length(Extended):460
 Chromosome	UR_Extractor	unannotated_region	1700	1989	.	.	.	ID=Chromosome_UR_1700_1989;Original_UR=1750_1939;Note=UR_Length(Extended):289
 Chromosome	UR_Extractor	unannotated_region	3025	3255	.	.	.	ID=Chromosome_UR_3025_3255;Original_UR=3075_3205;Note=UR_Length(Extended):230
 Chromosome	UR_Extractor	unannotated_region	4761	4910	.	.	.	ID=Chromosome_UR_4761_4910;Original_UR=4811_4860;Note=UR_Length(Extended):149
@@ -2620,4 +2623,4 @@ Chromosome	UR_Extractor	unannotated_region	4035232	4035383	.	.	.	ID=Chromosome_U
 Chromosome	UR_Extractor	unannotated_region	4036134	4036356	.	.	.	ID=Chromosome_UR_4036134_4036356;Original_UR=4036184_4036306;Note=UR_Length(Extended):222
 Chromosome	UR_Extractor	unannotated_region	4040275	4040686	.	.	.	ID=Chromosome_UR_4040275_4040686;Original_UR=4040325_4040636;Note=UR_Length(Extended):411
 Chromosome	UR_Extractor	unannotated_region	4041988	4042239	.	.	.	ID=Chromosome_UR_4041988_4042239;Original_UR=4042038_4042189;Note=UR_Length(Extended):251
-Chromosome	UR_Extractor	unannotated_region	4042489	4043042	.	.	.	ID=Chromosome_UR_4042489_4043042;Original_UR=4042038_4042189;Note=UR_Length(Extended):553
+Chromosome	UR_Extractor	unannotated_region	4042489	4043042	.	.	.	ID=Chromosome_UR_4042489_4043042;Original_UR=4042539_4042239;Note=UR_Length(Extended):553

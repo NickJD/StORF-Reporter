@@ -1,1 +1,1 @@
-Chromosome-UR:590885-591038|Chromosome-UR:590729-591143_1|UR_Stop_Locations:156-309|Length:153|Frame:6|UR_Frame:4|Start_Stop=TGA|End_Stop=TAA|StORF_Type:Stop-ORF	sp|A6TZ11|RL331_STAA2	97.9	47	1	0	4	50	1	47	5.45e-31	104
+Chromosome_UR_590729_591143_StORF_2:590835-590987;UR=Chromosome_UR_590729_591143;UR_Stop_Locations=108-261;Length=153;Strand=-;Frame=6;UR_Frame=4;Start_Stop=TGA;End_Stop=TAA;StORF_Type=StORF	sp|A6TZ11|RL331_STAA2	97.9	47	1	0	3	49	1	47	7.21e-31	103

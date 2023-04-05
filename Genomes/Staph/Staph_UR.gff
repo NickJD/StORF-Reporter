@@ -1,8 +1,11 @@
 ##gff-version	3
-#	UR Extractor 
-#	Run Date:2022-05-31
-##Original Files: ../../Genomes/Staph/Staph.fa | ../../Genomes/Staph/Staph.gff
-Chromosome	UR_Extractor	unannotated_region	0	1413	.	.	.	ID=Chromosome_UR_0_1413;Original_UR=0_1363;Note=UR_Length(Extended):1413
+#	UR-Extractor 
+#	Run Date:2023-03-31
+##StORF-Reporter v0.7.4
+##sequence-region	Chromosome 1 2764699
+##Original Files: Staph.fa | Staph.gff
+
+Chromosome	UR_Extractor	unannotated_region	1	1413	.	.	.	ID=Chromosome_UR_1_1413;Original_UR=1_1363;Note=UR_Length(Extended):1413
 Chromosome	UR_Extractor	unannotated_region	5383	5556	.	.	.	ID=Chromosome_UR_5383_5556;Original_UR=5433_5506;Note=UR_Length(Extended):173
 Chromosome	UR_Extractor	unannotated_region	6244	6714	.	.	.	ID=Chromosome_UR_6244_6714;Original_UR=6294_6664;Note=UR_Length(Extended):470
 Chromosome	UR_Extractor	unannotated_region	7552	8084	.	.	.	ID=Chromosome_UR_7552_8084;Original_UR=7602_8034;Note=UR_Length(Extended):532
@@ -1667,4 +1670,4 @@ Chromosome	UR_Extractor	unannotated_region	2756555	2757024	.	.	.	ID=Chromosome_U
 Chromosome	UR_Extractor	unannotated_region	2757253	2757842	.	.	.	ID=Chromosome_UR_2757253_2757842;Original_UR=2757303_2757792;Note=UR_Length(Extended):589
 Chromosome	UR_Extractor	unannotated_region	2759637	2759973	.	.	.	ID=Chromosome_UR_2759637_2759973;Original_UR=2759687_2759923;Note=UR_Length(Extended):336
 Chromosome	UR_Extractor	unannotated_region	2762454	2762606	.	.	.	ID=Chromosome_UR_2762454_2762606;Original_UR=2762504_2762556;Note=UR_Length(Extended):152
-Chromosome	UR_Extractor	unannotated_region	2763120	2764699	.	.	.	ID=Chromosome_UR_2763120_2764699;Original_UR=2762504_2762556;Note=UR_Length(Extended):1579
+Chromosome	UR_Extractor	unannotated_region	2763120	2764699	.	.	.	ID=Chromosome_UR_2763120_2764699;Original_UR=2763170_2762606;Note=UR_Length(Extended):1579

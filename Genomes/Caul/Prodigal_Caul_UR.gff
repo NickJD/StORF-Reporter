@@ -1,8 +1,11 @@
 ##gff-version	3
-#	UR Extractor 
-#	Run Date:2022-06-05
-##Original Files: ../../Genomes/Caul/Caul.fa | ../../Genomes/Caul/Prodigal_Caul.gff
-Chromosome	UR_Extractor	unannotated_region	0	252	.	.	.	ID=Chromosome_UR_0_252;Original_UR=0_202;Note=UR_Length(Extended):252
+#	UR-Extractor 
+#	Run Date:2023-03-31
+##StORF-Reporter v0.7.4
+##sequence-region	Chromosome 1 4016947
+##Original Files: Caul.fa | Prodigal_Caul.gff
+
+Chromosome	UR_Extractor	unannotated_region	1	252	.	.	.	ID=Chromosome_UR_1_252;Original_UR=1_202;Note=UR_Length(Extended):252
 Chromosome	UR_Extractor	unannotated_region	3108	3240	.	.	.	ID=Chromosome_UR_3108_3240;Original_UR=3158_3190;Note=UR_Length(Extended):132
 Chromosome	UR_Extractor	unannotated_region	3853	4072	.	.	.	ID=Chromosome_UR_3853_4072;Original_UR=3903_4022;Note=UR_Length(Extended):219
 Chromosome	UR_Extractor	unannotated_region	4760	5010	.	.	.	ID=Chromosome_UR_4760_5010;Original_UR=4810_4960;Note=UR_Length(Extended):250
@@ -2395,4 +2398,4 @@ Chromosome	UR_Extractor	unannotated_region	4008759	4009030	.	.	.	ID=Chromosome_U
 Chromosome	UR_Extractor	unannotated_region	4010532	4010759	.	.	.	ID=Chromosome_UR_4010532_4010759;Original_UR=4010582_4010709;Note=UR_Length(Extended):227
 Chromosome	UR_Extractor	unannotated_region	4012319	4012501	.	.	.	ID=Chromosome_UR_4012319_4012501;Original_UR=4012369_4012451;Note=UR_Length(Extended):182
 Chromosome	UR_Extractor	unannotated_region	4013834	4014193	.	.	.	ID=Chromosome_UR_4013834_4014193;Original_UR=4013884_4014143;Note=UR_Length(Extended):359
-Chromosome	UR_Extractor	unannotated_region	4016652	4016947	.	.	.	ID=Chromosome_UR_4016652_4016947;Original_UR=4013884_4014143;Note=UR_Length(Extended):295
+Chromosome	UR_Extractor	unannotated_region	4016652	4016947	.	.	.	ID=Chromosome_UR_4016652_4016947;Original_UR=4016702_4015647;Note=UR_Length(Extended):295

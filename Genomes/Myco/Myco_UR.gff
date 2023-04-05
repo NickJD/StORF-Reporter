@@ -1,8 +1,11 @@
 ##gff-version	3
-#	UR Extractor 
-#	Run Date:2022-05-31
-##Original Files: ../../Genomes/Myco/Myco.fa | ../../Genomes/Myco/Myco.gff
-Chromosome	UR_Extractor	unannotated_region	0	736	.	.	.	ID=Chromosome_UR_0_736;Original_UR=0_686;Note=UR_Length(Extended):736
+#	UR-Extractor 
+#	Run Date:2023-03-31
+##StORF-Reporter v0.7.4
+##sequence-region	Chromosome 1 580076
+##Original Files: Myco.fa | Myco.gff
+
+Chromosome	UR_Extractor	unannotated_region	1	736	.	.	.	ID=Chromosome_UR_1_736;Original_UR=1_686;Note=UR_Length(Extended):736
 Chromosome	UR_Extractor	unannotated_region	2710	2895	.	.	.	ID=Chromosome_UR_2710_2895;Original_UR=2760_2845;Note=UR_Length(Extended):185
 Chromosome	UR_Extractor	unannotated_region	15166	15344	.	.	.	ID=Chromosome_UR_15166_15344;Original_UR=15216_15294;Note=UR_Length(Extended):178
 Chromosome	UR_Extractor	unannotated_region	15401	15605	.	.	.	ID=Chromosome_UR_15401_15605;Original_UR=15451_15555;Note=UR_Length(Extended):204
@@ -158,4 +161,4 @@ Chromosome	UR_Extractor	unannotated_region	562554	562832	.	.	.	ID=Chromosome_UR_
 Chromosome	UR_Extractor	unannotated_region	563770	564043	.	.	.	ID=Chromosome_UR_563770_564043;Original_UR=563820_563993;Note=UR_Length(Extended):273
 Chromosome	UR_Extractor	unannotated_region	577155	577318	.	.	.	ID=Chromosome_UR_577155_577318;Original_UR=577205_577268;Note=UR_Length(Extended):163
 Chromosome	UR_Extractor	unannotated_region	578531	579274	.	.	.	ID=Chromosome_UR_578531_579274;Original_UR=578581_579224;Note=UR_Length(Extended):743
-Chromosome	UR_Extractor	unannotated_region	579983	580076	.	.	.	ID=Chromosome_UR_579983_580076;Original_UR=578581_579224;Note=UR_Length(Extended):93
+Chromosome	UR_Extractor	unannotated_region	579983	580076	.	.	.	ID=Chromosome_UR_579983_580076;Original_UR=580033_579274;Note=UR_Length(Extended):93
