@@ -11,7 +11,7 @@ except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='StORF-Reporter v0.5.4: StORF-Adder Run Parameters.')
+    parser = argparse.ArgumentParser(description='Single_Genome v0.5.4: StORF-Adder Run Parameters.')
     parser.add_argument('-dna', '--genome_DNA', required=True, help='Genome DNA file (.fa) which both annotations '
                                                                     'are based on')
     parser.add_argument('-rt', '--reference_tool', required=False,

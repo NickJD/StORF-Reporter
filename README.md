@@ -2,7 +2,7 @@
 
 ### StORF-Reporter, a toolkit that returns missed CDS genes from the Unannotated Regions (URs) of prokaryotic genomes.
 
-# Please use `pip3 install StORF-Reporter' to install StORF-Reporter v0.7.5.
+# Please use `pip3 install StORF-Reporter' to install StORF-Reporter.
 ### This will also install the python-standard library numpy (>=1.22.0,<1.24.0), Pyrodigal - (https://github.com/althonos/pyrodigal) and ORForise (https://github.com/NickJD/ORForise). 
 
 ### Consider using '--no-cache-dir' with pip to ensure the download of the newest version of StORF-Reporter.
@@ -46,6 +46,9 @@ StORF-Reporter -anno Pyrodigal Single_FASTA -p .../Test_Datasets/Pyrodigal/E-col
 ```
 
 ### Menu - (StORF-Reporter -h):
+```console
+StORF-Reporter -anno Ensembl Single_Genome -p .../Test_Datasets/Matching_GFF_FASTA/E-coli.gff
+```
 ```python
 usage: StORF_Reporter.py [-h]
                          [-anno [{Prokka,Bakta,Out_Dir,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]]
@@ -59,7 +62,7 @@ usage: StORF_Reporter.py [-h]
                          [-f_type [{StORF,CDS,ORF}]] [-olap OVERLAP_NT] [-ao ALLOWED_OVERLAP] [-overwrite {True,False}]
                          [-verbose {True,False}] [-v]
 
-StORF-Reporter v0.7.5: StORF-Reporter Run Parameters.
+StORF-Reporter v1.0.0: StORF-Reporter Run Parameters.
 
 Required Options:
   -anno [{Prokka,Bakta,Out_Dir,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]
@@ -169,7 +172,7 @@ UR-Extractor -f .../Test_Datasets/Matching_GFF_FASTA/E-coli.fa -gff .../Test_Dat
 ```python
 usage: UR_Extractor.py [-h] [-f FASTA] [-gff GFF] [-ident IDENT] [-min_len MINLEN] [-max_len MAXLEN] [-ex_len EXLEN] [-gene_ident GENE_IDENT] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v0.7.5: UR-Extractor Run Parameters.
+StORF-Reporter v1.0.0: UR-Extractor Run Parameters.
 
 Required Arguments:
   -f FASTA              FASTA file for Unannotated Region seq extraction
@@ -207,7 +210,7 @@ usage: StORF_Finder.py [-h] [-f FASTA] [-ua {True,False}] [-wc {True,False}] [-p
                        [-stop_ident {True,False}] [-f_type [{StORF,CDS,ORF}]] [-minorf MIN_ORF] [-maxorf MAX_ORF] [-codons STOP_CODONS] [-olap OVERLAP_NT] [-s SUFFIX] [-so [{start_pos,strand}]] [-spos {True,False}] [-oname O_NAME] [-odir O_DIR] [-gff {True,False}] [-aa {True,False}] [-aa_only {True,False}]
                        [-lw {True,False}] [-gff_fasta {True,False}] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v0.7.5: StORF-Finder Run Parameters.
+StORF-Reporter v1.0.0: StORF-Finder Run Parameters.
 
 Required Arguments:
   -f FASTA              Input FASTA File - (UR_Extractor output)
@@ -271,7 +274,7 @@ StORF-Extractor -storf_input Combined -p .../Test_Datasets/Combined_GFFs/E-coli_
 ```python
 usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gff_out {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v0.7.5: StORF-Extractor Run Parameters.
+StORF-Reporter v1.0.0: StORF-Extractor Run Parameters.
 
 Required Arguments:
   -storf_input {Combined,Separate}
@@ -292,5 +295,39 @@ Misc:
 
 ```
 
+## StORF-Remover
+Subpackage to remove sequences reported by StORF-Reporter without a Blast/Diamond hit (any alignment in BLAST 6 format).
+
+### Menu - (StORF-Remover -h):   
+```console
+StORF-Remover -gff .../Test_Datasets/StORF_Extractor_And_Remover/Myco_UR_StORF-R.gff -blast .../Test_Datasets/StORF_Extractor_And_Remover/Myco_URs_StORFs_aa_Swiss.tab 
+```
+
+```python
+usage: StORF_Remover.py [-h] [-gff GFF] [-blast BLAST] [-min_score MINSCORE] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}]
+                        [-verbose {True,False}] [-v]
+
+StORF-Reporter v1.0.0: UR-Extractor Run Parameters.
+
+Required Arguments:
+  -gff GFF              GFF annotation file for the FASTA
+  -blast BLAST          BLAST format 6 annotation file
+
+Optional Arguments:
+  -min_score MINSCORE   Minimum BitScore to keep StORF: Default 30
+
+Output:
+  -oname O_NAME         Default - Appends '_UR' to end of input GFF filename
+  -odir O_DIR           Default - Same directory as input GFF
+  -gz {True,False}      Default - False: Output as .gz
+
+Misc:
+  -verbose {True,False}
+                        Default - False: Print out runtime messages
+  -v                    Default - False: Print out version number and exit
+```
+
+
+
 ## Test Datasets: 
-### The directory 'Test_Datasets' contains GFF and FASTA files to test the installation and use of StORF-Reporter. 
+### The directory 'Test_Datasets' contains GFF and FASTA files to test the installation and use of StORF-Reporter - Example output files are also provided for comparison. 

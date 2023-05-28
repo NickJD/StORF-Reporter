@@ -76,7 +76,7 @@ def write_fasta(dna_regions, fasta_outfile):
 
 def write_gff(dna_regions,options,gff_outfile, gff):
     gff_outfile.write("##gff-version\t3\n#\tStORF-Extractor \n#\tRun Date:" + str(date.today()) + '\n')
-    gff_outfile.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
+    gff_outfile.write('##Single_Genome ' + StORF_Reporter_Version + '\n')
     for seq_reg in dna_regions:
         gff_outfile.write('##sequence-region\t' + seq_reg + ' 1 ' + str(dna_regions[seq_reg][1]) + '\n')
     gff_outfile.write("##Original File: " + gff.split('/')[-1] + '\n\n')
@@ -85,7 +85,7 @@ def write_gff(dna_regions,options,gff_outfile, gff):
         if storf_data[3]:
             for storf, seq in storf_data[3].items():
 
-                entry = (dna_region + '\tStORF-Reporter\tCDS\t' + storf.split('_')[0] + '\t' + storf.split('_')[1]+ '\t.\t' +
+                entry = (dna_region + '\tSingle_Genome\tCDS\t' + storf.split('_')[0] + '\t' + storf.split('_')[1]+ '\t.\t' +
                          storf.split('_')[2].split(';')[0]  + '\t.\t' + storf.split(';',1)[1] + '\n')
                 gff_outfile.write(entry)
     gff_outfile.close()
@@ -242,7 +242,7 @@ def storf_extractor(options, gff):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Extractor Run Parameters.')
+    parser = argparse.ArgumentParser(description='Single_Genome ' + StORF_Reporter_Version + ': StORF-Extractor Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
@@ -250,14 +250,13 @@ def main():
                         choices=['Combined', 'Separate'],
                         help='Are StORFs to be extracted from Combined GFF/FASTA or Separate GFF/FASTA files?\n')
     required.add_argument('-p', action='store', dest='path', default='', required=False,
-                        help='Provide input file or directory path')
+                        help='Provide input files or directory path')
 
     ### Not implemented yet
     # optional = parser.add_argument_group('Optional Arguments')
-    # optional.add_argument('-tool_ident', action='store', dest='tool_ident', default='StORF-Reporter',
-    #                         help='Default "StORF-Reporter": Tool-name Identifier used for extraction of StORFs or other genomic elements'
-    #                              ' "StORF-Reporter, Prodigal, Pyrodigal" (second GFF column)')
-
+    # optional.add_argument('-tool_ident', action='store', dest='tool_ident', default='Single_Genome',
+    #                         help='Default "Single_Genome": Tool-name Identifier used for extraction of StORFs or other genomic elements'
+    #                              ' "Single_Genome, Prodigal, Pyrodigal" (second GFF column)')
 
     output = parser.add_argument_group('Output')
     output.add_argument('-gff_out', action='store', dest='gff_out', default=False, type=eval, choices=[True, False],
@@ -279,7 +278,7 @@ def main():
 
 
     options = parser.parse_args()
-    options.tool_ident = ['StORF-Reporter']#options.tool_ident.split(',')
+    options.tool_ident = ['Single_Genome']#options.tool_ident.split(',')
 
 
     if options.storf_input == None or options.path == None:
@@ -288,7 +287,7 @@ def main():
         else:
             exit('StORF-Extractor: error: the following arguments are required: -storf_input, -p')
 
-    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+    print("Thank you for using Single_Genome -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
           "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
 

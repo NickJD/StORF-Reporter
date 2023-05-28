@@ -22,8 +22,8 @@ def get_Species(clustered):
     return str('_'.join(clustered_species)).capitalize()
 
 
-PEP_In = open('/home/nick/Documents/StORF-Reporter/All_Ensembl_PEP_CD_Clustered_90_60.clstr','r')
-StORF_In = open('/home/nick/Documents/StORF-Reporter/All_Ensem_PEP_CD_Clustered_90_60_Unclustered_UR_StORFs_AA_CD.clstr','r') # Clusters for single Genera
+PEP_In = open('/home/nick/Documents/Single_Genome/All_Ensembl_PEP_CD_Clustered_90_60.clstr','r')
+StORF_In = open('/home/nick/Documents/Single_Genome/All_Ensem_PEP_CD_Clustered_90_60_Unclustered_UR_StORFs_AA_CD.clstr','r') # Clusters for single Genera
 
 clusters = collections.OrderedDict()
 

@@ -1,8 +1,0 @@
-Chromosome-UR:560410-560566|Chromosome-UR:560380-560987_0|UR_Stop_Locations:30-186|Length:156|Frame:2|UR_Frame:1|Start_Stop=TAA|End_Stop=TGA|StORF_Type:Stop-ORF	BAM58640	79.4	34	7	0	18	51	10	43	1.12e-16	65.1
-Chromosome-UR:1126392-1127334|Chromosome-UR:1126205-1127529_1|UR_Stop_Locations:187-1129|Length:942|Frame:4|UR_Frame:5|Start_Stop=TGA|End_Stop=TAG|StORF_Type:Stop-ORF	BAM59697	27.3	308	180	8	47	313	58	362	7.34e-25	99.8
-Chromosome-UR:1865469-1865634|Chromosome-UR:1865230-1865890_2|UR_Stop_Locations:239-404|Length:165|Frame:4|UR_Frame:6|Start_Stop=TGA|End_Stop=TGA|StORF_Type:Stop-ORF	BAM58122	64.6	48	17	0	3	50	15	62	7.14e-16	64.7
-Chromosome-UR:2309628-2309760|Chromosome-UR:2309477-2309853_1|UR_Stop_Locations:151-283|Length:132|Frame:4|UR_Frame:5|Start_Stop=TAG|End_Stop=TAA|StORF_Type:Stop-ORF	BAM58550	75.6	41	10	0	3	43	9	49	1.12e-18	67.4
-Chromosome-UR:2534189-2534414|Chromosome-UR:2533496-2534530_4|UR_Stop_Locations:693-918|Length:225|Frame:6|UR_Frame:4|Start_Stop=TAG|End_Stop=TGA|StORF_Type:Stop-ORF	BAM58638	77.1	70	10	2	6	70	12	80	7.86e-26	95.1
-Chromosome-UR:3494079-3494337|Chromosome-UR:3494010-3494812_0|UR_Stop_Locations:69-327|Length:258|Frame:4|UR_Frame:4|Start_Stop=TGA|End_Stop=TGA|StORF_Type:Stop-ORF	BAM59662	67.4	46	13	1	42	85	31	76	3.03e-14	62.4
-Chromosome-UR:3494334-3494466|Chromosome-UR:3494010-3494812_1|UR_Stop_Locations:324-456|Length:132|Frame:4|UR_Frame:4|Start_Stop=TGA|End_Stop=TAA|StORF_Type:Stop-ORF	BAM59662	88.6	35	4	0	2	36	78	112	7.87e-16	64.7
-Chromosome-UR:3999038-3999248|Chromosome-UR:3999021-3999287_0|UR_Stop_Locations:17-227|Length:210|Frame:6|UR_Frame:6|Start_Stop=TGA|End_Stop=TAA|StORF_Type:Stop-ORF	BAM60170	93.3	30	2	0	23	52	1	30	4.24e-15	61.6

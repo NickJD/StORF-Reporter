@@ -13,7 +13,7 @@ except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
 #Output FASTA and GFF separately using the same filename but with respective extensions - gz output optional
 def write_fasta(dna_regions, options, fasta_out):
     fasta_out.write("##\tUR-Extractor \n#\tRun Date:" + str(date.today()) + '\n')
-    fasta_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
+    fasta_out.write('##Single_Genome ' + StORF_Reporter_Version + '\n')
     fasta_out.write("##Original Files: " + options.fasta.split('/')[-1] + ' | ' + options.gff.split('/')[-1] + '\n')
     for dna_region, dna_region_ur in dna_regions.items():
         fasta_out.write('\n##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
@@ -27,7 +27,7 @@ def write_fasta(dna_regions, options, fasta_out):
 
 def write_gff(dna_regions,options,gff_out):
     gff_out.write("##gff-version\t3\n#\tUR-Extractor \n#\tRun Date:" + str(date.today()) + '\n')
-    gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
+    gff_out.write('##Single_Genome ' + StORF_Reporter_Version + '\n')
     for seq_reg in dna_regions:
         gff_out.write('##sequence-region\t' + seq_reg + ' 1 ' + str(dna_regions[seq_reg][1]) + '\n')
     gff_out.write("##Original Files: " + options.fasta.split('/')[-1] + ' | ' + options.gff.split('/')[-1] + '\n\n')
@@ -109,7 +109,7 @@ def pyrodigal_virtual_gff_load(gff_in,dna_regions):
 def gff_load(options,gff_in,dna_regions):
     for line in gff_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
         line_data = line.split()
-        if line.startswith('\n') or line.startswith('#'):  # Not to crash on empty lines in GFF
+        if line.startswith('\n') or line.startswith('#') or 'European Nucleotide Archive' in line:  # Not to crash on empty lines in GFF
             continue
         elif options.gene_ident[0] == 'ID=gene':
             if line_data[0] in dna_regions and options.gene_ident[0] in line_data[8]:
@@ -197,7 +197,7 @@ def extractor(options):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
+    parser = argparse.ArgumentParser(description='Single_Genome ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
@@ -248,7 +248,7 @@ def main():
         else:
             exit('UR-Extractor: error: the following arguments are required: -f, -gff')
 
-    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+    print("Thank you for using Single_Genome -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
           "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     options.annotation_type = [None,None]

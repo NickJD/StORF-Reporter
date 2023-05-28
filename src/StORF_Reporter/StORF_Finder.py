@@ -202,7 +202,7 @@ def prepare_out(options, storfs, seq_id):
 
             storf_name = native_seq + '_' + storf_Type + '_' + str(idx) + ':' + gff_start + '-' + gff_stop
 
-            gff_entries.append(native_seq.split('_UR')[0] + '\tStORF-Reporter\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
+            gff_entries.append(native_seq.split('_UR')[0] + '\tSingle_Genome\t' + options.feature_type + '\t' + gff_start + '\t' + gff_stop + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';UR=' + ur_name.replace('>','')  + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(
                     length) + ';Strand=' + data[2] +
                 ';Frame=' + str(frame) + ';UR_Frame=' + str(ur_frame) +
@@ -617,7 +617,7 @@ def fasta_load(fasta_in, sequence_regions, sequences):
     sequences.update({sequence_name: [sequence_region_length,seq.strip()]})
     return sequence_regions, sequences
 
-## Function to control how StORF-Finder handles StORF-Reporter output
+## Function to control how StORF-Finder handles Single_Genome output
 def StORF_Reported(options, Contigs):
     Reporter_StORFs = collections.OrderedDict()
     for Contig_ID, Contig_URs in Contigs.items():
@@ -645,7 +645,7 @@ def StORF_Reported(options, Contigs):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Finder Run Parameters.')
+    parser = argparse.ArgumentParser(description='Single_Genome ' + StORF_Reporter_Version + ': StORF-Finder Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
@@ -736,7 +736,7 @@ def main():
         else:
             exit('StORF-Finder: error: the following arguments are required: -f')
 
-    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+    print("Thank you for using Single_Genome -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
           "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
 
@@ -773,8 +773,8 @@ def main():
     if not options.gz: # Clear fasta and gff files if not empty - Needs an elegant solution
         if not options.aa_only:
             gff_out = open(output_file + '.gff', 'w', newline='\n', encoding='utf-8')
-            gff_out.write("##gff-version\t3\n#\tStORF-Reporter - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
-            gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
+            gff_out.write("##gff-version\t3\n#\tSingle_Genome - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+            gff_out.write('##Single_Genome ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
             gff_out.write("##Original File: " + options.fasta.split('/')[-1] + '\n\n')
@@ -788,8 +788,8 @@ def main():
     elif options.gz:
         if not options.aa_only:
             gff_out = gzip.open(output_file + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
-            gff_out.write("##gff-version\t3\n#\tStORF-Reporter - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
-            gff_out.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
+            gff_out.write("##gff-version\t3\n#\tSingle_Genome - Stop ORF Predictions\n#\tRun Date:" + str(date.today()) + '\n')
+            gff_out.write('##Single_Genome ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
             gff_out.write("##Original File: " + options.gff + '\n\n')
