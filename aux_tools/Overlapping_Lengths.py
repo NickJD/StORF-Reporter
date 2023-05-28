@@ -9,15 +9,11 @@ import numpy as np
 from matplotlib.ticker import FuncFormatter
 
 
-
-
 def overlap_length(range1, range2):
-
     overlap_start = max(range1[0], range2[0])
     overlap_end = min(range1[1], range2[1])
     overlap_length = max(0, overlap_end - overlap_start)
     return overlap_length
-
 
 
 overlap_lengths = collections.defaultdict(int)
@@ -33,9 +29,9 @@ if __name__ == "__main__":
     options = parser.parse_args()
 
     directory_in = options.dir_in.split(',')[0]
-    extension_in = '.49.gff3'#options.dir_in.split(',')[1]
+    extension_in = '.49.gff3'  # options.dir_in.split(',')[1]
 
-    gff_list = list(glob.glob(directory_in+'/*.gff*'))
+    gff_list = list(glob.glob(directory_in + '/*.gff*'))
     counter = 0
 
     # Initialize variables to keep track of overlapping regions
@@ -66,12 +62,12 @@ if __name__ == "__main__":
             if feature == 'gene':
                 # If there was a previous gene and it overlaps with this gene
                 if prev_gene is not None:
-
-                    range1 = (start, end)
-                    range2 = (prev_gene['start'], prev_gene['end'])
-                    overlap_len = overlap_length(range1, range2)
-                    if overlap_len != 0:
-                        overlap_lengths[overlap_len] +=1
+                    overlap = max(min(end, prev_gene['end']) - max(start, prev_gene['start']), -1) + 1
+                    # range1 = (start, end)
+                    # range2 = (prev_gene['start'], prev_gene['end'])
+                    # overlap_len = overlap_length(range1, range2)
+                    if overlap != 0:
+                        overlap_lengths[overlap] += 1
 
                 # Store the current gene as the previous gene for the next iteration
                 prev_gene = {
@@ -80,14 +76,16 @@ if __name__ == "__main__":
                 }
                 prev_end = end
         # Output the lengths of the overlapping regions
-        for key, value in overlap_lengths.items():
-            print(key)
-            print(value)
+        # for key, value in overlap_lengths.items():
+        # print(key)
+        # print(value)
 
+# Output the counts of the lengths of the overlapping regions, sorted by length
 
-
-
-
+for key, value in sorted(overlap_lengths.items()):
+    print(key, value)
+    if key == 16:
+        break
 
 # Calculate the total count of all values
 total_count = sum(overlap_lengths.values())
@@ -98,30 +96,35 @@ proportions = {k: v / total_count for k, v in overlap_lengths.items()}
 # Calculate the cumulative proportion of each value
 cumulative_proportions = {}
 cumulative_sum = 0
-for k, v in proportions.items():
+for k, v in sorted(proportions.items()):  # AFC: added "sorted" here
     cumulative_sum += v
     cumulative_proportions[k] = cumulative_sum
 
 # Create a bar chart of the proportions
 fig, ax = plt.subplots()
-ax.bar(proportions.keys(), proportions.values(), label='Proportions')
+# ax.bar(proportions.keys(), proportions.values(), label='Proportions')
+# AFC: extract the keys and vals after sorting by length
+(sorted_props_keys, sorted_props_values) = zip(*sorted(proportions.items()))
+ax.bar(sorted_props_keys, sorted_props_values, label='Proportions')
 
 # Create a line chart of the cumulative proportions
-ax.plot(cumulative_proportions.keys(), cumulative_proportions.values(), label='Cumulative Proportions')
+# ax.plot(cumulative_proportions.keys(), cumulative_proportions.values(), label='Cumulative Proportions')
+# AFC: we need these sorted by length
+(sorted_cumu_keys, sorted_cumu_values) = zip(*sorted(cumulative_proportions.items()))
+ax.plot(sorted_cumu_keys, sorted_cumu_values, label='Cumulative Proportions')
 
 # Set the chart title and axis labels
 ax.set_title('Proportions of Values and Cumulative Proportions')
 ax.set_xlabel('Value')
 ax.set_ylabel('Proportion')
-plt.xlim([0,50])
+plt.xlim([0, 50])
 
 # Add a legend to the chart
 ax.legend()
 
 # Display the chart
-plt.show()
-
-
+# plt.show()
+plt.savefig("cumu_proportions.png", dpi=400)
 
 
 

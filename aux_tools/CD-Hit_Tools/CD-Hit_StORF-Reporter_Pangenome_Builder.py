@@ -158,13 +158,17 @@ for line in StORF_In:
 
 ALL_PEPS = 0
 
+
+StORF_Add_To_Singletons = []
 Com_PEPs = 0
 Com_PEPs_List = []
+total_combined_pep_clusters = []
 only_PEP = []
 num_clustered_PEP = collections.defaultdict(list)
 recorded_PEP = []
 pangenome_clusters_Type = copy.deepcopy(pangenome_clusters_PEP)
 list_of_reps = list(reps.keys())
+pep_max_comb = [0,0]
 for cluster, pep_genomes in pangenome_clusters_PEP.items():
     rep = list_of_reps[int(cluster)] # get the rep of the current pep cluster
     #if rep not in recorded_PEP:
@@ -177,6 +181,7 @@ for cluster, pep_genomes in pangenome_clusters_PEP.items():
         clustered_combined =  Combined_pangenome_clusters_PEP_StORF_Clustered[rep] # Not true clusters - I put a PEP as key myself
         seen_clust_Genomes = []
         num_clustered_PEP[cluster].append(rep+'_'+str(len(pep_genomes)))
+
         for clust in clustered_combined:
             if 'StORF_Type=StORF' not in clust: # Not good enough at the moment
                 ### Need to get the number of pep genomes for each pep clustered into this
@@ -202,8 +207,13 @@ for cluster, pep_genomes in pangenome_clusters_PEP.items():
             else:
                 print("WHAT")
 
+        if len(pep_genomes) == 1 and Added_StORF_Genomes >= 10:
+            StORF_Add_To_Singletons.append([cluster,Added_StORF_Genomes])
+
         size_of_pep_clusters = []
         peps =  num_clustered_PEP[cluster]
+        if len(peps) > 1:
+            total_combined_pep_clusters.append(peps)
         for pep in peps:
             pep = pep.rsplit('_',1)
             #if pep[0] not in recorded_PEP: # Do not record PEPs are combined and on their own.
@@ -212,48 +222,63 @@ for cluster, pep_genomes in pangenome_clusters_PEP.items():
             recorded_PEP.append(pep[0])
             # else:
             #     print("W")
-        pangenome_clusters_Type[cluster] = [len(num_clustered_PEP[cluster]), sum(size_of_pep_clusters), size_of_pep_clusters, Added_StORF_Genomes, StORFs,len(seen_StORFs)]
+        pangenome_clusters_Type[cluster] = [len(num_clustered_PEP[cluster]), sum(size_of_pep_clusters), size_of_pep_clusters, Added_StORF_Genomes, StORFs, len(seen_StORFs)]
+        if len(peps) > 1:
+            print("")
+            if Added_StORF_Genomes > 10:
+                print("")
+        if len(peps) > 2:
+            print("")
+        if len(peps) > pep_max_comb[0]:
+            pep_max_comb = [len(peps),peps]
+        num_pep_combined = sum(size_of_pep_clusters)
+        if len(peps) >1 and all(i >= 5 for i in size_of_pep_clusters):
+            print("")
     except KeyError:
         ###Singleton
         num_pep_genomes = [len(pep_genomes)]
         ALL_PEPS += len(pep_genomes)
-        pangenome_clusters_Type[cluster] = [1,len(pep_genomes), num_pep_genomes, Added_StORF_Genomes, StORFs,len(seen_StORFs)]
+        pangenome_clusters_Type[cluster] = [1, len(pep_genomes), num_pep_genomes, Added_StORF_Genomes, StORFs, len(seen_StORFs)]
         only_PEP.append(cluster)
+
+print(pep_max_comb)
 # else:
 #     print("PEP already recorded in another cluster: " + rep)
 #####################
 #### write out Cluster IDs for clusters of specific types?? To then be eggnogged
 #sys.exit("Killed Ere")
-# Without_StORF = open('./E-coli/Ensem_Clusters_Without_StORFs_To_Be_Nogged_min2','w')
-# With_StORF = open('./E-coli/Ensem_Clusters_With_StORFs_To_Be_Nogged','w')
-# #With_Extending_StORF = open('./E-coli/Ensem_Clusters_With_Extending_Con-StORFs_To_Be_Nogged','w')
-#
-# for key, value in pangenome_clusters_Type.items():
-#     if value[4] == 0 and value[1] >=2:
-#         Without_StORF.write(str(key)+',')
-#     # elif value[3] != 0:
-#     #     With_Extending_StORF.write(str(key)+',')
-#     #     With_StORF.write(str(key) + ',')
-#     elif value[4] >=1:
-#         With_StORF.write(str(key) + ',')
-# With_StORF.close()
-# Without_StORF.close()
-#With_Extending_StORF.close()
+Without_StORF = open('./Ensem_Clusters_Without_StORFs','w')
+Without_StORF_min2 = open('./Ensem_Clusters_Without_StORFs_min2','w')
+With_StORF_min2 = open('./Ensem_Clusters_With_StORFs_min2','w')
+With_Extending_StORF = open('./Ensem_Clusters_With_Extending_StORFs','w')
+
+# number of clustered PEP - Number of PEP genomes - Induvidual sizes of PEP clusters - Added StORF Genomes - StORF sequences - not sure
+# [len(num_clustered_PEP[cluster]), sum(size_of_pep_clusters), size_of_pep_clusters, Added_StORF_Genomes, StORFs,len(seen_StORFs)]
+
+for key, value in pangenome_clusters_Type.items():
+    if value[4] == 0 and value[1] >=2:
+        Without_StORF_min2.write(str(key)+',')
+    elif value[4] == 0:
+        Without_StORF.write(str(key)+',')
+    elif value[3] != 0:
+        With_Extending_StORF.write(str(key)+',')
+    elif value[4] >=2:
+        With_StORF_min2.write(str(key) + ',')
+With_StORF_min2.close()
+Without_StORF.close()
+Without_StORF_min2.close()
+With_Extending_StORF.close()
+
+
+
+STORF_ONLY = []
+ENSEM_ONLY = []
+COMBINED_ONLY = []
 
 
 
 
 
-
-
-############## Typing for the StORF_Reporter-Data
-Combined_pangenome_clusters_ONLY_StORF_Type = collections.defaultdict(list)
-Combined_pangenome_clusters_StORF_Type = collections.defaultdict(list)
-for cluster, genomes in Combined_pangenome_clusters_StORF.items():
-    if cluster in not_StORF_Only_Cluster_IDs:
-        Combined_pangenome_clusters_StORF_Type[cluster] = [cluster,len(genomes)]
-    else:
-        Combined_pangenome_clusters_ONLY_StORF_Type[cluster] = [cluster,len(genomes)]
 
 #######################################
 
@@ -388,11 +413,18 @@ for cluster, numbers in pangenome_clusters_Type.items(): # put limits here to ma
 #         c +=1
 # print(str(c))
 
-STORF_ONLY = []
-ENSEM_ONLY = []
-COMBINED_ONLY = []
 
-# StORF_Only_Out = open("./E-coli/E-coli_StORF_Only_Clusters_To_Be_Nogged_min2",'w')
+############## Typing for the StORF_Reporter-Data
+Combined_pangenome_clusters_ONLY_StORF_Type = collections.defaultdict(list)
+Combined_pangenome_clusters_StORF_Type = collections.defaultdict(list)
+for cluster, genomes in Combined_pangenome_clusters_StORF.items():
+    if cluster in not_StORF_Only_Cluster_IDs:
+        Combined_pangenome_clusters_StORF_Type[cluster] = [cluster,len(genomes)]
+    else:
+        Combined_pangenome_clusters_ONLY_StORF_Type[cluster] = [cluster,len(genomes)]
+
+
+StORF_Only_Out = open("./E-coli_StORF_Only_Clusters_min2",'w')
 span = []
 #
 for cluster, data in Combined_pangenome_clusters_StORF_Type.items():
@@ -402,8 +434,9 @@ for cluster, data in Combined_pangenome_clusters_ONLY_StORF_Type.items():
     if data[1] >= 2:
         STORF_ONLY.append(data[1])
         calc_only_StORF_only_core(cluster,data[1])  # ,numbers[3])
-        #StORF_Only_Out.write(str(cluster) + ',')
+        StORF_Only_Out.write(str(cluster) + ',')
         span.append(data[1])
+
 
         #if data[1] >= core_99:
         #     os.system("python3 Extract_FASTA_From_Cluster.py -f ./E-coli/Escherichia_coli_PEP_Clustered_With_Unclustered_UR-StORFs.fa_CD_c90_s60.fa  "
@@ -419,22 +452,24 @@ print(cores)
 
 print(dict(sorted(list_all_pep_numbers.items())))
 
+#[len(num_clustered_PEP[cluster]), sum(size_of_pep_clusters), size_of_pep_clusters, Added_StORF_Genomes, StORFs,len(seen_StORFs)]
+
 pangenome_clusters_Type_list = []
 for clust, counts in pangenome_clusters_Type.items():
-    if counts[1] > 169:
+    if counts[1] >= 169:
         counts[1] = 169
     ENSEM_ONLY.append(counts[1])
     if counts[3] != 0:
         tmp = counts[1]+counts[3]
         COMBINED_ONLY.append(tmp)
-    # if (counts[1] >=1 and counts[3] >=1):# and counts[0] >1 and counts[1] >1:
-    #     if counts[1] > 219:
-    #         counts[1] = 219 # Not fake - it controls the combined cluster problem
+    if (counts[1] >=1 and counts[3] >=1):# and counts[0] >1 and counts[1] >1:
+        if counts[1] >= 169:
+            counts[1] = 169 # Not fake - it controls the combined cluster problem
 
-#     clust[1] = clust[0]+clust[1]
+    clust[1] = clust[0]+clust[1]
 
 
-    #write.writerow(COMBINED_ONLY)
+    #writerow(COMBINED_ONLY)
 
 Ensem_P = []
 StORF_P = []
@@ -453,11 +488,14 @@ print(len(ENSEM_ONLY))
 
 
 
-for i in range(220):
+for i in range(170):
     if i > 1:
-        Ensem_P.append((ENSEM_ONLY.count(i)/len(ENSEM_ONLY))*100)
-        StORF_P.append((STORF_ONLY.count(i)/len(STORF_ONLY))*100)
-        Combined_P.append((COMBINED_ONLY.count(i) / len(COMBINED_ONLY)) * 100)
+        E = round((ENSEM_ONLY.count(i)/len(ENSEM_ONLY))*100,2)
+        Ensem_P.append(E)
+        S = round((STORF_ONLY.count(i)/len(STORF_ONLY))*100,2)
+        StORF_P.append(S)
+        C = round((COMBINED_ONLY.count(i) / len(COMBINED_ONLY)) * 100,2)
+        Combined_P.append(C)
 
 
 Ensem_tmp = [Ensem_P[x:x+10] for x in range(0, len(Ensem_P),10)]
@@ -473,163 +511,20 @@ for St in StORF_tmp:
 
 import csv
 import matplotlib.ticker as mtick
+print("Here")
 
-out_csv = open('./E-coli/Ensembl_Then_Con-StORF.csv','w')
-with out_csv:
-    write = csv.writer(out_csv)
-    write.writerow(["Ensembl:",Ensem_P])
-    write.writerow(["Combind:", Combined_P])
-    write.writerow(["StORF:",StORF_P])
+with open('./Ensembl_Then_Con-StORF.csv', 'w') as out_file:
+    out_file.write("Ensembl:")
+    for E in Ensem_P:
+        out_file.write(str(E)+',')
+    out_file.write("\nCombined:")
+    for C in Combined_P:
+        out_file.write(str(C)+',')
+    out_file.write("\nStORF:")
+    for S in StORF_P:
+        out_file.write(str(S)+',')
 
 
 
 print("DDD")
 
-#
-# plt.hist(Ensem_Dec)
-# plt.hist(StORF_Dec)
-# plt.show()
-#
-#
-#
-# print("DDD")
-# comb = list(zip(Ensem_Dec,StORF_Dec))
-# distributions = pd.DataFrame(comb, columns=['Ensembl','StORF_Reporter'])
-# #ax.yaxis.set_major_formatter(mtick.PercentFormatter())
-# ax = sns.displot(distributions, legend=False)
-# plt.show()
-#
-
-
-
-#         pangenome_clusters_Type_list.append([counts[1],counts[3]])
-# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF_Reporter'])
-# ax = sns.displot(distributions, legend=False,hist=False)
-# ax.set(xlabel='Number of strains', ylabel='Clusters',title="Distribution of cluster sizes")
-# ax.set(yscale="log")
-#
-# for axs in ax.axes.flat:
-#     axs.xaxis.set_major_formatter(PercentFormatter(xmax=219))
-#
-# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF_Reporter'])
-# plt.tight_layout()
-# plt.savefig("Ensembl_StORF_E-coli_Distributions_stack.pdf")
-#
-#
-# for clust in pangenome_clusters_Type_list:
-#     clust[1] = clust[0]+clust[1]
-# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF_Reporter Extended'])
-# ax = sns.displot(distributions['Ensembl'])
-# ax = sns.displot(distributions['StORF_Reporter Extended'])
-# #ax = sns.displot(distributions, multiple="stack",legend=False)
-# #ax = sns.kdeplot(distributions['Ensembl'])
-# #ax = sns.kdeplot(distributions['StORF_Reporter Extended'])
-# ax.set(xlabel='Number of strains', ylabel='Clusters',title="Distribution of clusters sizes extended by StORFs")
-# ax.set(yscale="log")
-# for axs in ax.axes.flat:
-#     axs.xaxis.set_major_formatter(PercentFormatter(xmax=219))
-# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF_Reporter Extended'])
-# plt.tight_layout()
-# plt.savefig("Ensembl_StORF_Extended_E-coli_Distributions_stack.pdf")
-#
-
-
-
-
-
-
-
-        # if numbers[1] >= math.floor(core_99) and numbers[3] == 0:
-        #     pep_core_99 +=1
-        # elif numbers[1] >= math.floor(core_95) and numbers[1] < math.floor(core_99) and numbers[3] == 0:
-        #     pep_core_95 +=1
-        # elif numbers[1] >= math.floor(core_90) and numbers[1] < math.floor(core_95) and numbers[3] == 0:
-        #     pep_core_90 +=1
-        # if numbers[1] >= math.floor(core_15) and numbers[1] < math.floor(core_95) and numbers[3] == 0: # this catch captures some from pep_core_90
-        #     pep_core_15 +=1
-        ############ With Con-StORFs
-        # if numbers[1] < math.floor(core_99) and numbers[1] != 0 and numbers[1]+numbers[3] >= math.floor(core_99):
-        #     extended_99 +=1
-        # elif numbers[1] < math.floor(core_95) and numbers[1] != 0 and numbers[1]+numbers[3] >= math.floor(core_95) and numbers[0]+numbers[3] < math.floor(core_99):
-        #     extended_95 +=1
-        # elif numbers[1] < math.floor(core_90) and numbers[1] != 0 and numbers[1]+numbers[3] >= math.floor(core_90) and numbers[0]+numbers[3] < math.floor(core_95):
-        #     extended_90 +=1
-        # if numbers[1] < math.floor(core_15) and numbers[1] != 0 and numbers[1]+numbers[3] >= math.floor(core_15) and numbers[0]+numbers[3] < math.floor(core_95):
-        #     extended_15 +=1
-
-
-
-# for cluster, numbers in Combined_pangenome_clusters_StORF_Type.items():
-#     ##### STORF ONLY
-#     if numbers[3] >= math.floor(core_99) and numbers[1] == 0:
-#         storf_core_99 +=1
-#     elif numbers[3] >= math.floor(core_95) and numbers[3] < math.floor(core_99) and numbers[1] == 0:
-#         storf_core_95 +=1
-#     elif numbers[3] >= math.floor(core_90) and numbers[3] < math.floor(core_95) and numbers[1] == 0:
-#         storf_core_90 +=1
-#     if numbers[3] >= math.floor(core_15) and numbers[3] < math.floor(core_95) and numbers[1] == 0: # t
-#         storf_core_15 +=1
-
-
-
-
-# print("Results")
-# print("PEP CORE")
-# print(pep_core_99)
-# print(pep_core_95)
-# print(pep_core_90)
-# print(pep_core_15)
-# print("PEP CORE STORF ADDED")
-# print(extended_99)
-# print(extended_95)
-# print(extended_90)
-# print(extended_15)
-# print("STORF ONLY")
-# print(storf_core_99)
-# print(storf_core_95)
-# print(storf_core_90)
-# print(storf_core_15)
-
-
-
-
-
-
-
-
-#pangenome_clusters_Type_list = []
-# for clust, counts in pangenome_clusters_Type.items():
-#     if (counts[0] >1 and counts[4] >1):# and counts[0] >1 and counts[1] >1:
-#      pangenome_clusters_Type_list.append(counts)
-# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF_Reporter'])
-# ax = sns.displot(distributions, multiple="st
-#ack",legend=False)
-# ax.set(xlabel='Number of strains', ylabel='Clusters',title="Distribution of cluster sizes")
-# ax.set(yscale="log")
-#
-# for axs in ax.axes.flat:
-#     axs.xaxis.set_major_formatter(PercentFormatter(xmax=219))
-#
-# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF_Reporter'])
-# plt.tight_layout()
-# plt.savefig("Ensembl_StORF_E-coli_Distributions_stack.pdf")
-#
-#
-#
-# for clust in pangenome_clusters_Type_list:
-#     clust[1] = clust[0]+clust[1]
-# distributions = pd.DataFrame(pangenome_clusters_Type_list, columns=['Ensembl','StORF_Reporter Extended'])
-# ax = sns.displot(distributions, multiple="stack",legend=False)
-# ax.set(xlabel='Number of strains', ylabel='Clusters',title="Distribution of clusters sizes extended by StORFs")
-# ax.set(yscale="log")
-# for axs in ax.axes.flat:
-#     axs.xaxis.set_major_formatter(PercentFormatter(xmax=219))
-# plt.legend(loc='upper right', title='Sequence Count', labels=['Ensembl', 'StORF_Reporter Extended'])
-# plt.tight_layout()
-# plt.savefig("Ensembl_StORF_Extended_E-coli_Distributions_stack.pdf")
-
-
-
-
-import sys
-#sys.exit()

@@ -34,6 +34,10 @@ pangenome_clusters_PEP_Strains = collections.OrderedDict()
 pangenome_clusters_PEP_SEQS = collections.OrderedDict()
 
 
+max_storf_only_genera = 0
+
+
+
 
 count = 0
 first = True
@@ -296,7 +300,7 @@ StORF_Genomes_Extended = []
 #cores = collections.OrderedDict({'pep_genera_single':[],'pep_genera_multi':[],'extended_genera':[],'comb_extended_genera_single':[],'comb_extended_genera_multi':[],'extended_genera_single':[],'extended_genera_multi':0,'storf_genera_single':0,'storf_genera_multi':0,
 #                                 'only_storf_genera_single':0,'only_storf_genera_multi':0})
 
-cores = collections.OrderedDict({'pep_genera':[],'extended_genera':[],'comb_extended_genera':[],'storf_genera':[],'only_storf_genera':[]})
+cores = collections.OrderedDict({'pep_genera':[],'extended_genera_single_pep':[],'many_extended_genera_pep':[],'extended_genera':[],'comb_extended_genera':[],'storf_genera':[],'only_storf_genera':[],'only_storf_genera_recording':[]})
 
 extended = collections.OrderedDict()
 ############################
@@ -314,10 +318,13 @@ def calc_pep_only(pep_num):
 ##########################
 def calc_pep_extended_StORF(cluster,pep_num,storf_num):
     if pep_num != 0 and storf_num >= 1:
-        if storf_num >14:
-            print("D")
         cores['extended_genera'].append(pep_num+storf_num)
         clsuters_to_be_validated['extended_genera'].append(cluster)
+    if pep_num != 0 and storf_num >= 10:
+        cores['many_extended_genera_pep'].append([cluster,pep_num+storf_num])
+
+    if pep_num == 1 and storf_num >= 1:
+        cores['extended_genera_single_pep'].append([cluster,pep_num + storf_num])
     #     cores['extended_genera_single'] +=1
     # if pep_num != 0 and storf_num > 1:
     #     cores['extended_genera_multi'] +=1
@@ -336,14 +343,20 @@ def calc_StORF_only_when_with_pep(cluster,storf_num):
     # elif storf_num > 1:# and StORF_num == 0:
     #     cores['storf_genera_multi'] += 1
 ########################  What is the difference with these?
-def calc_only_StORF(cluster,storf_num): # only count the true storf onlies
+def calc_only_StORF(cluster,storf_num,max_storf_only_genera): # only count the true storf onlies
     cores['only_storf_genera'].append(storf_num)
     clsuters_to_be_validated['only_storf_genera'].append(cluster)
+    if storf_num>=6:
+        cores['only_storf_genera_recording'].append([cluster, storf_num])
+    if storf_num > max_storf_only_genera:
+        max_storf_only_genera = storf_num
     # if storf_num == 1:# and StORF_num == 0:
     #     cores['only_storf_genera_single'] += 1
     # elif storf_num > 1:# and StORF_num == 0:
     #     cores['only_storf_genera_multi'] += 1
+    return max_storf_only_genera
 #########################
+
 
 
 ###########################
@@ -370,14 +383,16 @@ for cluster, numbers in pangenome_clusters_Type_Genera.items():
         calc_pep_extended_StORF(cluster,numbers[1],numbers[3])
         extended.update({cluster:numbers})
         check_all_calced += 1
-    elif numbers[0] >1 and numbers[3] >1: # IF StORFs combined multiple PEP
+    elif numbers[0] >1 and numbers[3] >1: # IF StORFs combined multiple PEP - Genera added
         #grouped_pep = sum(numbers[2])
         #for num in numbers[2]:
         calc_multi_pep_extended_StORF(cluster,numbers[2],numbers[1],numbers[3]) # same here
         print("combined: " + str(cluster))
-        multi_PEP_Combined_By_StORFs.update({cluster:numbers})
+
         extended.update({cluster: numbers})
         check_all_calced += 1
+    elif numbers[0] >1 and numbers[4] >1: # IF StORFs combined multiple PEP
+        multi_PEP_Combined_By_StORFs.update({cluster: numbers})
 
 
 import os
@@ -408,7 +423,7 @@ for cluster, genera in Combined_pangenome_clusters_StORF_Genera.items():
         if len(storf_strains) >= 2:
             StORF_Only.write(str(cluster) + ',')
             Combined_pangenome_clusters_ONLY_StORF_Type[cluster] = [cluster,len(genera)]
-            calc_only_StORF(cluster,len(genera))
+            max_storf_only_genera = calc_only_StORF(cluster,len(genera),max_storf_only_genera)
             if len(genera) > big_genera:
                 big_genera = len(genera)
                 biggest_genera = cluster
@@ -441,11 +456,12 @@ print(cores)
 
 from collections import Counter
 
-print(Counter(cores['pep_genera']))
-print(Counter(cores['extended_genera']))
-print(Counter(cores['comb_extended_genera']))
-print(Counter(cores['storf_genera']))
+#print(Counter(cores['pep_genera']))
+#print(Counter(cores['extended_genera']))
+#print(Counter(cores['comb_extended_genera']))
+#print(Counter(cores['storf_genera']))
 print(Counter(cores['only_storf_genera']))
+print(cores['only_storf_genera_recording'])
 
 print("END")
 
