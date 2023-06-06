@@ -11,12 +11,12 @@ except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
     from Constants import *
 
 def gff_load_and_write(options,gff_in,blast_hits):
-    for line in gff_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
+    for line in gff_in: 
         line_data = line.split()
         if line.startswith('\n') or line.startswith('#'):  # Not to crash on empty lines in GFF
             options.gff_out.write(line)
         else:
-            if 'Single_Genome' in line:
+            if 'StORF-Reporter' in line:
                 StORF = line_data[8].split('ID=')[1].split(';')[0]
                 if StORF in blast_hits:
                     options.gff_out.write(line)
@@ -30,7 +30,7 @@ def load_blast_6(options, blast_in):
         line_data = line.split('\t')
         if 'StORF' in line_data[0]:
             if int(line_data[11].split('.')[0]) >= options.minscore:
-                blast_hits.update({line_data[0].split(';')[0]:[]})
+                blast_hits.update({line_data[0]:[]})
 
     return blast_hits
 
@@ -54,7 +54,7 @@ def remover(options):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='Single_Genome ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
@@ -90,7 +90,7 @@ def main():
         else:
             exit('StORF-Remover: error: the following arguments are required: -f, -gff, -blast')
 
-    print("Thank you for using Single_Genome -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
           "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     options.annotation_type = [None,None]
