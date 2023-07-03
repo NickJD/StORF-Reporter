@@ -226,10 +226,10 @@ def storf_extractor(options, gff):
                         print("UR " + pos + " is more than 100,000 kbs - Please Check Annotation")
                     continue
                 if frame == '+':
-                    StORF_seq = seq[start:stop]
+                    StORF_seq = seq[start-4:stop]
                 elif frame == '-':
                     rev_corrected_start, rev_corrected_stop = reverseCorrectLoci(seq_length, start, None, stop)
-                    StORF_seq = seq_rev[rev_corrected_start:rev_corrected_stop]
+                    StORF_seq = seq_rev[rev_corrected_start-3:rev_corrected_stop]
 
                 Extracted_StORFs[pos] = StORF_seq
         dna_regions.update({key: (seq, seq_length, posns, Extracted_StORFs)})
@@ -278,7 +278,7 @@ def main():
 
 
     options = parser.parse_args()
-    options.tool_ident = ['Single_Genome']#options.tool_ident.split(',')
+    options.tool_ident = ['StORF-Reporter']#options.tool_ident.split(',')
 
 
     if options.storf_input == None or options.path == None:
