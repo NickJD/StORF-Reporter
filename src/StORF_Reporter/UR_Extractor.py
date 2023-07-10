@@ -108,7 +108,7 @@ def pyrodigal_virtual_gff_load(gff_in,dna_regions):
 
 def gff_load(options,gff_in,dna_regions):
     for line in gff_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
-        line_data = line.split()
+        line_data = line.split('\t')
         if line.startswith('\n') or line.startswith('#') or 'European Nucleotide Archive' in line:  # Not to crash on empty lines in GFF
             continue
         elif options.gene_ident[0] == 'ID=gene':
