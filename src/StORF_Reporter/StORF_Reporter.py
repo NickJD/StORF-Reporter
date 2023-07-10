@@ -533,8 +533,8 @@ def main():
                              '\tEnsembl = Report StORFs for an Ensembl Bacteria annotation (ID=gene); \n'
                              '\tFeature_Types = Used in conjunction with -gene_ident to define features such as CDS,rRNA,tRNA for UR extraction (default CDS); \n'
                              '--- Standard GFF Input Options: \n'
-                             '\tSingle_Genome = To provide a single Genome - accompanying FASTA must share same name as given gff file (can be .fna, fa or .fasta); \n'
-                             '\tMultiple_Genomes = To provide a directory containing multiple accompanying GFF and FASTA files - files must share the same name (fasta can be .fna, fa or .fasta); \n'
+                             '\tSingle_Genome = To provide a single Genome - accompanying FASTA must share same name as given gff file (can be .fna, .fa or .fasta); \n'
+                             '\tMultiple_Genomes = To provide a directory containing multiple accompanying GFF and FASTA files - files must share the same name (fasta can be .fna, .fa or .fasta); \n'
                              '\tSingle_Combined_GFF = To provide a GFF file with embedded FASTA at the bottom; \n'
                              '\tMultiple_Combined_GFFs = To provide a directory containing multiple GFF files with embedded FASTA at the bottom; \n\n'
                              
@@ -812,10 +812,10 @@ def main():
         file_counter = 0
         for gff in gff_list:
             # Finalising output_file name
-            if Reporter_options.annotation_type[1]  == "Multiple_Combined_GFFs" and Reporter_options.o_name != None:
+            if (Reporter_options.annotation_type[1]  == "Multiple_Combined_GFFs" or Reporter_options.annotation_type[1] == "Multiple_Genomes") and Reporter_options.o_name != None:
                 Reporter_options.output_file = output_file + '_' + str(file_counter)
                 file_counter += 1
-            elif Reporter_options.annotation_type[1]  == "Multiple_Combined_GFFs":
+            elif (Reporter_options.annotation_type[1]  == "Multiple_Combined_GFFs" or Reporter_options.annotation_type[1] == "Multiple_Genomes"):
                 tmp_filename = gff.split('/')[-1].split('.gff')[0]  # could be .fa/.fasta etc
                 Reporter_options.output_file = output_file.replace('_StORF-Reporter',tmp_filename + '_StORF-Reporter')
             else:
