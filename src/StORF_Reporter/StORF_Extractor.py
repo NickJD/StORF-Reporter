@@ -5,6 +5,7 @@ import gzip
 import sys
 import os
 import pathlib
+import textwrap
 
 
 try:
@@ -65,14 +66,41 @@ def revCompIterative(watson): #Gets Reverse Complement
     return crick
 
 
-def write_fasta(dna_regions, fasta_outfile):
+def write_fasta(dna_regions, options):
     for dna_region, dna_region_ur in dna_regions.items():
-        fasta_outfile.write('##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
+        #fasta_outfile.write('##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
         if dna_region_ur[3]:
             for storf, seq in dna_region_ur[3].items():
-                fasta_outfile.write('>Start=' + storf.split('_')[0] + ';Stop=' + storf.split('_')[1] + ';Frame=' +
-                                storf.split('_')[2] + storf.split(';')[1] + '\n' + seq + '\n')
-    fasta_outfile.close()
+                strand = storf.split('_')[2]
+                options.fasta_outfile.write('>Start=' + storf.split('_')[0] + ';Stop=' + storf.split('_')[1] + ';Frame=' +
+                                            strand + storf.split(';')[1] + '\n') #) + seq + '\n')
+                if options.translate == True:
+                    if "+" in strand:
+                        amino = translate_frame(seq[0:])
+                        if options.stop_ident == False:
+                            amino = amino.replace('*', '')  # Remove * from sequences
+                        if options.line_wrap:
+                            amino = textwrap.wrap(amino, width=60)
+                            for wrap in amino:
+                                options.fasta_outfile.write(wrap + '\n')
+                        else:
+                            options.fasta_outfile.write(amino + '\n')
+                    if "-" in strand:
+                        amino = translate_frame(seq[0:])
+                        if options.stop_ident == False:
+                            amino = amino.replace('*', '')  # Remove * from sequences
+                        if options.line_wrap:
+                            amino = textwrap.wrap(amino, width=60)
+                            for wrap in amino:
+                                options.fasta_outfile.write(wrap + '\n')
+                        else:
+                            options.fasta_outfile.write(amino + '\n')
+                else:
+                    options.fasta_outfile.write(seq + '\n')
+
+
+
+    options.fasta_outfile.close()
 
 def write_gff(dna_regions,options,gff_outfile, gff):
     gff_outfile.write("##gff-version\t3\n#\tStORF-Extractor \n#\tRun Date:" + str(date.today()) + '\n')
@@ -203,7 +231,7 @@ def storf_extractor(options, gff):
     if dna_regions == None and options.verbose == True:
         print("No StORFs to extract from " + gff)
         os.remove(options.fasta_outfile.name)
-        os.remove(options.gff_outfile.name)
+        #os.remove(options.gff_outfile.name)
         return
     elif dna_regions == None:
         os.remove(options.fasta_outfile.name)
@@ -236,7 +264,7 @@ def storf_extractor(options, gff):
 
 
 
-    write_fasta(dna_regions, options.fasta_outfile)
+    write_fasta(dna_regions, options)
     if options.gff_out != False:
         write_gff(dna_regions, options, options.gff_outfile, gff)
 
@@ -261,6 +289,12 @@ def main():
     output = parser.add_argument_group('Output')
     output.add_argument('-gff_out', action='store', dest='gff_out', default=False, type=eval, choices=[True, False],
                         help='Default - False: Output StORFs in GFF format')
+    output.add_argument('-aa', action="store", dest='translate', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Report StORFs as amino acid sequences')
+    output.add_argument('-lw', action="store", dest='line_wrap', default=True, type=eval, choices=[True, False],
+                        help='Default - True: Line wrap FASTA sequence output at 60 chars')
+    output.add_argument('-stop_ident', action="store", dest='stop_ident', default=False, choices=[True, False],
+                        help='Default - True: Identify Stop Codon positions with \'*\'')
     output.add_argument('-oname', action="store", dest='o_name', required=False,
                         help='Default - Appends \'_Extracted_StORFs\' to end of input GFF filename')
     output.add_argument('-odir', action="store", dest='o_dir', required=False,
@@ -292,10 +326,15 @@ def main():
 
 
     #### Output Directory and Filename handling
+    if os.path.isdir(options.path):
+        options.path = options.path + '/' if not options.path.endswith('/') else options.path
     if options.o_dir == None and options.o_name == None:
         tmp_extension = options.path.split('.')[-1]  # could be .fa/.fasta etc
         output_file = options.path.replace('.' + tmp_extension, '')
-        output_file = output_file + '_Extracted_StORFs'
+        if options.translate == True:
+            output_file = output_file + '_Extracted_StORFs_AA'
+        else:
+            output_file = output_file + '_Extracted_StORFs'
     elif options.o_dir != None and options.o_name != None:
         output_file = options.o_dir
         output_file = output_file + '/' if not output_file.endswith('/') else output_file
@@ -303,7 +342,10 @@ def main():
     elif options.o_dir != None:
         tmp_extension = options.path.split('.')[-1]  # could be .fa/.fasta etc
         output_file = options.path.replace('.' + tmp_extension, '').split('/')[-1]
-        output_file = options.o_dir + output_file + '_Extracted_StORFs'
+        if options.translate == True:
+            output_file = options.o_dir + output_file + '_Extracted_StORFs_AA'
+        else:
+            output_file = options.o_dir + output_file + '_Extracted_StORFs'
     elif options.o_name != None:
         tmp_filename = options.path.split('/')[-1]  # could be .fa/.fasta etc
         output_file = options.path.replace(tmp_filename, '')
@@ -358,7 +400,7 @@ def main():
         ##################
 
         if options.verbose == True:
-            print("Finished: " + gff.split('/')[-1])  # Will add number of additional StORFs here`
+            print("Finished: " + gff)#.split('/')[-1])  # Will add number of additional StORFs here`
 
 
 

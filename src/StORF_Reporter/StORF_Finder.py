@@ -444,11 +444,11 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                             first = False
                         break
 
-                    if options.short_storfs != False and length >= 30: # Report short (<= 120) StORFs with less than 50% overlap with other larger StORFs
+                    if options.short_storfs != False and length >= 30: # Report short (<= 120) StORFs
                         seq = sequence[stop:next_stop  + 3]
                         length = next_stop - stop # Check
                         short_storfs.update({",".join([str(stop), str(next_stop  + 3)]): [seq, str(frame), strand, length,'Short-StORF', short_StORF_idx]})
-                        short_StORF_idx +1
+                        short_StORF_idx +=1
                     else:
                         break
         counter +=1
@@ -524,42 +524,49 @@ def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, g
                 write_gff(gff_entries, gff_out)
 
     ###### Only Short-StORFs
-    elif options.short_storfs != False and options.short_storfs_only == True: # Short-StORFs ONLY
-        if bool(short_storfs):
-            if options.start_filtering == True:
-                short_storfs = start_filtering(short_storfs)
-            if options.olap_filtering == 'both-strand':
-                short_storfs = tile_filtering(short_storfs, options)  # Filtering
-            short_storfs = OrderedDict(sorted(short_storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))  # Reorder by start position
-            ###Data Prepare
-            gff_entries, fasta_entries = prepare_out(options, short_storfs, sequence_id)
-            write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
-            if not options.aa_only:
-                write_gff(gff_entries, gff_out)
+    # elif options.short_storfs != False and options.short_storfs_only == True: # Short-StORFs ONLY
+    #     if bool(short_storfs):
+    #         if options.start_filtering == True:
+    #             short_storfs = start_filtering(short_storfs)
+    #         if options.olap_filtering == 'both-strand':
+    #             short_storfs = tile_filtering(short_storfs, options)  # Filtering
+    #         short_storfs = OrderedDict(sorted(short_storfs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))  # Reorder by start position
+    #         ###Data Prepare
+    #         gff_entries, fasta_entries = prepare_out(options, short_storfs, sequence_id)
+    #         write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
+    #         if not options.aa_only:
+    #             write_gff(gff_entries, gff_out)
 
-    ### StORFs and Short-StORFs
-    elif options.short_storfs != False and options.short_storfs_only == False:
+    ### Short-StORFs
+    elif options.short_storfs != False: # and options.short_storfs_only == False:
         ### Don't allow short-storfs to overlap with storfs
         if options.short_storfs == 'Nolap':
             all_StORFs = {**storfs, **short_storfs}
             if options.olap_filtering == 'both-strand':
                 all_StORFs = tile_filtering(all_StORFs,options) # Filtering
-            all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
-            if options.reporter == True:
-                return all_StORFs
+            filtered_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(","))))) # Reorder by start position
+
         ### short-storfs can onverlap with storfs
         elif options.short_storfs == 'Olap':
             if options.olap_filtering == 'both-strand': # Filter individually
                 storfs = tile_filtering(storfs,options) # Filtering
                 short_storfs = tile_filtering(short_storfs,options) # Filtering
             all_StORFs = {**storfs, **short_storfs}
-            all_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
+            filtered_StORFs = OrderedDict(sorted(all_StORFs.items(), key=lambda e: tuple(map(int, e[0].split(",")))))
+        if options.short_storfs_only == True: # Checking what short_storfs survived filtering and extracting them
+            final_StORFs = dict(short_storfs.items() & filtered_StORFs.items())
+            if len(final_StORFs) != 0:
+                print("we have one: " + options.fasta)
+        else:
+            final_StORFs = filtered_StORFs
+
+        if options.reporter == True:
+            return final_StORFs
             ###Data Prepare
-        gff_entries, fasta_entries = prepare_out(options, all_StORFs, sequence_id)
+        gff_entries, fasta_entries = prepare_out(options, final_StORFs, sequence_id)
         write_fasta(options, fasta_entries, fasta_out, aa_fasta_out)
         if not options.aa_only:
             write_gff(gff_entries, gff_out)
-
 
     ####### StORFs and Con-StORFs
     elif options.con_storfs == True and options.con_only == False:
@@ -619,6 +626,7 @@ def fasta_load(fasta_in, sequence_regions, sequences):
 
 ## Function to control how StORF-Finder handles Single_Genome output
 def StORF_Reported(options, Contigs):
+    options.unannotated = True
     Reporter_StORFs = collections.OrderedDict()
     for Contig_ID, Contig_URs in Contigs.items():
         Reporter_StORFs.update({Contig_ID:[]})
@@ -677,8 +685,6 @@ def main():
                              'overlapped by StORFs and Olap will report Short-StORFs which do overlap StORFs. Overlap is defined by "-olap".')
     optional.add_argument('-short_storfs_only', action="store", dest='short_storfs_only', default=False, type=eval, choices=[True, False],
                         help='Default - True. Only report Short-StORFs?')
-    optional.add_argument('-stop_ident', action="store", dest='stop_ident', default=False, choices=[True, False],
-                        help='Default - True: Identify Stop Codon positions with \'*\'')
     optional.add_argument('-f_type', action='store', dest='feature_type', default='CDS', const='StORF', nargs='?',
                         choices=['StORF', 'CDS', 'ORF'],
                         help='Default - "StORF": Which GFF feature type for StORFs to be reported as in GFF')
@@ -715,6 +721,8 @@ def main():
                         help='Default - False: Only output Amino Acid Fasta')
     output.add_argument('-lw', action="store", dest='line_wrap', default=True, type=eval, choices=[True, False],
                         help='Default - True: Line wrap FASTA sequence output at 60 chars')
+    output.add_argument('-stop_ident', action="store", dest='stop_ident', default=False, choices=[True, False],
+                        help='Default - True: Identify Stop Codon positions with \'*\'')
     output.add_argument('-gff_fasta', action="store", dest='gff_fasta', default=False, type=eval, choices=[True, False],
                         help='Default - False: Report all gene sequences (nt) at the bottom of GFF files in Prokka output mode')
     output.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],

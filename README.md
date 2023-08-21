@@ -62,7 +62,7 @@ usage: StORF_Reporter.py [-h]
                          [-f_type [{StORF,CDS,ORF}]] [-olap OVERLAP_NT] [-ao ALLOWED_OVERLAP] [-overwrite {True,False}]
                          [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.0.3: StORF-Reporter Run Parameters.
+StORF-Reporter v1.1.0: StORF-Reporter Run Parameters.
 
 Required Options:
   -anno [{Prokka,Bakta,Out_Dir,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]
@@ -170,32 +170,32 @@ UR-Extractor -f .../Test_Datasets/Matching_GFF_FASTA/E-coli.fa -gff .../Test_Dat
 ```
 
 ```python
-usage: UR_Extractor.py [-h] [-f FASTA] [-gff GFF] [-ident IDENT] [-min_len MINLEN] [-max_len MAXLEN] [-ex_len EXLEN] [-gene_ident GENE_IDENT] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}] [-verbose {True,False}] [-v]
+usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gff_out {True,False}] [-aa {True,False}]
+                          [-lw {True,False}] [-stop_ident {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}]
+                          [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.0.3: UR-Extractor Run Parameters.
+Single_Genome v1.1.0: StORF-Extractor Run Parameters.
 
 Required Arguments:
-  -f FASTA              FASTA file for Unannotated Region seq extraction
-  -gff GFF              GFF annotation file for the FASTA
-
-Optional Arguments:
-  -ident IDENT          Identifier given for Unannotated Region output sequences - Do not modify if output is to be used by StORF-Finder: Default "Sequence-ID"_UR
-  -min_len MINLEN       Minimum UR Length: Default 30
-  -max_len MAXLEN       Maximum UR Length: Default 100,000
-  -ex_len EXLEN         UR Extension Length on 5' and 3': Default 50
-  -gene_ident GENE_IDENT
-                        Identifier used for extraction of Unannotated Regions "CDS,rRNA,tRNA": Default for Ensembl_Bacteria = "ID=gene" or "-gene_ident CDS" for "most" genome annotations
+  -storf_input {Combined,Separate}
+                        Are StORFs to be extracted from Combined GFF/FASTA or Separate GFF/FASTA files?
+  -p PATH               Provide input files or directory path
 
 Output:
-  -oname O_NAME         Default - Appends '_UR' to end of input GFF filename
-  -odir O_DIR           Default - Same directory as input GFF
+  -gff_out {True,False}
+                        Default - False: Output StORFs in GFF format
+  -aa {True,False}      Default - False: Report StORFs as amino acid sequences
+  -lw {True,False}      Default - True: Line wrap FASTA sequence output at 60 chars
+  -stop_ident {True,False}
+                        Default - True: Identify Stop Codon positions with '*'
+  -oname O_NAME         Default - Appends '_Extracted_StORFs' to end of input GFF filename
+  -odir O_DIR           Default - Same directory as input FASTA
   -gz {True,False}      Default - False: Output as .gz
 
 Misc:
   -verbose {True,False}
                         Default - False: Print out runtime messages
   -v                    Default - False: Print out version number and exit
-
 ```
 ## StORF-Finder:
 ### Subpackage to extract StORFs from Fasta sequences - Works directly with the output of UR-Extractor.  
@@ -210,7 +210,7 @@ usage: StORF_Finder.py [-h] [-f FASTA] [-ua {True,False}] [-wc {True,False}] [-p
                        [-stop_ident {True,False}] [-f_type [{StORF,CDS,ORF}]] [-minorf MIN_ORF] [-maxorf MAX_ORF] [-codons STOP_CODONS] [-olap OVERLAP_NT] [-s SUFFIX] [-so [{start_pos,strand}]] [-spos {True,False}] [-oname O_NAME] [-odir O_DIR] [-gff {True,False}] [-aa {True,False}] [-aa_only {True,False}]
                        [-lw {True,False}] [-gff_fasta {True,False}] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.0.3: StORF-Finder Run Parameters.
+StORF-Reporter v1.1.0: StORF-Finder Run Parameters.
 
 Required Arguments:
   -f FASTA              Input FASTA File - (UR_Extractor output)
@@ -274,7 +274,7 @@ StORF-Extractor -storf_input Combined -p .../Test_Datasets/Combined_GFFs/E-coli_
 ```python
 usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gff_out {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.0.3: StORF-Extractor Run Parameters.
+StORF-Reporter v1.1.0: StORF-Extractor Run Parameters.
 
 Required Arguments:
   -storf_input {Combined,Separate}
@@ -307,7 +307,7 @@ StORF-Remover -gff .../Test_Datasets/StORF_Extractor_And_Remover/Myco_UR_StORF-R
 usage: StORF_Remover.py [-h] [-gff GFF] [-blast BLAST] [-min_score MINSCORE] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}]
                         [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.0.3: UR-Extractor Run Parameters.
+StORF-Reporter v1.1.0: UR-Extractor Run Parameters.
 
 Required Arguments:
   -gff GFF              GFF annotation file for the FASTA
