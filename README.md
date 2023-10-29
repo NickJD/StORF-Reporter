@@ -1,4 +1,4 @@
-# StORF-Reporter - Preprint: https://www.biorxiv.org/content/10.1101/2022.03.31.486628v3
+# StORF-Reporter has now been published in NAR: https://doi.org/10.1093/nar/gkad814
 
 ### StORF-Reporter, a toolkit that returns missed CDS genes from the Unannotated Regions (URs) of prokaryotic genomes.
 
