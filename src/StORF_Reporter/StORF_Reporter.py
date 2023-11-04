@@ -209,11 +209,11 @@ def pyrodigal_predict(fasta,Reporter_options):
         sequences = read_pyrodigal_fasta(fasta_in, sequences)
     pyrodigal_hold = NamedTemporaryFile(mode='w+', delete=False)
 
-    orf_finder = pyrodigal.OrfFinder()
+    orf_finder = pyrodigal.GeneFinder()
     longest = (max(sequences.values(), key=len)) # Get longest contig for training
 
     if Reporter_options.py_train == 'meta':
-        orf_finder = pyrodigal.OrfFinder(meta=True)
+        orf_finder = pyrodigal.GeneFinder(meta=True)
     elif Reporter_options.py_train == 'longest':
         orf_finder.train(longest)
     for sequence_name, seq in sequences.items():
@@ -222,7 +222,7 @@ def pyrodigal_predict(fasta,Reporter_options):
                 orf_finder.train(seq)
                 break
             except ValueError:
-                orf_finder = pyrodigal.OrfFinder(meta=True)  # If NO contig is >= 20kb#
+                orf_finder = pyrodigal.GeneFinder(meta=True)  # If NO contig is >= 20kb#
         else:
             genes = orf_finder.find_genes(seq)
         if Reporter_options.py_unstorfed == True:
