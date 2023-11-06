@@ -13,6 +13,8 @@
 
 #############################################################
 # StORF-Reporter:
+<img src="./Visual_Abstract.jpg"  width="50%" height="50%"/>
+
 ## Most common use cases - 
 ### Supplement a current annotation from a tool such as Prokka or Bakta. A new GFF file will be created compatible with downstream pangenome analysis tools such as Roary and Panaroo.
 
