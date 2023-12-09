@@ -1,5 +1,4 @@
 import argparse
-from argparse import Namespace
 import pathlib
 import collections
 import textwrap
@@ -32,7 +31,7 @@ class SmartFormatter(argparse.HelpFormatter):
 #         self.name = name
 #         self.roll = roll
 
-###################
+################### We are currently fixed using Table 11
 gencode = {
       'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
       'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
@@ -124,7 +123,7 @@ def FASTA_StORF_write(Reporter_options, track_contig, fasta_out, StORF):  # Cons
             fasta_out.write(wrap + '\n')
     else:
         fasta_out.write(sequence+'\n')
-    if Reporter_options.storfs_out == True: # Not efficient
+    if Reporter_options.storfs_out == True and Reporter_options.annotation_type[1] == 'Out_Dir': # Not efficient
         if Reporter_options.gz == False:
             storf_fasta_outfile = open(fasta_out.name.replace('.fasta','_StORFs_Only.fasta'),'a')
         else:
@@ -385,7 +384,11 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             gff_in = gff.read()
             gff_name = Reporter_options.gff
     try:
-        Reporter_options.gff_outfile = open(Reporter_options.output_file + '.gff', 'w')
+        if Reporter_options.gz == False:
+            Reporter_options.gff_outfile = open(Reporter_options.output_file + '.gff', 'w', newline='\n', encoding='utf-8')
+        elif Reporter_options.gz == True:
+            Reporter_options.gff_outfile = gzip.open(Reporter_options.output_file + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
+
     except FileNotFoundError:
         sys.exit('File not found error - Try providing full path.')
     track_prev_contig, track_contig = '',''
@@ -404,10 +407,6 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
         Contig_URS[Contig] = Contig_StORFs
     ### Rename .gff to .fasta / faa and load in fasta file
     if Reporter_options.annotation_type[1] == 'Out_Dir': # If normal Prokka Dir run
-        if Reporter_options.gz == False:
-                fasta_outfile = open(Reporter_options.output_file + '.fasta', 'w', newline='\n', encoding='utf-8')
-        elif Reporter_options.gz == True:
-                fasta_outfile = gzip.open(Reporter_options.output_file + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
         faa_infile = Reporter_options.gff.replace('.gff3', '.faa').replace('.gff','.faa')
         ffn_infile = Reporter_options.gff.replace('.gff3', '.ffn').replace('.gff','.ffn')
         Original_AA,Original_NT = FASTA_Load(faa_infile,ffn_infile)
@@ -415,6 +414,18 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
         Reporter_options.gff_outfile.write('##Pyrodigal annotation and StORF-Reporter extended GFF annotation of ' + Reporter_options.fasta.split('/')[-1] + '\n') # Windows uses '\'
     else:
         Reporter_options.gff_outfile.write('##StORF-Reporter extended annotation of ' + gff_name.split('/')[-1] + '\n')
+
+    #Handling separate output of FASTA sequences
+    if Reporter_options.annotation_type[1] == 'Out_Dir' or Reporter_options.storfs_out == True:
+        if Reporter_options.translate == True and Reporter_options.gz == False:
+            fasta_outfile = open(Reporter_options.output_file + '_aa.fasta', 'w', newline='\n', encoding='utf-8')
+        elif Reporter_options.translate == False and Reporter_options.gz == False:
+            fasta_outfile = open(Reporter_options.output_file + '.fasta', 'w', newline='\n', encoding='utf-8')
+        elif Reporter_options.translate == True and Reporter_options.gz == True:
+            fasta_outfile = gzip.open(Reporter_options.output_file + '_aa.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+        elif Reporter_options.translate == False and Reporter_options.gz == True:
+            fasta_outfile = gzip.open(Reporter_options.output_file + '.fasta.gz', 'wt', newline='\n', encoding='utf-8')
+
     Reporter_options.gff_outfile.write('##StORF-Reporter ' + StORF_Reporter_Version + '\n')
 
     first_region = True
@@ -448,7 +459,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             track_prev_start = track_current_start
             track_prev_stop = track_current_stop
             ##### Print out Prokka/Bakta Gene
-            if tracked == False and Reporter_options.annotation_type[1] == 'Out_Dir':
+            if tracked == False and (Reporter_options.annotation_type[1] == 'Out_Dir' or Reporter_options.storfs_out == True):
                 if ('gene' in data[2] or 'ID=' in data[8]) and Reporter_options.annotation_type[0] in ('Prokka', 'Bakta'):
                     Original_ID = data[8].split(';')[0].replace('ID=','').replace('_gene','')
                     try:
@@ -473,7 +484,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             if StORFs:
                 for StORF in StORFs:  # ([ur_pos,StORF_start, StORF_stop, StORF_Start_In_UR, StORF_Stop_In_UR, frame, ur_frame, strand, StORF_Length, StORF_UR_Num, StORF_Seq)]
                     GFF_StORF_write(Reporter_options, track_contig, Reporter_options.gff_outfile, StORF, StORF_Num)  # To keep consistency
-                    if Reporter_options.annotation_type[1] == 'Out_Dir':
+                    if Reporter_options.annotation_type[1] == 'Out_Dir' or Reporter_options.storfs_out == True:
                         FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
                     StORF_Num += 1
             if line != written_line:
@@ -485,7 +496,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             if StORFs:
                 for StORF in StORFs:
                     GFF_StORF_write(Reporter_options, track_prev_contig, Reporter_options.gff_outfile, StORF, StORF_Num)  # To keep consistency
-                    if Reporter_options.annotation_type[1] == 'Out_Dir':
+                    if Reporter_options.annotation_type[1] == 'Out_Dir' or Reporter_options.storfs_out == True:
                         FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
                     StORF_Num += 1
             Reporter_options.gff_outfile.write(line.strip() + '\n')
@@ -666,7 +677,10 @@ def main():
           "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     ##############
-    ## Print out user chosen annotation options
+    ## TODO: Print out user chosen annotation options
+
+    Reporter_options.path = os.path.realpath(Reporter_options.path)
+
 
     ##############
     ## Incompatible argument catching

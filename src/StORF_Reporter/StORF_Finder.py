@@ -633,7 +633,7 @@ def StORF_Reported(options, Contigs):
         URs = Contig_URs[3]
         try:
             for UR in URs:
-                if len(URs[UR][1]) >= options.min_orf: # Here
+                if len(URs[UR][1]) >= options.min_orf:
                     contig_length = Contigs[Contig_ID][1]
                     sequence_info = [contig_length,URs[UR][1]]
                     if UR.split('_')[0] == '0': # This is to account for the GFF base-1 system
