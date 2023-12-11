@@ -71,15 +71,14 @@ def write_fasta(dna_regions, options):
         #fasta_outfile.write('##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
         if dna_region_ur[3]:
             for storf, seq in dna_region_ur[3].items():
-                strand = storf.split('_')[2]
-                options.fasta_outfile.write('>Start=' + storf.split('_')[0] + ';Stop=' + storf.split('_')[1] + ';Frame=' +
-                                            strand + storf.split(';')[1] + '\n') #) + seq + '\n')
+                strand = storf.split('_')[2].split(';')[0]                    #I removed the extra info
+                options.fasta_outfile.write('>' + storf.split(';')[1] + '\n') #'|Start=' + storf.split('_')[0] + '|Stop=' + storf.split('_')[1] + '|Frame=' +strand + '\n') #) + seq + '\n')
                 if options.translate == True:
                     if "+" in strand:
                         amino = translate_frame(seq[0:])
                         if options.stop_ident == False:
                             amino = amino.replace('*', '')  # Remove * from sequences
-                        if options.line_wrap:
+                        if options.line_wrap == True:
                             amino = textwrap.wrap(amino, width=60)
                             for wrap in amino:
                                 options.fasta_outfile.write(wrap + '\n')
@@ -89,14 +88,19 @@ def write_fasta(dna_regions, options):
                         amino = translate_frame(seq[0:])
                         if options.stop_ident == False:
                             amino = amino.replace('*', '')  # Remove * from sequences
-                        if options.line_wrap:
+                        if options.line_wrap == True:
                             amino = textwrap.wrap(amino, width=60)
                             for wrap in amino:
                                 options.fasta_outfile.write(wrap + '\n')
                         else:
                             options.fasta_outfile.write(amino + '\n')
                 else:
-                    options.fasta_outfile.write(seq + '\n')
+                    if options.line_wrap == True:
+                        seq = textwrap.wrap(seq, width=60)
+                        for wrap in seq:
+                            options.fasta_outfile.write(wrap.lstrip() + '\n')
+                    else:
+                        options.fasta_outfile.write(seq + '\n')
 
 
 
@@ -270,7 +274,7 @@ def storf_extractor(options, gff):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='Single_Genome ' + StORF_Reporter_Version + ': StORF-Extractor Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Extractor ' + StORF_Reporter_Version + ': StORF-Extractor Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
@@ -315,17 +319,21 @@ def main():
     options.tool_ident = ['StORF-Reporter']#options.tool_ident.split(',')
 
 
+
     if options.storf_input == None or options.path == None:
         if options.version:
             sys.exit(StORF_Reporter_Version)
         else:
             exit('StORF-Extractor: error: the following arguments are required: -storf_input, -p')
 
-    print("Thank you for using Single_Genome -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+
+
+    print("Thank you for using StORF-Extractor -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
           "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
 
     #### Output Directory and Filename handling
+    options.path = os.path.realpath(options.path)
     if os.path.isdir(options.path):
         options.path = options.path + '/' if not options.path.endswith('/') else options.path
     if options.o_dir == None and options.o_name == None:
