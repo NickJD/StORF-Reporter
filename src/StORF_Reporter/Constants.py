@@ -1,1 +1,1 @@
-StORF_Reporter_Version = 'v1.1.2'
+StORF_Reporter_Version = 'v1.1.4'
