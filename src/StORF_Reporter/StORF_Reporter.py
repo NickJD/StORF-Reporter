@@ -68,7 +68,8 @@ def GFF_StORF_write(Reporter_options, track_contig, gff_out, StORF, StORF_Num): 
     stop = StORF[4]
     UR_Start = int(StORF[0].split('_')[0])
     start_stop = StORF[12][0:3]
-    if len(StORF[11].split(',')) == 3: # fix for con-storfs
+    if len(StORF[11].split(',')) >= 3: # fix for con-storfs - TBD
+        StORF_Type = 'ID=Con-StORF_'
         if StORF[7] == '-':
             mid = int(StORF[11].split(',')[2]) - int(StORF[11].split(',')[1])
             mid_stop = StORF[12][mid:mid + 3]
@@ -77,6 +78,7 @@ def GFF_StORF_write(Reporter_options, track_contig, gff_out, StORF, StORF_Num): 
             mid_stop = StORF[12][mid:mid + 3]
     else:
         mid_stop = 'N/A'
+        StORF_Type = 'ID=StORF_'
     end_stop = StORF[12][-3:]
 
     if strand == '+':
@@ -99,7 +101,7 @@ def GFF_StORF_write(Reporter_options, track_contig, gff_out, StORF, StORF_Num): 
     StORF_length = int(gff_stop) + 1 - int(gff_start) # +1 to adjust for base-1
 
     gff_out.write(track_contig + '\tStORF-Reporter\t' + Reporter_options.feature_type + '\t' +  str(gff_start) + '\t' + str(gff_stop) + '\t.\t' +
-        StORF[7] + '\t0\tID=StORF_' + locus_tag + ';locus_tag=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Stop_Locations=' + StORF[11].replace(',','-') + ';Name=' +
+        StORF[7] + '\t0\t' + StORF_Type + locus_tag + ';locus_tag=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Stop_Locations=' + StORF[11].replace(',','-') + ';Name=' +
            StORF[10] + '_' + str(StORF_Num) + ';' + StORF[10] + '_Num_In_UR=' + str(StORF[9]) + ';' + StORF[10] + '_Length=' + str(StORF_length) + ';' + StORF[10] +
            '_Frame=' + str(frame) + ';UR_' + StORF[10] + '_Frame=' + str(StORF[6]) +  ';Start_Stop=' + start_stop + ';Mid_Stops=' + mid_stop  + ';End_Stop='
            + end_stop + ';StORF_Type=' + StORF[10] + '\n')
@@ -109,7 +111,11 @@ def FASTA_StORF_write(Reporter_options, track_contig, fasta_out, StORF):  # Cons
     ## This should compute the same hash as the one for GFF_Write - Should not be computed twice though
     ID = track_contig + '_UR_' + StORF[0] + '_' + StORF[10] + '_'+ str(StORF[9])
     to_hash = fasta_out.name.split('.')[0] + '_' + ID # create unique hash from outfile name and ID
-    locus_tag = 'StORF_' + hashlib.shake_256(to_hash.encode()).hexdigest(8)
+    if len(StORF[11].split(',')) >= 3: # fix for con-storfs - TBD
+        StORF_Type = 'Con-StORF_'
+    else:
+        StORF_Type = 'StORF_'
+    locus_tag = StORF_Type + hashlib.shake_256(to_hash.encode()).hexdigest(8)
     ### Wrtie out new FASTA entry - Currently only write out as nt
     fasta_out.write('>'+locus_tag+'\n')
     sequence = StORF[-1]

@@ -37,7 +37,7 @@ def translate_frame(sequence):
     return translate
 
 
-def reverseCorrectLoci(seq_length,first,second,third): # here for the negative loci correction
+def reverseCorrectLoci(seq_length,first,second,third): # here for the negative loci correction - TBD
 
     if second == None:
         corrected_start = max(seq_length - int(third),1)
@@ -72,7 +72,7 @@ def write_fasta(dna_regions, options):
         if dna_region_ur[3]:
             for storf, seq in dna_region_ur[3].items():
                 strand = storf.split('_')[2].split(';')[0]                    #I removed the extra info
-                options.fasta_outfile.write('>' + storf.split(';')[1] + '\n') #'|Start=' + storf.split('_')[0] + '|Stop=' + storf.split('_')[1] + '|Frame=' +strand + '\n') #) + seq + '\n')
+                options.fasta_outfile.write('>' + storf.split(';')[1].replace('ID=','') + '\n') #'|Start=' + storf.split('_')[0] + '|Stop=' + storf.split('_')[1] + '|Frame=' +strand + '\n') #) + seq + '\n')
                 if options.translate == True:
                     if "+" in strand:
                         amino = translate_frame(seq[0:])
