@@ -55,6 +55,66 @@ def translate_frame(sequence):
     return translate
 ############################
 
+def get_outfile_name(Reporter_options):
+    if Reporter_options.o_dir == None and Reporter_options.o_name == None and Reporter_options.alt_filename == None:
+        if Reporter_options.annotation_type[1] == 'Out_Dir':
+            output_file = Reporter_options.path
+            split_path = output_file.split(os.sep)
+            directory_name = split_path[-1]
+            output_file = os.path.join(output_file, f"{directory_name}_StORF-Reporter_Extended")
+            # output_file = output_file + output_file.split('/')[-2] + '_StORF-Reporter_Extended'
+        else:
+            tmp_extension = Reporter_options.path.split('.')[-1]  # could be .fa/.fasta etc
+            output_file = Reporter_options.path.replace('.' + tmp_extension, '')
+            if 'Multiple' in Reporter_options.annotation_type[1]:
+                if Reporter_options.annotation_type[0] == 'Pyrodigal':
+                    output_file = os.path.join(output_file, "_Pyrodigal_StORF-Reporter_Extended")
+                else:
+                    output_file = os.path.join(output_file, "_StORF-Reporter_Extended")
+            else:
+                if Reporter_options.annotation_type[0] == 'Pyrodigal':
+                    output_file = output_file + '_Pyrodigal_StORF-Reporter_Extended'
+                else:
+                    output_file = output_file + '_StORF-Reporter_Extended'
+
+    elif Reporter_options.o_dir == None and Reporter_options.o_name == None and Reporter_options.alt_filename != None:
+        output_file = Reporter_options.path
+        output_file = os.path.join(output_file, f"{Reporter_options.alt_filename}_StORF-Reporter_Extended")
+
+    elif Reporter_options.o_dir != None and Reporter_options.o_name != None:
+        Reporter_options.o_dir = os.path.normpath(Reporter_options.o_dir)
+        Reporter_options.o_dir = os.path.realpath(Reporter_options.o_dir)
+        output_file = Reporter_options.o_dir
+        output_file = os.path.join(output_file, Reporter_options.o_name)
+    elif Reporter_options.o_dir != None:
+        Reporter_options.o_dir = os.path.normpath(Reporter_options.o_dir)
+        Reporter_options.o_dir = os.path.realpath(Reporter_options.o_dir)
+        if Reporter_options.annotation_type[1] == 'Out_Dir':
+            split_path = Reporter_options.path.split(os.sep)
+            directory_name = split_path[-1]
+            output_file = os.path.join(Reporter_options.o_dir, f"{directory_name}_StORF-Reporter_Extended")
+        elif Reporter_options.annotation_type[0] == 'Pyrodigal':
+            split_path = Reporter_options.path.split(os.sep)
+            filename = split_path[-1].split('.')[0]
+            output_file = os.path.join(Reporter_options.o_dir, f"{filename}_Pyrodigal_StORF-Reporter_Extended")
+        else:
+            split_path = Reporter_options.path.split(os.sep)
+            filename = split_path[-1].split('.')[0]
+            output_file = os.path.join(Reporter_options.o_dir, f"{filename}_StORF-Reporter_Extended")
+
+    elif Reporter_options.o_name != None:
+        output_file = Reporter_options.path
+        if 'Multiple' in Reporter_options.annotation_type[1]:
+            output_file = os.path.join(output_file, Reporter_options.o_name)
+        else:
+            split_path = output_file.split(os.sep)
+            filename = split_path[-1]
+            output_file = output_file.replace(filename,Reporter_options.o_name)
+
+    return output_file
+
+############################
+
 def GFF_StORF_write(Reporter_options, track_contig, gff_out, StORF, StORF_Num): # Consistency in outfile
     ID = track_contig + '_UR_' + StORF[0] + '_' + StORF[10] + '_'+ str(StORF[9])
     try:
@@ -245,8 +305,12 @@ def pyrodigal_predict(fasta,Reporter_options):
 
 
 def run_UR_Extractor_Directory(Reporter_options): # When given a complete Prokka/Bakta Directory
-    identifier = Reporter_options.path.split('/')[-2]
-    Reporter_options.fasta = Reporter_options.path + identifier + '.fna'
+    if Reporter_options.alt_filename:
+        identifier = Reporter_options.alt_filename
+    else:
+        split_path = Reporter_options.path.split(os.sep)
+        identifier = split_path[-1]
+    Reporter_options.fasta = os.path.join(Reporter_options.path, f"{identifier}.fna")
     if Reporter_options.annotation_type[0] == 'Prokka':
         Reporter_options.gff = Reporter_options.fasta.replace('.fna','.gff')
     if Reporter_options.annotation_type[0] == 'Bakta':
@@ -394,9 +458,9 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             Reporter_options.gff_outfile = open(Reporter_options.output_file + '.gff', 'w', newline='\n', encoding='utf-8')
         elif Reporter_options.gz == True:
             Reporter_options.gff_outfile = gzip.open(Reporter_options.output_file + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
-
     except FileNotFoundError:
         sys.exit('File not found error - Try providing full path.')
+
     track_prev_contig, track_contig = '',''
     StORF_Num = 0
     end = False
@@ -417,7 +481,9 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
         ffn_infile = Reporter_options.gff.replace('.gff3', '.ffn').replace('.gff','.ffn')
         Original_AA,Original_NT = FASTA_Load(faa_infile,ffn_infile)
     if Reporter_options.annotation_type[0] == 'Pyrodigal':
-        Reporter_options.gff_outfile.write('##Pyrodigal annotation and StORF-Reporter extended GFF annotation of ' + Reporter_options.fasta.split('/')[-1] + '\n') # Windows uses '\'
+        split_path = Reporter_options.fasta.split(os.sep)
+        file_name = split_path[-1]
+        Reporter_options.gff_outfile.write('##Pyrodigal annotation and StORF-Reporter extended GFF annotation of ' + file_name + '\n') # Windows uses '\'
     else:
         Reporter_options.gff_outfile.write('##StORF-Reporter extended annotation of ' + gff_name.split('/')[-1] + '\n')
 
@@ -566,10 +632,14 @@ def main():
     ###
     StORF_Reporter_args = parser.add_argument_group('StORF-Reporter Options')
     ### Add options to redirect into new output directory and filename - and output StORFs on their own in their own GFF -
+    StORF_Reporter_args.add_argument('-af', action="store", dest='alt_filename', required=False,
+                                     help='Default - Prokka/Bakta output directory share the same prefix with their gff/fna files - Use this option when Prokka/Bakta output directory name is different '
+                                          'from the gff/fna files within and StORF-Reporter will search for the gff/fna with the given prefix (MyProkkaDir/altname.gff/fna)')
     StORF_Reporter_args.add_argument('-oname', action="store", dest='o_name', required=False,
-                        help='Default - Appends \'_StORF-R\' to end of input FASTA filename - Multiple_* runs will be numbered')
+                        help='Default - Appends \'_StORF-Reporter_Extended\' to end of input filename - Takes the directory name of Prokka/Bakta output if given as input or the input for -af if given'
+                             '  - Multiple_* runs will be numbered')
     StORF_Reporter_args.add_argument('-odir', action="store", dest='o_dir', required=False,
-                        help='Default -  Same directory as input FASTA')
+                        help='Default -  Same directory as input')
     StORF_Reporter_args.add_argument('-sout', action="store", dest='storfs_out', default=False, type=eval, choices=[True, False],
                         help='Default - False: Print out StORF sequences separately from Prokka/Bakta annotations')
     StORF_Reporter_args.add_argument('-lw', action="store", dest='line_wrap', default=True, type=eval, choices=[True, False],
@@ -684,8 +754,9 @@ def main():
 
     ##############
     ## TODO: Print out user chosen annotation options
-
+    Reporter_options.path = os.path.normpath(Reporter_options.path)
     Reporter_options.path = os.path.realpath(Reporter_options.path)
+
 
 
     ##############
@@ -695,45 +766,14 @@ def main():
     ##############
     #### Output Directory and Filename handling
     ### Add '/' to end of directory path
-    if Reporter_options.annotation_type[1] in ['Multiple_GFFs','Multiple_Genomes','Multiple_FASTA','Out_Dir','Comb_GFFs', 'Multiple_Combined_GFFs']:
-        Reporter_options.path = Reporter_options.path + '/' if not Reporter_options.path.endswith('/') else Reporter_options.path
+    #if Reporter_options.annotation_type[1] in ['Multiple_GFFs','Multiple_Genomes','Multiple_FASTA','Out_Dir','Comb_GFFs', 'Multiple_Combined_GFFs']:
+    #    Reporter_options.path = Reporter_options.path + '/' if not Reporter_options.path.endswith('/') else Reporter_options.path
 
-    if Reporter_options.o_dir == None and Reporter_options.o_name == None:
-        if Reporter_options.annotation_type[1] == 'Out_Dir':
-            output_file = Reporter_options.path#.split('.')[-1]
-            output_file = output_file + output_file.split('/')[-2] + '_StORF-Reporter_Extended'
-        else:
-            tmp_extension = Reporter_options.path.split('.')[-1]  # could be .fa/.fasta etc
-            output_file = Reporter_options.path.replace('.' + tmp_extension, '')
-            if Reporter_options.annotation_type[0] == 'Pyrodigal':
-                output_file = output_file + '_Pyrodigal_StORF-Reporter_Extended'
-            else:
-                output_file = output_file + '_StORF-Reporter_Extended'
-    elif Reporter_options.o_dir != None and Reporter_options.o_name != None:
-        output_file = Reporter_options.o_dir
-        output_file = output_file + '/' if not output_file.endswith('/') else output_file
-        output_file = output_file + Reporter_options.o_name
-    elif Reporter_options.o_dir != None:
-        if Reporter_options.annotation_type[1] == 'Out_Dir':
-            Reporter_options.o_dir = Reporter_options.o_dir + '/' if not Reporter_options.o_dir.endswith('/') else Reporter_options.o_dir
-            output_file = Reporter_options.path#.split('.')[-1]
-            output_file = output_file + output_file.split('/')[-2] + '_StORF-Reporter_Extended'
-            output_file = output_file.split('/')[-1]
-            output_file = Reporter_options.o_dir + output_file
-        elif Reporter_options.annotation_type[0] == 'Pyrodigal':
-            tmp_extension = Reporter_options.path.split('.')[-1]  # could be .fa/.fasta etc
-            output_file = Reporter_options.path.replace('.' + tmp_extension, '').split('/')[-1]
-            output_file = Reporter_options.o_dir + output_file + '_Pyrodigal_StORF-Reporter_Extended'
-        else:
-            tmp_extension = Reporter_options.path.split('.')[-1]  # could be .fa/.fasta etc
-            output_file = Reporter_options.path.replace('.' + tmp_extension, '').split('/')[-1]
-            output_file = Reporter_options.o_dir + output_file + '_StORF-Reporter_Extended'
-    elif Reporter_options.o_name != None:
-        tmp_filename = Reporter_options.path.split('/')[-1]  # could be .fa/.fasta etc
-        output_file = Reporter_options.path.replace(tmp_filename, '')
-        output_file = output_file + Reporter_options.o_name
+    output_file = get_outfile_name(Reporter_options)
 
-###############################################################################################
+
+
+# ========================================================================================================================
 
     ############## Setup for Prokka/Bakta output directory
     if Reporter_options.annotation_type[0] in ('Prokka','Bakta') and Reporter_options.annotation_type[1] == 'Out_Dir':
@@ -873,7 +913,9 @@ def main():
                 Reporter_options.output_file = output_file + '_' + str(file_counter)
                 file_counter += 1
             elif Reporter_options.annotation_type[1]  == "Multiple_FASTA":
-                Reporter_options.output_file = output_file.replace('_Pyrodigal',fasta.name.split('.')[0] + '_Pyrodigal')
+                split_path = fasta.split(os.sep)
+                file_name = split_path[-1]
+                Reporter_options.output_file = output_file.replace('_Pyrodigal',file_name.split('.')[0] + '_Pyrodigal')
             else:
                 Reporter_options.output_file = output_file
             if Reporter_options.py_unstorfed == True:  # User wants to output initial Pyrodigal GFF
@@ -887,7 +929,9 @@ def main():
             Reporter_StORFs = StORF_Reported(Reporter_options, Contigs)
             ###### Append StORFs to current GFF file from provided genome annotation
             StORF_Filler(Reporter_options, Reporter_StORFs)
-            print("Finished predicting Pyrodigal CDS genes and StORFs for -  " + fasta.split('/')[-1]) # Can add number of additional StORFs here
+            split_path = fasta.split(os.sep)
+            file_name = split_path[-1]
+            print("Finished predicting Pyrodigal CDS genes and StORFs for -  " + file_name) # Can add number of additional StORFs here
     else:
         parser.error('Incompatible user-arguments selected.')
 
