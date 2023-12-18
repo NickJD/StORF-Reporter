@@ -111,7 +111,7 @@ def write_gff(dna_regions,options,gff_outfile, gff):
     gff_outfile.write('##Single_Genome ' + StORF_Reporter_Version + '\n')
     for seq_reg in dna_regions:
         gff_outfile.write('##sequence-region\t' + seq_reg + ' 1 ' + str(dna_regions[seq_reg][1]) + '\n')
-    gff_outfile.write("##Original File: " + gff.split('/')[-1] + '\n\n')
+    gff_outfile.write("##Original File: " + gff.split(os.sep)[-1] + '\n\n')
     for dna_region, storf_data in dna_regions.items():
         #ur_ident = dna_region + options.ident
         if storf_data[3]:
@@ -331,37 +331,46 @@ def main():
     print("Thank you for using StORF-Extractor -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
           "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
+    ############
 
     #### Output Directory and Filename handling
+    options.path = os.path.normpath(options.path)
     options.path = os.path.realpath(options.path)
-    if os.path.isdir(options.path):
-        options.path = options.path + '/' if not options.path.endswith('/') else options.path
+
+    #if os.path.isdir(options.path):
+    #    options.path = options.path + '/' if not options.path.endswith('/') else options.path
     if options.o_dir == None and options.o_name == None:
-        tmp_extension = options.path.split('.')[-1]  # could be .fa/.fasta etc
-        output_file = options.path.replace('.' + tmp_extension, '')
-        if options.translate == True:
-            output_file = output_file + '_Extracted_StORFs_AA'
+        if os.path.isdir(options.path):
+            output_file = os.path.join(options.path, f"_Extracted_StORFs")
         else:
-            output_file = output_file + '_Extracted_StORFs'
+            split_path = options.path.split(os.sep)
+            filename = split_path[-1]
+            output_file = options.path.split(os.sep)[-1].split('.')[0]
+            output_file = os.path.join(options.path.replace(filename,''), f"{output_file}_Extracted_StORFs")
+        if options.translate == True:
+            output_file = output_file + '_AA'
     elif options.o_dir != None and options.o_name != None:
-        output_file = options.o_dir
-        output_file = output_file + '/' if not output_file.endswith('/') else output_file
-        output_file = output_file + options.o_name
+        options.o_dir = os.path.normpath(options.o_dir)
+        options.o_dir = os.path.realpath(options.o_dir)
+        output_file = os.path.join(options.o_dir, f"{options.o_name}")
     elif options.o_dir != None:
-        tmp_extension = options.path.split('.')[-1]  # could be .fa/.fasta etc
-        output_file = options.path.replace('.' + tmp_extension, '').split('/')[-1]
+        options.o_dir = os.path.normpath(options.o_dir)
+        options.o_dir = os.path.realpath(options.o_dir)
+        output_file = options.path.split(os.sep)[-1].split('.')[0]
         if options.translate == True:
-            output_file = options.o_dir + output_file + '_Extracted_StORFs_AA'
+            output_file = os.path.join(options.o_dir, f"{output_file}_Extracted_StORFs_AA")
         else:
-            output_file = options.o_dir + output_file + '_Extracted_StORFs'
+            output_file = os.path.join(options.o_dir, f"{output_file}_Extracted_StORFs")
     elif options.o_name != None:
-        tmp_filename = options.path.split('/')[-1]  # could be .fa/.fasta etc
+        tmp_filename = options.path.split(os.sep)[-1]  # could be .fa/.fasta etc
         output_file = options.path.replace(tmp_filename, '')
         output_file = output_file + options.o_name
+        if options.translate == True:
+            output_file = output_file + '_AA'
 
 ######################################################################
     if os.path.isdir(options.path):
-        options.path = options.path + '/' if not options.path.endswith('/') else options.path
+        #options.path = options.path + '/' if not options.path.endswith('/') else options.path
         gff_list = list(pathlib.Path(options.path).glob('*.gff'))
         gff_list.extend(pathlib.Path(options.path).glob('*.gff3'))
     else:
@@ -383,7 +392,7 @@ def main():
             tmp_output_file = output_file + '_' + str(file_counter)
             file_counter += 1
         elif os.path.isdir(options.path):
-            tmp_filename = gff.split('/')[-1].split('.gff')[0]  # could be .fa/.fasta etc
+            tmp_filename = gff.split(os.sep)[-1].split('.gff')[0]  # could be .fa/.fasta etc
             tmp_output_file = output_file.replace('_Extracted_StORFs', tmp_filename + '_Extracted_StORFs')
         else:
             tmp_output_file = output_file
@@ -408,7 +417,7 @@ def main():
         ##################
 
         if options.verbose == True:
-            print("Finished: " + gff)#.split('/')[-1])  # Will add number of additional StORFs here`
+            print("Finished: " + gff)  # TODO add number of additional StORFs here`
 
 
 

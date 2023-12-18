@@ -248,7 +248,7 @@ def main():
         else:
             exit('UR-Extractor: error: the following arguments are required: -f, -gff')
 
-    print("Thank you for using Single_Genome -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+    print("Thank you for using UR-Extractor -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
           "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     options.annotation_type = [None,None]

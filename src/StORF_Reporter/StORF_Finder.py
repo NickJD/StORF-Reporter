@@ -707,7 +707,7 @@ def main():
 
     output = parser.add_argument_group('Output')
     output.add_argument('-oname', action="store", dest='o_name', required=False,
-                        help='Default - Appends \'_StORF-R\' to end of input FASTA filename')
+                        help='Default - Appends \'_StORF-Finder\' to end of input FASTA filename')
     output.add_argument('-odir', action="store", dest='o_dir', required=False,
                         help='Default -  Same directory as input FASTA')
     # output.add_argument('-af', action="store", dest='affix', required=False,
@@ -744,8 +744,13 @@ def main():
         else:
             exit('StORF-Finder: error: the following arguments are required: -f')
 
-    print("Thank you for using Single_Genome -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+    print("Thank you for using StORF-Finder -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
           "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
+
+    #############
+    options.fasta = os.path.normpath(options.fasta)
+    options.fasta = os.path.realpath(options.fasta)
+    #############
 
 
     #ns_nt = defaultdict  # Used to Record non-standard nucleotides - not implemented yet
@@ -765,16 +770,15 @@ def main():
     if options.o_dir == None and options.o_name == None:
         tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
         output_file = options.fasta.replace('.' + tmp_extension, '')
-        output_file = output_file + '_StORF-R'
+        output_file = output_file + '_StORF-Finder'
     elif options.o_dir != None and options.o_name != None:
         output_file = options.o_dir
         output_file = output_file + options.o_name
     elif options.o_dir != None:
-        tmp_extension = options.fasta.split('.')[-1]  # could be .fa/.fasta etc
-        output_file = options.fasta.replace('.' + tmp_extension, '').split('/')[-1]
-        output_file = options.o_dir + output_file + '_StORF-R'
+        output_file = options.fasta.split(os.sep)[-1].split('.')[0]
+        output_file = options.o_dir + output_file + '_StORF-Finder'
     elif options.o_name != None:
-        tmp_filename = options.fasta.split('/')[-1]  # could be .fa/.fasta etc
+        tmp_filename = options.fasta.split(os.sep)[-1]  # could be .fa/.fasta etc
         output_file = options.fasta.replace(tmp_filename, '')
         output_file = output_file + options.o_name
 
@@ -785,7 +789,7 @@ def main():
             gff_out.write('##Single_Genome ' + StORF_Reporter_Version + '\n')
             for seq_reg in sequence_regions:
                 gff_out.write(seq_reg + '\n')
-            gff_out.write("##Original File: " + options.fasta.split('/')[-1] + '\n\n')
+            gff_out.write("##Original File: " + options.fasta.split(os.sep)[-1] + '\n\n')
             fasta_out = open(output_file + '.fasta', 'w', newline='\n', encoding='utf-8')
             if options.translate:
                 aa_fasta_out = open(output_file + '_aa.fasta', 'w', newline='\n', encoding='utf-8')

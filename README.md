@@ -64,7 +64,7 @@ usage: StORF_Reporter.py [-h]
                          [-f_type [{StORF,CDS,ORF}]] [-olap OVERLAP_NT] [-ao ALLOWED_OVERLAP] [-overwrite {True,False}]
                          [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.1.4: StORF-Reporter Run Parameters.
+StORF-Reporter v1.2.0: StORF-Reporter Run Parameters.
 
 Required Options:
   -anno [{Prokka,Bakta,Out_Dir,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]
@@ -176,7 +176,7 @@ usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gf
                           [-lw {True,False}] [-stop_ident {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}]
                           [-verbose {True,False}] [-v]
 
-Single_Genome v1.1.4: StORF-Extractor Run Parameters.
+Single_Genome v1.2.0: StORF-Extractor Run Parameters.
 
 Required Arguments:
   -storf_input {Combined,Separate}
@@ -212,7 +212,7 @@ usage: StORF_Finder.py [-h] [-f FASTA] [-ua {True,False}] [-wc {True,False}] [-p
                        [-stop_ident {True,False}] [-f_type [{StORF,CDS,ORF}]] [-minorf MIN_ORF] [-maxorf MAX_ORF] [-codons STOP_CODONS] [-olap OVERLAP_NT] [-s SUFFIX] [-so [{start_pos,strand}]] [-spos {True,False}] [-oname O_NAME] [-odir O_DIR] [-gff {True,False}] [-aa {True,False}] [-aa_only {True,False}]
                        [-lw {True,False}] [-gff_fasta {True,False}] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.1.4: StORF-Finder Run Parameters.
+StORF-Reporter v1.2.0: StORF-Finder Run Parameters.
 
 Required Arguments:
   -f FASTA              Input FASTA File - (UR_Extractor output)
@@ -276,7 +276,7 @@ StORF-Extractor -storf_input Combined -p .../Test_Datasets/Combined_GFFs/E-coli_
 ```python
 usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gff_out {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.1.4: StORF-Extractor Run Parameters.
+StORF-Reporter v1.2.0: StORF-Extractor Run Parameters.
 
 Required Arguments:
   -storf_input {Combined,Separate}
@@ -309,7 +309,7 @@ StORF-Remover -gff .../Test_Datasets/StORF_Extractor_And_Remover/Myco_UR_StORF-R
 usage: StORF_Remover.py [-h] [-gff GFF] [-blast BLAST] [-min_score MINSCORE] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}]
                         [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.1.4: UR-Extractor Run Parameters.
+StORF-Reporter v1.2.0: UR-Extractor Run Parameters.
 
 Required Arguments:
   -gff GFF              GFF annotation file for the FASTA
