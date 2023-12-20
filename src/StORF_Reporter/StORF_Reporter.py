@@ -54,10 +54,14 @@ def translate_frame(sequence):
     translate = ''.join([gencode.get(sequence[3 * i:3 * i + 3], 'X') for i in range(len(sequence) // 3)])
     return translate
 ############################
+def get_directory_names(path):
+    directories = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+    return directories
+############################
 
 def get_outfile_name(Reporter_options):
     if Reporter_options.o_dir == None and Reporter_options.o_name == None and Reporter_options.alt_filename == None:
-        if Reporter_options.annotation_type[1] == 'Out_Dir':
+        if Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs']:
             output_file = Reporter_options.path
             split_path = output_file.split(os.sep)
             directory_name = split_path[-1]
@@ -482,7 +486,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
                 UR_StORF_Num += 1
         Contig_URS[Contig] = Contig_StORFs
     ### Rename .gff to .fasta / faa and load in fasta file
-    if Reporter_options.annotation_type[1] == 'Out_Dir': # or Reporter_options.annotation_type[0] == 'Bakta': # If normal Prokka/Bakta Dir run
+    if Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs']: # or Reporter_options.annotation_type[0] == 'Bakta': # If normal Prokka/Bakta Dir run
         faa_infile = Reporter_options.gff.replace('.gff3', '.faa').replace('.gff','.faa')
         ffn_infile = Reporter_options.gff.replace('.gff3', '.ffn').replace('.gff','.ffn')
         Original_AA,Original_NT = FASTA_Load(faa_infile,ffn_infile)
@@ -496,7 +500,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
         Reporter_options.gff_outfile.write('##StORF-Reporter extended annotation of ' + file_name + '\n')
 
     #Handling separate output of FASTA sequences
-    if Reporter_options.annotation_type[1] == 'Out_Dir' or Reporter_options.storfs_out == True:
+    if Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs'] or Reporter_options.storfs_out == True:
         if Reporter_options.translate == True and Reporter_options.gz == False:
             fasta_outfile = open(Reporter_options.output_file + '_aa.fasta', 'w', newline='\n', encoding='utf-8')
         elif Reporter_options.translate == False and Reporter_options.gz == False:
@@ -539,7 +543,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             track_prev_start = track_current_start
             track_prev_stop = track_current_stop
             ##### Print out Prokka/Bakta Gene
-            if tracked == False and (Reporter_options.annotation_type[1] == 'Out_Dir' or Reporter_options.storfs_out == True):
+            if tracked == False and (Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs'] or Reporter_options.storfs_out == True):
                 if ('gene' in data[2] or 'ID=' in data[8]) and Reporter_options.annotation_type[0] in ('Prokka', 'Bakta') and Reporter_options.annotation_type[1] == 'Out_Dir':
                     Original_ID = data[8].split(';')[0].replace('ID=','').replace('_gene','')
                     try:
@@ -576,7 +580,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             if StORFs:
                 for StORF in StORFs:
                     GFF_StORF_write(Reporter_options, track_prev_contig, Reporter_options.gff_outfile, StORF, StORF_Num)  # To keep consistency
-                    if Reporter_options.annotation_type[1] == 'Out_Dir' or Reporter_options.storfs_out == True:
+                    if Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs'] or Reporter_options.storfs_out == True:
                         FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
                     StORF_Num += 1
             Reporter_options.gff_outfile.write(line.strip() + '\n')
@@ -608,7 +612,7 @@ def main():
 
     required = parser.add_argument_group('Required Options')
     required.add_argument('-anno', action='store', dest='annotation_type', required=False,
-                        choices=['Prokka', 'Bakta', 'Out_Dir', 'Single_GFF', 'Multiple_GFFs', 'Ensembl', 'Feature_Types',
+                        choices=['Prokka', 'Bakta', 'Out_Dir', 'Multiple_Out_Dirs', 'Single_GFF', 'Multiple_GFFs', 'Ensembl', 'Feature_Types',
                                   'Single_Genome', 'Multiple_Genomes','Single_Combined_GFF', 'Multiple_Combined_GFFs',
                                  'Pyrodigal', 'Single_FASTA', 'Multiple_FASTA'], nargs='*',
                         help='R|Select Annotation and Input options for one of the 3 options listed below\n'
@@ -617,6 +621,7 @@ def main():
                              '\tBakta = Report StORFs for a Bakta annotation; \n'
                              '--- Prokka/Bakta Input Options: \n'
                              '\tOut_Dir = To provide the output directory of either a Prokka or Bakta run (will produce a new GFF and FASTA file containing original and extended annotations); \n'
+                             '\tMultiple_Out_Dirs = To provide a directory containing multiple Prokka/Bakta standard output directories - Will run on each sequentially; \n' 
                              '\tSingle_GFF = To provide a single Prokka or Bakta GFF - searches for accompanying ".fna" file (will provide a new extended GFF); \n'
                              '\tMultiple_GFFs = To provide a directory containing multiple Prokka or Bakta GFF files - searches for accompanying ".fna" files (will provide a new extended GFF); \n\n'
                              
@@ -642,7 +647,7 @@ def main():
     ### Add options to redirect into new output directory and filename - and output StORFs on their own in their own GFF -
     StORF_Reporter_args.add_argument('-af', action="store", dest='alt_filename', required=False,
                         help='Default - Prokka/Bakta output directory share the same prefix with their gff/fna files - Use this option when Prokka/Bakta output directory name is different '
-                             'from the gff/fna files within and StORF-Reporter will search for the gff/fna with the given prefix (MyProkkaDir/"altname".gff)')
+                             'from the gff/fna files within and StORF-Reporter will search for the gff/fna with the given prefix (MyProkkaDir/"altname".gff) - Does not work with "Multiple_Out_Dirs" option')
     StORF_Reporter_args.add_argument('-oname', action="store", dest='o_name', required=False,
                         help='Default - Appends \'_StORF-Reporter_Extended\' to end of input filename - Takes the directory name of Prokka/Bakta output if given as input or the input for -af if given'
                              '  - Multiple_* runs will be numbered')
@@ -793,7 +798,8 @@ def main():
         Reporter_options.gene_ident = 'misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo'
     #############
 
-    output_file = get_outfile_name(Reporter_options)
+    if Reporter_options.annotation_type[1] != 'Multiple_Out_Dirs':
+        output_file = get_outfile_name(Reporter_options)
 
 
 
@@ -821,11 +827,39 @@ def main():
         if Reporter_options.verbose == True:
             print("Finished: " + Reporter_options.gff.split(os.sep)[-1])
 
+    ############## Setup for Multi[;e Prokka/Bakta output directories
+    if Reporter_options.annotation_type[0] in ('Prokka','Bakta') and Reporter_options.annotation_type[1] == 'Multiple_Out_Dirs':
+        fixed_path = Reporter_options.path # So we can modify the path variable later
+        directories = get_directory_names(fixed_path)
+        for directory in directories:
+            directory_path = os.path.join(fixed_path, directory)
+            #### Checking and cleaning
+            for fname in os.listdir(directory_path):
+                if '_StORF-Reporter_Extended' in fname and Reporter_options.overwrite == False:
+                    parser.error(
+                        'Prokka/Bakta directory not clean and already contains a StORF-Reporter output. Please delete or use "-overwrite True" and try again.')
+                elif '_StORF-Reporter_Extended' in fname and Reporter_options.overwrite == True:
+                    file_path = os.path.join(directory_path, fname)
+                    os.remove(file_path)
+                    if Reporter_options.verbose == True:
+                        print('StORF-Reporter output ' + fname + ' will be overwritten.')
+            ####
+            Reporter_options.path = directory_path
+            output_file = get_outfile_name(Reporter_options)
+            Reporter_options.output_file = output_file
+            Reporter_options.gene_ident = "misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo"
+            Contigs, Reporter_options = run_UR_Extractor_Directory(Reporter_options)
+            ################## Find StORFs in URs - Setup StORF_Reporter-Finder Run
+            Reporter_StORFs = StORF_Reported(Reporter_options, Contigs)
+            StORF_Filler(Reporter_options, Reporter_StORFs)
+            if Reporter_options.verbose == True:
+                print("Finished: " + Reporter_options.gff.split(os.sep)[-1])
+
     ############### Setup for directory of a single Prokka/Bakta GFF or a directory of multiple Prokka/Bakta GFFs
-    elif Reporter_options.annotation_type[0] in ('Prokka', 'Bakta') and Reporter_options.annotation_type[1]  in ('Single_GFF', 'Multiple_GFFs'):
-        if Reporter_options.annotation_type[1]  == "Single_GFF":
+    elif Reporter_options.annotation_type[0] in ('Prokka', 'Bakta') and Reporter_options.annotation_type[1] in ('Single_GFF', 'Multiple_GFFs'):
+        if Reporter_options.annotation_type[1] == "Single_GFF":
             gff_list = [Reporter_options.path]
-        elif Reporter_options.annotation_type[1]  == "Multiple_GFFs":
+        elif Reporter_options.annotation_type[1] == "Multiple_GFFs":
             gff_list = list(pathlib.Path(Reporter_options.path).glob('*.gff'))
             gff_list.extend(pathlib.Path(Reporter_options.path).glob('*.gff3'))
         #### Checking and cleaning

@@ -13,14 +13,18 @@
 
 #############################################################
 # StORF-Reporter:
-<img src="./Visual_Abstract.jpg"  width="50%" height="50%"/>
+<img src="./Visual_Abstract.jpg"  width="75%" height="50%"/>
 
 ## Most common use cases - 
 ### Supplement a current annotation from a tool such as Prokka or Bakta. A new GFF file will be created compatible with downstream pangenome analysis tools such as Roary and Panaroo.
 
-#### For use on a single Prokka/Bakta output directory - Will also create a new fasta file with Prokka/Bakta gene and StORF sequences.
+#### For use on a single Prokka/Bakta output directory - Will also create a new fasta file with Prokka/Bakta genes and StORF sequences.
 ```console
 StORF-Reporter -anno Prokka Out_Dir -p .../Test_Datasets/Prokka_E-coli/
+```
+#### For use on multiple Prokka/Bakta output directies - Will also create a new fasta file with Prokka/Bakta genes and StORF sequences.
+```console
+StORF-Reporter -anno Prokka Multiple_Out_Dirs -p ../Test_Datasets/Multi_Prokka_Outs
 ```
 #### For use on a directory containing multiple Prokka/Bakta output gffs - Only produces new GFF files. 
 ```console
@@ -53,50 +57,49 @@ StORF-Reporter -anno Ensembl Single_Genome -p .../Test_Datasets/Matching_GFF_FAS
 ```
 ```python
 usage: StORF_Reporter.py [-h]
-                         [-anno [{Prokka,Bakta,Out_Dir,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]]
-                         [-p PATH] [-oname O_NAME] [-odir O_DIR] [-sout {True,False}] [-lw {True,False}] [-aa {True,False}]
-                         [-gz {True,False}] [-py_train [{longest,individual,meta}]] [-py_fasta {True,False}]
-                         [-py_unstorfed {True,False}] [-gene_ident GENE_IDENT] [-min_len MINLEN] [-max_len MAXLEN]
-                         [-ex_len EXLEN] [-spos {True,False}] [-rs {True,False}] [-con_storfs {True,False}]
-                         [-con_only {True,False}] [-ps {True,False}] [-wc {True,False}] [-short_storfs {False,Nolap,Olap}]
-                         [-short_storfs_only {True,False}] [-minorf MIN_ORF] [-maxorf MAX_ORF] [-codons STOP_CODONS]
-                         [-olap_filt [{none,single-strand,both-strand}]] [-start_filt {True,False}] [-so [{start_pos,strand}]]
-                         [-f_type [{StORF,CDS,ORF}]] [-olap OVERLAP_NT] [-ao ALLOWED_OVERLAP] [-overwrite {True,False}]
+                         [-anno [{Prokka,Bakta,Out_Dir,Multiple_Out_Dirs,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]]
+                         [-p PATH] [-af ALT_FILENAME] [-oname O_NAME] [-odir O_DIR] [-sout {True,False}] [-lw {True,False}] [-aa {True,False}] [-gz {True,False}] [-py_train [{longest,individual,meta}]] [-py_fasta {True,False}]
+                         [-py_unstorfed {True,False}] [-gene_ident GENE_IDENT] [-min_len MINLEN] [-max_len MAXLEN] [-ex_len EXLEN] [-spos {True,False}] [-rs {True,False}] [-con_storfs {True,False}] [-con_only {True,False}]
+                         [-ps {True,False}] [-wc {True,False}] [-short_storfs {False,Nolap,Olap}] [-short_storfs_only {True,False}] [-minorf MIN_ORF] [-maxorf MAX_ORF] [-codons STOP_CODONS]
+                         [-olap_filt [{none,single-strand,both-strand}]] [-start_filt {True,False}] [-so [{start_pos,strand}]] [-f_type [{StORF,CDS,ORF}]] [-olap OVERLAP_NT] [-ao ALLOWED_OVERLAP] [-overwrite {True,False}]
                          [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.2.0: StORF-Reporter Run Parameters.
+StORF-Reporter v1.3.0: StORF-Reporter Run Parameters.
 
 Required Options:
-  -anno [{Prokka,Bakta,Out_Dir,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]
+  -anno [{Prokka,Bakta,Out_Dir,Multiple_Out_Dirs,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]
                         Select Annotation and Input options for one of the 3 options listed below
                         ### Prokka/Bakta Annotation Option 1: 
-                        	Prokka = Report StORFs for a Prokka annotation; 
-                        	Bakta = Report StORFs for a Bakta annotation; 
+                                Prokka = Report StORFs for a Prokka annotation; 
+                                Bakta = Report StORFs for a Bakta annotation; 
                         --- Prokka/Bakta Input Options: 
-                        	Out_Dir = To provide the output directory of either a Prokka or Bakta run (will produce a new GFF and FASTA file); 
-                        	Single_GFF = To provide a single Prokka or Bakta GFF file (will not provide new FASTA file); 
-                        	Multiple_GFFs = To provide a directory containing multiple GFF files in Prokka/Bakta format (will not provide a new FASTA file); 
+                                Out_Dir = To provide the output directory of either a Prokka or Bakta run (will produce a new GFF and FASTA file containing original and extended annotations); 
+                                Multiple_Out_Dirs = To provide a directory containing multiple Prokka/Bakta standard output directories - Will run on each sequentially; 
+                                Single_GFF = To provide a single Prokka or Bakta GFF - searches for accompanying ".fna" file (will provide a new extended GFF); 
+                                Multiple_GFFs = To provide a directory containing multiple Prokka or Bakta GFF files - searches for accompanying ".fna" files (will provide a new extended GFF); 
                         
                         ### Standard GFF Annotation Option 2: 
-                        	Ensembl = Report StORFs for an Ensembl Bacteria annotation (ID=gene); 
-                        	Feature_Types = Used in conjunction with -gene_ident to define features such as CDS,rRNA,tRNA for UR extraction (default CDS); 
+                                Ensembl = Report StORFs for an Ensembl Bacteria annotation (ID=gene); 
+                                Feature_Types = Used in conjunction with -gene_ident to define features such as CDS,rRNA,tRNA for UR extraction (default CDS); 
                         --- Standard GFF Input Options: 
-                        	Single_Genome = To provide a single Genome - accompanying FASTA must share same name as given gff file (can be .fna, fa or .fasta); 
-                        	Multiple_Genomes = To provide a directory containing multiple accompanying GFF and FASTA files - files must share the same name (fasta can be .fna, fa or .fasta); 
-                        	Single_Combined_GFF = To provide a GFF file with embedded FASTA at the bottom; 
-                        	Multiple_Combined_GFFs = To provide a directory containing multiple GFF files with embedded FASTA at the bottom; 
+                                Single_Genome = To provide a single Genome - accompanying FASTA must share same name as given gff file (can be .fna, .fa or .fasta); 
+                                Multiple_Genomes = To provide a directory containing multiple accompanying GFF and FASTA files - files must share the same name (fasta can be .fna, .fa or .fasta); 
+                                Single_Combined_GFF = To provide a GFF file with embedded FASTA at the bottom; 
+                                Multiple_Combined_GFFs = To provide a directory containing multiple GFF files with embedded FASTA at the bottom; 
                         
                         ### Complete Annotation Option 3: 
-                        	Pyrodigal = Run Pyrodigal then Report StORFs (provide path to single FASTA or directory of multiple FASTA files ;
+                                Pyrodigal = Run Pyrodigal then Report StORFs (provide path to single FASTA or directory of multiple FASTA files ;
                         --- Complete Annotation Input Options: 
-                        	Single_FASTA = To provide a single FASTA file; 
-                        	Multiple_FASTA = To provide a directory containing multiple FASTA files (will detect .fna,.fa,.fasta); 
+                                Single_FASTA = To provide a single FASTA file; 
+                                Multiple_FASTA = To provide a directory containing multiple FASTA files (will detect .fna,.fa,.fasta); 
                         
   -p PATH               Provide input file or directory path
 
 StORF-Reporter Options:
-  -oname O_NAME         Default - Appends '_StORF-R' to end of input FASTA filename - Multiple_* runs will be numbered
-  -odir O_DIR           Default - Same directory as input FASTA
+  -af ALT_FILENAME      Default - Prokka/Bakta output directory share the same prefix with their gff/fna files - Use this option when Prokka/Bakta output directory name is different from the gff/fna files within and StORF-Reporter
+                        will search for the gff/fna with the given prefix (MyProkkaDir/"altname".gff) - Does not work with "Multiple_Out_Dirs" option
+  -oname O_NAME         Default - Appends '_StORF-Reporter_Extended' to end of input filename - Takes the directory name of Prokka/Bakta output if given as input or the input for -af if given - Multiple_* runs will be numbered
+  -odir O_DIR           Default - Same directory as input
   -sout {True,False}    Default - False: Print out StORF sequences separately from Prokka/Bakta annotations
   -lw {True,False}      Default - True: Line wrap FASTA sequence output at 60 chars
   -aa {True,False}      Default - False: Report StORFs as amino acid sequences
@@ -104,8 +107,7 @@ StORF-Reporter Options:
 
 Pyrodigal Options:
   -py_train [{longest,individual,meta}]
-                        Default - longest: Type of model training to be done for Pyrodigal CDS prediction: Options: longest =
-                        Trains on longest contig; individual = Trains on each contig separately - runs in meta mode if contig is
+                        Default - longest: Type of model training to be done for Pyrodigal CDS prediction: Options: longest = Trains on longest contig; individual = Trains on each contig separately - runs in meta mode if contig is
                         < 20KB; meta = Runs in meta mode for all sequences
   -py_fasta {True,False}
                         Default - False: Output Pyrodigal+StORF predictions in FASTA format
@@ -114,8 +116,8 @@ Pyrodigal Options:
 
 UR-Extractor Options:
   -gene_ident GENE_IDENT
-                        Identifier used for extraction of Unannotated Regions "CDS,rRNA,tRNA" - To be used with "-anno
-                        Feature_Types"
+                        Identifier used for extraction of Unannotated Regions such as "misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo" - To be used with "-anno Feature_Types" - "-gene_ident
+                        Prokka" will select features present in Prokka annotations
   -min_len MINLEN       Default - 30: Minimum UR Length
   -max_len MAXLEN       Default - 100,000: Maximum UR Length
   -ex_len EXLEN         Default - 50: UR Extension Length
@@ -130,26 +132,21 @@ StORF-Finder Options:
   -ps {True,False}      Default - False: Partial StORFs reported
   -wc {True,False}      Default - False: StORFs reported across entire sequence
   -short_storfs {False,Nolap,Olap}
-                        Default - False: Run StORF-Finder in "Short-StORF" mode. Will only return StORFs between 30 and 120 nt
-                        that do not overlap longer StORFs - Only works with StORFs for now. "Nolap" will filter Short-StORFs
-                        which areoverlapped by StORFs and Olap will report Short-StORFs which do overlap StORFs. Overlap is
-                        defined by "-olap".
+                        Default - False: Run StORF-Finder in "Short-StORF" mode. Will only return StORFs between 30 and 120 nt that do not overlap longer StORFs - Only works with StORFs for now. "Nolap" will filter Short-StORFs
+                        which areoverlapped by StORFs and Olap will report Short-StORFs which do overlap StORFs. Overlap is defined by "-olap".
   -short_storfs_only {True,False}
                         Default - True. Only report Short-StORFs?
   -minorf MIN_ORF       Default - 99: Minimum StORF size in nt
   -maxorf MAX_ORF       Default - 60kb: Maximum StORF size in nt
   -codons STOP_CODONS   Default - ('TAG,TGA,TAA'): List Stop Codons to use
   -olap_filt [{none,single-strand,both-strand}]
-                        Default - "both-strand": Filtering level "none" is not recommended, "single-strand" for single strand
-                        filtering and both-strand for both-strand longest-first tiling
+                        Default - "both-strand": Filtering level "none" is not recommended, "single-strand" for single strand filtering and both-strand for both-strand longest-first tiling
   -start_filt {True,False}
-                        Default - False: Filter out StORFs without at least one of the 3 common start codons (best used for
-                        short-storfs).
+                        Default - False: Filter out StORFs without at least one of the 3 common start codons (best used for short-storfs).
   -so [{start_pos,strand}]
                         Default - Start Position: How should StORFs be ordered when >1 reported in a single UR.
   -f_type [{StORF,CDS,ORF}]
-                        Default - "CDS": Which GFF feature type for StORFs to be reported as in GFF - "CDS" is probably needed
-                        for use in tools such as Roary and Panaroo
+                        Default - "CDS": Which GFF feature type for StORFs to be reported as in GFF - "CDS" is probably needed for use in tools such as Roary and Panaroo
   -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which can overlap another StORF.
   -ao ALLOWED_OVERLAP   Default - 50 nt: Maximum overlap between a StORF and an original gene.
 
@@ -158,7 +155,8 @@ Misc:
                         Default - False: Overwrite StORF-Reporter output if already present
   -verbose {True,False}
                         Default - False: Print out runtime messages
-  -v                    Default - False: Print out version number and exit
+  -v                    Print out version number and exit
+
 ```
 
 ###################################
@@ -176,7 +174,7 @@ usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gf
                           [-lw {True,False}] [-stop_ident {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}]
                           [-verbose {True,False}] [-v]
 
-Single_Genome v1.2.0: StORF-Extractor Run Parameters.
+Single_Genome v1.3.0: StORF-Extractor Run Parameters.
 
 Required Arguments:
   -storf_input {Combined,Separate}
@@ -212,7 +210,7 @@ usage: StORF_Finder.py [-h] [-f FASTA] [-ua {True,False}] [-wc {True,False}] [-p
                        [-stop_ident {True,False}] [-f_type [{StORF,CDS,ORF}]] [-minorf MIN_ORF] [-maxorf MAX_ORF] [-codons STOP_CODONS] [-olap OVERLAP_NT] [-s SUFFIX] [-so [{start_pos,strand}]] [-spos {True,False}] [-oname O_NAME] [-odir O_DIR] [-gff {True,False}] [-aa {True,False}] [-aa_only {True,False}]
                        [-lw {True,False}] [-gff_fasta {True,False}] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.2.0: StORF-Finder Run Parameters.
+StORF-Reporter v1.3.0: StORF-Finder Run Parameters.
 
 Required Arguments:
   -f FASTA              Input FASTA File - (UR_Extractor output)
@@ -276,7 +274,7 @@ StORF-Extractor -storf_input Combined -p .../Test_Datasets/Combined_GFFs/E-coli_
 ```python
 usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gff_out {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.2.0: StORF-Extractor Run Parameters.
+StORF-Reporter v1.3.0: StORF-Extractor Run Parameters.
 
 Required Arguments:
   -storf_input {Combined,Separate}
@@ -309,7 +307,7 @@ StORF-Remover -gff .../Test_Datasets/StORF_Extractor_And_Remover/Myco_UR_StORF-R
 usage: StORF_Remover.py [-h] [-gff GFF] [-blast BLAST] [-min_score MINSCORE] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}]
                         [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.2.0: UR-Extractor Run Parameters.
+StORF-Reporter v1.3.0: UR-Extractor Run Parameters.
 
 Required Arguments:
   -gff GFF              GFF annotation file for the FASTA
