@@ -2,7 +2,7 @@ import argparse
 import collections
 from datetime import date
 import gzip
-import sys
+import sys,os
 
 
 try:
@@ -150,8 +150,10 @@ def extractor(options):
                 gff_in = open(options.gff,'r',encoding='unicode_escape')
                 dna_regions = gff_load(options,gff_in,dna_regions)
         except AttributeError:
-            sys.exit("Attribute Error:\nStORF'ed GFF probably already exists - Must be deleted before running")
-
+            sys.exit("Attribute Error:\nStORF'ed GFF probably already exists - Must be deleted before running (-overwrite)")
+        except FileNotFoundError:
+            split_path = options.gff.split(os.sep)
+            print("Directory '" + split_path[-2] + "' missing fna/gff files")
 
     for (key,(seq,seq_length,posns,URs))  in dna_regions.items(): #Extract URs from 1 dna_region at a time
         unannotated_regions = collections.OrderedDict()
@@ -186,7 +188,6 @@ def extractor(options):
             except UnboundLocalError:
                 pass
             dna_regions.update({key: (seq, seq_length, posns, unannotated_regions)})
-
 
     if options.nout == False:
         write_fasta(dna_regions, options, options.fasta_out)

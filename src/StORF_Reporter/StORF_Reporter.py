@@ -568,7 +568,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             if StORFs:
                 for StORF in StORFs:
                     GFF_StORF_write(Reporter_options, track_contig, Reporter_options.gff_outfile, StORF, StORF_Num)  # To keep consistency
-                    if Reporter_options.annotation_type[1] == 'Out_Dir' or Reporter_options.storfs_out == True:
+                    if (Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs']  or Reporter_options.storfs_out == True):
                         FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
                     StORF_Num += 1
             if line != written_line:
@@ -764,7 +764,7 @@ def main():
         else:
             exit('StORF-Reporter: error: the following arguments are required: -anno, -p')
 
-    if Reporter_options.translate == True and Reporter_options.storfs_out == False:
+    if Reporter_options.translate == True and Reporter_options.storfs_out == False and Reporter_options.annotation_type[1] != 'Multiple_Out_Dirs':
         exit('StORF-Reporter "-sout True" is required when "-aa True" is selected')
 
 
@@ -834,7 +834,15 @@ def main():
         for directory in directories:
             directory_path = os.path.join(fixed_path, directory)
             #### Checking and cleaning
-            for fname in os.listdir(directory_path):
+            files_in_directory = os.listdir(directory_path)
+            if len(files_in_directory) == 0:
+                if Reporter_options.verbose == True:
+                    split_path = directory_path.split(os.sep)
+                    print("Directory '" + split_path[-1] + "' missing fna/gff files")
+                continue
+            #if fname.endswith('.gff') or file_name.endswith('.fna'):
+            #
+            for fname in files_in_directory:
                 if '_StORF-Reporter_Extended' in fname and Reporter_options.overwrite == False:
                     parser.error(
                         'Prokka/Bakta directory not clean and already contains a StORF-Reporter output. Please delete or use "-overwrite True" and try again.')
