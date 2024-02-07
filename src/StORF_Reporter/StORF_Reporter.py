@@ -59,6 +59,23 @@ def get_directory_names(path):
     return directories
 ############################
 
+def compute_hash(StORF, Reporter_options,track_contig):
+    ### Compute the hash/locus tag here
+    ID = track_contig + '_UR_' + StORF[0] + '_' + StORF[10] + '_' + str(StORF[9])
+    try:
+        to_hash = Reporter_options.gff.split('.')[0] + '_' + ID  # create unique hash from outfile name and ID
+    except AttributeError: # Will go here for Pyrodigal
+        to_hash = Reporter_options.fasta.split('.')[
+                      0] + '_' + ID  # create unique hash from outfile name and ID
+    if len(StORF[11].split(',')) >= 3:  # fix for con-storfs - TBD
+        StORF_Type = 'Con-StORF_'
+    else:
+        StORF_Type = 'StORF_'
+    StORF_Hash = StORF_Type + hashlib.shake_256(to_hash.encode()).hexdigest(8)
+    return StORF_Hash, ID
+
+
+############################
 def get_outfile_name(Reporter_options):
     if Reporter_options.o_dir == None and Reporter_options.o_name == None and Reporter_options.alt_filename == None:
         if Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs']:
@@ -125,13 +142,7 @@ def get_outfile_name(Reporter_options):
 
 ############################
 
-def GFF_StORF_write(Reporter_options, track_contig, gff_out, StORF, StORF_Num): # Consistency in outfile
-    ID = track_contig + '_UR_' + StORF[0] + '_' + StORF[10] + '_'+ str(StORF[9])
-    try:
-        to_hash = gff_out.split('.')[0] + '_' + ID # create unique hash from outfile name and ID
-    except AttributeError:
-        to_hash = gff_out.name.split('.')[0] + '_' + ID  # create unique hash from outfile name and ID
-    locus_tag = hashlib.shake_256(to_hash.encode()).hexdigest(8)
+def GFF_StORF_write(Reporter_options, track_contig, gff_out, StORF, StORF_Num, StORF_Hash, ID): # Consistency in outfile
     ### Write out new GFF entry -
     strand = StORF[7]
     start = StORF[3]
@@ -171,23 +182,16 @@ def GFF_StORF_write(Reporter_options, track_contig, gff_out, StORF, StORF_Num): 
     StORF_length = int(gff_stop) + 1 - int(gff_start) # +1 to adjust for base-1
 
     gff_out.write(track_contig + '\tStORF-Reporter\t' + Reporter_options.feature_type + '\t' +  str(gff_start) + '\t' + str(gff_stop) + '\t.\t' +
-        StORF[7] + '\t0\t' + StORF_Type + locus_tag + ';locus_tag=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Stop_Locations=' + StORF[11].replace(',','-') + ';Name=' +
+        StORF[7] + '\t0\tID=' + StORF_Hash + ';locus_tag=' + ID + ';INFO=Additional_Annotation_StORF-Reporter;UR_Stop_Locations=' + StORF[11].replace(',','-') + ';Name=' +
            StORF[10] + '_' + str(StORF_Num) + ';' + StORF[10] + '_Num_In_UR=' + str(StORF[9]) + ';' + StORF[10] + '_Length=' + str(StORF_length) + ';' + StORF[10] +
            '_Frame=' + str(frame) + ';UR_' + StORF[10] + '_Frame=' + str(StORF[6]) +  ';Start_Stop=' + start_stop + ';Mid_Stops=' + mid_stop  + ';End_Stop='
            + end_stop + ';StORF_Type=' + StORF[10] + '\n')
 
 
-def FASTA_StORF_write(Reporter_options, track_contig, fasta_out, StORF):  # Consistency in outfile
-    ## This should compute the same hash as the one for GFF_Write - Should not be computed twice though
-    ID = track_contig + '_UR_' + StORF[0] + '_' + StORF[10] + '_'+ str(StORF[9])
-    to_hash = fasta_out.name.split('.')[0] + '_' + ID # create unique hash from outfile name and ID
-    if len(StORF[11].split(',')) >= 3: # fix for con-storfs - TBD
-        StORF_Type = 'Con-StORF_'
-    else:
-        StORF_Type = 'StORF_'
-    locus_tag = StORF_Type + hashlib.shake_256(to_hash.encode()).hexdigest(8)
+def FASTA_StORF_write(Reporter_options, fasta_out, StORF, StORF_Hash):  # Consistency in outfile
+
     ### Wrtie out new FASTA entry - Currently only write out as nt
-    fasta_out.write('>'+locus_tag+'\n')
+    fasta_out.write('>'+StORF_Hash+'\n')
     sequence = StORF[-1]
     if Reporter_options.translate == True:
         sequence = translate_frame(sequence[0:])
@@ -204,7 +208,7 @@ def FASTA_StORF_write(Reporter_options, track_contig, fasta_out, StORF):  # Cons
             storf_fasta_outfile = open(fasta_out.name.replace('.fasta','_StORFs_Only.fasta'),'a')
         else:
             storf_fasta_outfile = open(fasta_out.name.replace('.fasta.gz','_StORFs_Only.fasta.gz'),'a')
-        storf_fasta_outfile.write('>' + locus_tag + '\n')
+        storf_fasta_outfile.write('>' + StORF_Hash + '\n')
         if Reporter_options.line_wrap == True:
             wrapped = textwrap.wrap(sequence, width=60)
             for wrap in wrapped:
@@ -567,9 +571,11 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
                         fasta_outfile.write(Original_Seq+'\n')
             if StORFs:
                 for StORF in StORFs:
-                    GFF_StORF_write(Reporter_options, track_contig, Reporter_options.gff_outfile, StORF, StORF_Num)  # To keep consistency
+                    ###Compute hash/locus tag
+                    StORF_Hash, ID = compute_hash(StORF,Reporter_options, track_contig)
+                    GFF_StORF_write(Reporter_options, track_contig, Reporter_options.gff_outfile, StORF, StORF_Num, StORF_Hash, ID)  # To keep consistency
                     if (Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs']  or Reporter_options.storfs_out == True):
-                        FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
+                        FASTA_StORF_write(Reporter_options, fasta_outfile, StORF, StORF_Hash)
                     StORF_Num += 1
             if line != written_line:
                 Reporter_options.gff_outfile.write(line.strip()+'\n')
@@ -579,9 +585,11 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             StORFs = find_after_StORFs(Reporter_options, Contig_URS, track_prev_start, track_prev_stop, track_prev_contig)  # Changed to prev stop because we are switching from previous contig
             if StORFs:
                 for StORF in StORFs:
-                    GFF_StORF_write(Reporter_options, track_prev_contig, Reporter_options.gff_outfile, StORF, StORF_Num)  # To keep consistency
+                    ###Compute hash/locus tag
+                    StORF_Hash, ID = compute_hash(StORF,Reporter_options, track_contig)
+                    GFF_StORF_write(Reporter_options, track_prev_contig, Reporter_options.gff_outfile, StORF, StORF_Num, StORF_Hash, ID)  # To keep consistency
                     if Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs'] or Reporter_options.storfs_out == True:
-                        FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
+                        FASTA_StORF_write(Reporter_options, fasta_outfile, StORF, StORF_Hash)
                     StORF_Num += 1
             Reporter_options.gff_outfile.write(line.strip() + '\n')
 
@@ -764,8 +772,8 @@ def main():
         else:
             exit('StORF-Reporter: error: the following arguments are required: -anno, -p')
 
-    if Reporter_options.translate == True and Reporter_options.storfs_out == False and Reporter_options.annotation_type[1] != 'Multiple_Out_Dirs':
-        exit('StORF-Reporter "-sout True" is required when "-aa True" is selected')
+    if Reporter_options.translate == True and Reporter_options.storfs_out == False and Reporter_options.annotation_type[1] not in ['Out_Dir', 'Multiple_Out_Dirs']:
+        exit('StORF-Reporter: "-sout True" is required when "-aa True" is selected')
 
 
     print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
@@ -809,15 +817,18 @@ def main():
     if Reporter_options.annotation_type[0] in ('Prokka','Bakta') and Reporter_options.annotation_type[1] == 'Out_Dir':
         Reporter_options.output_file = output_file
         #### Checking and cleaning
-        for fname in os.listdir(Reporter_options.path):
-            if '_StORF-Reporter_Extended' in fname and Reporter_options.overwrite == False:
-                parser.error(
-                    'Prokka/Bakta directory not clean and already contains a StORF-Reporter output. Please delete or use "-overwrite True" and try again.')
-            elif '_StORF-Reporter_Extended' in fname and Reporter_options.overwrite == True:
-                file_path = os.path.join(Reporter_options.path, fname)
-                os.remove(file_path)
-                if Reporter_options.verbose == True:
-                    print('StORF-Reporter output ' + fname + ' will be overwritten.')
+        try:
+            for fname in os.listdir(Reporter_options.path):
+                if '_StORF-Reporter_Extended' in fname and Reporter_options.overwrite == False:
+                    parser.error(
+                        'Prokka/Bakta directory not clean and already contains a StORF-Reporter output. Please delete or use "-overwrite True" and try again.')
+                elif '_StORF-Reporter_Extended' in fname and Reporter_options.overwrite == True:
+                    file_path = os.path.join(Reporter_options.path, fname)
+                    os.remove(file_path)
+                    if Reporter_options.verbose == True:
+                        print('StORF-Reporter output ' + fname + ' will be overwritten.')
+        except FileNotFoundError:
+            sys.exit("Incorrect file path '" + Reporter_options.path + "' - Please check input")
         ####
         Reporter_options.gene_ident = "misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo"
         Contigs, Reporter_options = run_UR_Extractor_Directory(Reporter_options)
@@ -828,7 +839,7 @@ def main():
             print("Finished: " + Reporter_options.gff.split(os.sep)[-1])
 
     ############## Setup for Multi[;e Prokka/Bakta output directories
-    if Reporter_options.annotation_type[0] in ('Prokka','Bakta') and Reporter_options.annotation_type[1] == 'Multiple_Out_Dirs':
+    elif Reporter_options.annotation_type[0] in ('Prokka','Bakta') and Reporter_options.annotation_type[1] == 'Multiple_Out_Dirs':
         fixed_path = Reporter_options.path # So we can modify the path variable later
         directories = get_directory_names(fixed_path)
         for directory in directories:
@@ -947,7 +958,6 @@ def main():
                 Reporter_options.output_file = output_file.replace('_StORF-Reporter',tmp_filename + '_StORF-Reporter')
             else:
                 Reporter_options.output_file = output_file
-
 
             if Reporter_options.verbose == True:
                 print("Starting: " + str(gff.split(os.sep)[-1]))
