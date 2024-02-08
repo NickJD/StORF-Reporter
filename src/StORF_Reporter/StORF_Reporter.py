@@ -112,19 +112,19 @@ def get_outfile_name(Reporter_options):
     elif Reporter_options.o_dir != None:
         Reporter_options.o_dir = os.path.normpath(Reporter_options.o_dir)
         Reporter_options.o_dir = os.path.realpath(Reporter_options.o_dir)
+        split_path = Reporter_options.path.split(os.sep)
         if Reporter_options.alt_filename != None:
             directory_name = Reporter_options.alt_filename
         else:
-            split_path = Reporter_options.path.split(os.sep)
             directory_name = split_path[-1]
         if Reporter_options.annotation_type[1] == 'Out_Dir':
             output_file = os.path.join(Reporter_options.o_dir, f"{directory_name}_StORF-Reporter_Extended")
+        elif Reporter_options.annotation_type[1] in ['Multiple_Genomes','Multiple_Combined_GFFs','Multiple_GFFs']:
+            output_file = os.path.join(Reporter_options.o_dir, "_StORF-Reporter_Extended")
         elif Reporter_options.annotation_type[0] == 'Pyrodigal':
-            split_path = Reporter_options.path.split(os.sep)
             filename = split_path[-1].split('.')[0]
             output_file = os.path.join(Reporter_options.o_dir, f"{filename}_Pyrodigal_StORF-Reporter_Extended")
         else:
-            split_path = Reporter_options.path.split(os.sep)
             filename = split_path[-1].split('.')[0]
             output_file = os.path.join(Reporter_options.o_dir, f"{filename}_StORF-Reporter_Extended")
 
@@ -196,7 +196,7 @@ def FASTA_StORF_write(Reporter_options, fasta_out, StORF, StORF_Hash):  # Consis
     if Reporter_options.translate == True:
         sequence = translate_frame(sequence[0:])
         if Reporter_options.remove_stop == True:
-            sequence = sequence.strip('*')
+            sequence = sequence.replace('*','')
     if Reporter_options.line_wrap == True:
         wrapped = textwrap.wrap(sequence, width=60)
         for wrap in wrapped:
@@ -562,7 +562,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
                     if Reporter_options.translate == True:
                         Original_Seq = translate_frame(Original_Seq[0:])
                         if Reporter_options.remove_stop == True:
-                            Original_Seq = Original_Seq.strip('*')
+                            Original_Seq = Original_Seq.replace('*','')
                     if Reporter_options.line_wrap == True:
                         wrapped = textwrap.wrap(Original_Seq, width=60)
                         for wrap in wrapped:
@@ -776,7 +776,7 @@ def main():
         exit('StORF-Reporter: "-sout True" is required when "-aa True" is selected')
 
 
-    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+    print("Thank you for using StORF-Reporter version " + StORF_Reporter_Version +  "  -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
           "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
 
     ##############

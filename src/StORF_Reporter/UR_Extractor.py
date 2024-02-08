@@ -153,7 +153,8 @@ def extractor(options):
             sys.exit("Attribute Error:\nStORF'ed GFF probably already exists - Must be deleted before running (-overwrite)")
         except FileNotFoundError:
             split_path = options.gff.split(os.sep)
-            print("Directory '" + split_path[-2] + "' missing fna/gff files")
+            sys.exit("Directory '" + split_path[-2] + "' missing fna/gff files")
+
 
     for (key,(seq,seq_length,posns,URs))  in dna_regions.items(): #Extract URs from 1 dna_region at a time
         unannotated_regions = collections.OrderedDict()
