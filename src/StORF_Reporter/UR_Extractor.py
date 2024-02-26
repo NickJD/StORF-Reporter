@@ -12,11 +12,7 @@ except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
 
 #Output FASTA and GFF separately using the same filename but with respective extensions - gz output optional
 def write_fasta(dna_regions, options, fasta_out):
-    fasta_out.write("##\tUR-Extractor \n#\tRun Date:" + str(date.today()) + '\n')
-    fasta_out.write('##Single_Genome ' + StORF_Reporter_Version + '\n')
-    fasta_out.write("##Original Files: " + options.fasta.split('/')[-1] + ' | ' + options.gff.split('/')[-1] + '\n')
     for dna_region, dna_region_ur in dna_regions.items():
-        fasta_out.write('\n##sequence-region\t' + dna_region + ' 1 ' + str(len(dna_region_ur[0])) + '\n')
         ur_ident = dna_region + options.ident # Add user ident onto name of dna regions
         if dna_region_ur[3]:
             for ex_ur, data in dna_region_ur[3].items():
@@ -28,10 +24,12 @@ def write_fasta(dna_regions, options, fasta_out):
 def write_gff(dna_regions,options,gff_out):
     gff_out.write("##gff-version\t3\n#\tUR-Extractor \n#\tRun Date:" + str(date.today()) + '\n')
     gff_out.write('##Single_Genome ' + StORF_Reporter_Version + '\n')
+    gff_out.write("##Original Files: " + options.fasta.split('/')[-1] + ' | ' + options.gff.split('/')[-1] + '\n')
     for seq_reg in dna_regions:
         gff_out.write('##sequence-region\t' + seq_reg + ' 1 ' + str(dna_regions[seq_reg][1]) + '\n')
-    gff_out.write("##Original Files: " + options.fasta.split('/')[-1] + ' | ' + options.gff.split('/')[-1] + '\n\n')
+
     for dna_region, dna_region_ur in dna_regions.items():
+        gff_out.write('###\n' + dna_region + '\t' + options.fasta.split('/')[-1].split('.')[0] + '\tregion\t1\t' + str(dna_region_ur[1]) + '\t.\t.\t.\tID=region:' + dna_region + '\n###\n')
         ur_ident = dna_region + options.ident
         if dna_region_ur[3]:
             for ex_ur, data in dna_region_ur[3].items():
@@ -272,6 +270,9 @@ def main():
         tmp_filename = options.gff.split('/')[-1]
         output_file = options.gff.replace(tmp_filename, '')
         output_file = output_file + options.o_name
+
+    output_file = os.path.normpath(output_file)
+    output_file = os.path.realpath(output_file)
 
     if options.gz == False:
         options.fasta_out = open(output_file + '.fasta','w', newline='\n', encoding='utf-8')
