@@ -294,7 +294,12 @@ def pyrodigal_predict(fasta,Reporter_options):
     if Reporter_options.py_train == 'meta':
         orf_finder = pyrodigal.GeneFinder(meta=True)
     elif Reporter_options.py_train == 'longest':
-        orf_finder.train(longest)
+        try:
+            orf_finder.train(longest)
+        except ValueError:
+            if Reporter_options.verbose == True:
+                print("Longest sequence is  <=20kb. Pyrodigal will be run in meta mode")
+            orf_finder = pyrodigal.GeneFinder(meta=True)  # If NO contig is >= 20kb#
     for sequence_name, seq in sequences.items():
         if Reporter_options.py_train == 'indvidual':
             try:  # Catch if sequence is less than 20kb - will run in meta mode
@@ -344,10 +349,12 @@ def run_UR_Extractor_Extended_GFFs(Reporter_options,gff): # When given a directo
 def run_UR_Extractor_Matched(Reporter_options,gff): # When given a directory with multiple GFFs but with accompianing .fna
     if '_StORF-Reporter_Extended' not in str(gff): #Might fall over - put a break
         gff = str(gff)
+        last_pos = gff.rfind('.')
+        before_last_pos = gff[:last_pos]
         Reporter_options.gff = gff
-        fasta = gff.replace('.gff','.fasta')
-        fna = gff.replace('.gff', '.fna')
-        fa = gff.replace('.gff', '.fa')
+        fasta = before_last_pos + '.fasta'
+        fna = before_last_pos + '.fna'
+        fa = before_last_pos + '.fa'
         if os.path.isfile(fasta):
             Reporter_options.fasta = fasta
         elif os.path.isfile(fna):
@@ -738,6 +745,8 @@ def main():
                           choices=['StORF', 'CDS', 'ORF'],
                           help='Default - "CDS": Which GFF feature type for StORFs to be reported as in GFF - '
                                '"CDS" is probably needed for use in tools such as Roary and Panaroo')
+    StORF_Finder_args.add_argument('-non_standard', action="store", dest='non_standard', default="0.20",
+                          help='Default - 0.20: Reject StORFs with >=20%% non-standard nucleotides (A,T,G,C) - Provide %% as decimal')
     StORF_Finder_args.add_argument('-olap', action="store", dest='overlap_nt', default=50, type=int,
                           help='Default - 50: Maximum number of nt of a StORF which can overlap another StORF.')
     StORF_Finder_args.add_argument('-ao', action="store", dest='allowed_overlap', default=50, type=int,

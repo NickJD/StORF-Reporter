@@ -201,10 +201,10 @@ def main():
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
-    required.add_argument('-f', action='store', dest='fasta', required=False,
+    required.add_argument('-f', action='store', dest='fasta', required=True,
                         help='FASTA file for Unannotated Region seq extraction')
     required.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',
-                        required=False)
+                        required=True)
 
     optional = parser.add_argument_group('Optional Arguments')
     optional.add_argument('-ident', action='store', dest='ident', default='_UR',

@@ -64,7 +64,7 @@ usage: StORF_Reporter.py [-h]
                          [-olap_filt [{none,single-strand,both-strand}]] [-start_filt {True,False}] [-so [{start_pos,strand}]] [-f_type [{StORF,CDS,ORF}]] [-olap OVERLAP_NT] [-ao ALLOWED_OVERLAP] [-overwrite {True,False}]
                          [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.3.4: StORF-Reporter Run Parameters.
+StORF-Reporter v1.4.0: StORF-Reporter Run Parameters.
 
 Required Options:
   -anno [{Prokka,Bakta,Out_Dir,Multiple_Out_Dirs,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]
@@ -148,6 +148,10 @@ StORF-Finder Options:
   -f_type [{StORF,CDS,ORF}]
                         Default - "CDS": Which GFF feature type for StORFs to be reported as in GFF - "CDS" is probably needed for use in tools such as Roary and Panaroo
   -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which can overlap another StORF.
+  -non_standard NON_STANDARD
+                        Default - 0.20: Reject StORFs with >=20% non-standard nucleotides (A,T,G,C) - Provide % as
+                        decimal
+
   -ao ALLOWED_OVERLAP   Default - 50 nt: Maximum overlap between a StORF and an original gene.
 
 Misc:
@@ -174,7 +178,7 @@ usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gf
                           [-lw {True,False}] [-stop_ident {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}]
                           [-verbose {True,False}] [-v]
 
-Single_Genome v1.3.4: StORF-Extractor Run Parameters.
+Single_Genome v1.4.0: StORF-Extractor Run Parameters.
 
 Required Arguments:
   -storf_input {Combined,Separate}
@@ -210,7 +214,7 @@ usage: StORF_Finder.py [-h] [-f FASTA] [-ua {True,False}] [-wc {True,False}] [-p
                        [-stop_ident {True,False}] [-f_type [{StORF,CDS,ORF}]] [-minorf MIN_ORF] [-maxorf MAX_ORF] [-codons STOP_CODONS] [-olap OVERLAP_NT] [-s SUFFIX] [-so [{start_pos,strand}]] [-spos {True,False}] [-oname O_NAME] [-odir O_DIR] [-gff {True,False}] [-aa {True,False}] [-aa_only {True,False}]
                        [-lw {True,False}] [-gff_fasta {True,False}] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.3.4: StORF-Finder Run Parameters.
+StORF-Reporter v1.4.0: StORF-Finder Run Parameters.
 
 Required Arguments:
   -f FASTA              Input FASTA File - (UR_Extractor output)
@@ -240,6 +244,9 @@ Optional Arguments:
   -maxorf MAX_ORF       Default - 60kb: Maximum StORF size in nt
   -codons STOP_CODONS   Default - ('TAG,TGA,TAA'): List Stop Codons to use
   -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which can overlap another StORF.
+  -non_standard NON_STANDARD
+                        Default - 0.20: Reject StORFs with >=20% non-standard nucleotides (A,T,G,C) - Provide % as
+                        decimal
   -s SUFFIX             Default - Do not append suffix to genome ID
   -so [{start_pos,strand}]
                         Default - Start Position: How should StORFs be ordered when >1 reported in a single UR.
@@ -274,7 +281,7 @@ StORF-Extractor -storf_input Combined -p .../Test_Datasets/Combined_GFFs/E-coli_
 ```python
 usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gff_out {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.3.4: StORF-Extractor Run Parameters.
+StORF-Reporter v1.4.0: StORF-Extractor Run Parameters.
 
 Required Arguments:
   -storf_input {Combined,Separate}
@@ -307,7 +314,7 @@ StORF-Remover -gff .../Test_Datasets/StORF_Extractor_And_Remover/Myco_UR_StORF-R
 usage: StORF_Remover.py [-h] [-gff GFF] [-blast BLAST] [-min_score MINSCORE] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}]
                         [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.3.4: UR-Remover Run Parameters.
+StORF-Reporter v1.4.0: UR-Remover Run Parameters.
 
 Required Arguments:
   -gff GFF              GFF annotation file for the FASTA
