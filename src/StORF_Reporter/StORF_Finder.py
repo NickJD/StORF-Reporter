@@ -124,59 +124,68 @@ def start_filtering(storfs):
 @profile
 def tile_filtering(storfs,options): #both-strand filtering
     ################ - Order largest first filtering
-    storfs = sorted(storfs.items(), key=lambda storfs:storfs[1][3],reverse=True)
+    storfs = sorted(storfs.items(), key=lambda storfs: storfs[1][3], reverse=True)
     ordered_by_length = OrderedDict()
+
     for tup in storfs:
-        ordered_by_length.update({tup[0]:tup[1]}) # -1 for last?
+        ordered_by_length.update({tup[0]:tup[1]})
+
     ############## - For each StORF_Reporter, remove all smaller overlapping STORFs according to filtering rules
+    # Convert to a list for easier index-based manipulation
+    ordered_by_length = list(ordered_by_length.items())
     num_storfs = len(ordered_by_length)
     i = 0
-    ordered_by_length = list(ordered_by_length.items())
+
+    # Step 2: Filter out nested and overlapping StORFs
     while i < num_storfs:
         pos_x, data_x = ordered_by_length[i]
+        start_x = int(pos_x.split(',')[0])
+        stop_x = int(pos_x.split(',')[-1])
+
         j = i + 1
-        if check_non_standard_chars(options,data_x[0]):
-            start_x = int(pos_x.split(',')[0])
-            stop_x = int(pos_x.split(',')[-1])
-            while j < num_storfs:
-                pos_y, data_y = ordered_by_length[j]
-                start_y = int(pos_y.split(',')[0])
-                stop_y = int(pos_y.split(',')[-1])
-                if start_y >= stop_x or stop_y <= start_x:
-                    j+=1
-                    continue  # Not caught up yet / too far
-                elif start_y >= start_x and stop_y <= stop_x:
-                    # StORF Y is completely contained within StORF X, remove Y
+        while j < num_storfs:
+            pos_y, data_y = ordered_by_length[j]
+            start_y = int(pos_y.split(',')[0])
+            stop_y = int(pos_y.split(',')[-1])
+
+            # Check if StORF Y overlaps with or is contained within StORF X
+            if start_y >= stop_x or stop_y <= start_x:
+                # No overlap, continue checking
+                j += 1
+            elif start_y >= start_x and stop_y <= stop_x:
+                # StORF Y is completely contained within StORF X, remove Y
+                ordered_by_length.pop(j)
+                num_storfs -= 1
+            else:
+                # Check for partial overlap
+                overlap_start = max(start_x, start_y)
+                overlap_end = min(stop_x, stop_y)
+                overlap = max(0, overlap_end - overlap_start + 1)  # Calculate the overlap length
+
+                if overlap >= options.overlap_nt:
+                    # Overlap exceeds the threshold, remove the shorter StORF Y
                     ordered_by_length.pop(j)
                     num_storfs -= 1
-                else: # +1 needed for stop codon
-                    overlap_start = max(start_x, start_y)  # The start of the overlapping region
-                    overlap_end = min(stop_x, stop_y)  # The end of the overlapping region
-                    # Calculate the length of the overlap
-                    overlap = max(0, overlap_end - overlap_start + 1)  # Ensure overlap isn't negative
-                    if overlap >= options.overlap_nt:
-                        ordered_by_length.pop(j)
-                        num_storfs -= 1
-                    else:
-                        j += 1
-            num_storfs -= 1
-            i+=1
-        else: # Remove StORF if proportion of X's more than allowed
-            ordered_by_length.pop(i)
-            num_storfs = len(ordered_by_length)
+                else:
+                    # Overlap is within the allowed limit, keep both
+                    j += 1
 
+        # Move to the next StORF
+        i += 1
+
+    # Step 3: Reorganize the remaining StORFs after filtering
     filtered_storfs = OrderedDict(ordered_by_length)
-    #### Clunky - reordering of StORFs - Through number found (pos then neg strand) or start position?
+
+    # Final ordering of filtered StORFs
     if options.storf_order == 'start_pos':
-        final_filtered_storfs = sortORFs(filtered_storfs)
+        final_filtered_storfs = sortORFs(filtered_storfs)  # Sort by start position
     elif options.storf_order == 'strand':
-        final_filtered_storfs = collections.OrderedDict()
-        storf_nums = [item[-1] for item in filtered_storfs.values()]
-        storf_nums = sorted(storf_nums)
+        final_filtered_storfs = OrderedDict()
+        storf_nums = sorted([item[-1] for item in filtered_storfs.values()])  # Sort by StORF number
         for num in storf_nums:
-            for key,value in filtered_storfs.items():
+            for key, value in filtered_storfs.items():
                 if value[-1] == num:
-                    final_filtered_storfs.update({key:value})
+                    final_filtered_storfs.update({key: value})
                     break
 
     return final_filtered_storfs
@@ -296,7 +305,7 @@ def write_fasta(options, fasta_entries, fasta_out,aa_fasta_out):  # Some Lines c
                     aa_fasta_out.write(amino + '\n')
         storf_num += 1
 
-
+@profile
 def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con_StORFs,frames_covered,counter,lengths,strand,StORF_idx,short_StORF_idx,Con_StORF_idx,options):
     first = True
     con_StORF_tracker = ''
@@ -321,7 +330,7 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                                 length = next_stop - prev_stop
                                 ##### Needed to correct for negative frame loci
                                 if working_frame == 'negative':
-                                    rev_corrected_start, rev_corrected_mid, rev_corrected_stop = reverseCorrectLoci(options,len(sequence),len(sequence),sequence_id,prev_stop,stop,next_stop  + 3)
+                                    rev_corrected_start, rev_corrected_mid, rev_corrected_stop = reverseCorrectLoci(options,len(sequence),sequence_id,prev_stop,stop,next_stop  + 3)
                                     con_StORF_Pos = ",".join([str(rev_corrected_start), str(rev_corrected_mid), str(rev_corrected_stop)])
                                 else:
                                     con_StORF_Pos = ",".join([str(prev_stop), str(stop), str(next_stop  + 3)])
@@ -487,10 +496,10 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                 StORF_idx +=1
         except UnboundLocalError:
             pass
+
     return storfs, short_storfs, con_StORFs, frames_covered, counter, lengths, StORF_idx, Con_StORF_idx
 
 def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, gff_out): #Main Function
-    sequence_region_length = sequence_info[0]
     sequence = sequence_info[1]
     stops = []
     frames_covered = OrderedDict()
@@ -657,24 +666,24 @@ def StORF_Reported(options, Contigs):
     for Contig_ID, Contig_URs in Contigs.items():
         Reporter_StORFs.update({Contig_ID:[]})
         URs = Contig_URs[3]
-        try:
-            for UR in URs:
-                if len(URs[UR][1]) >= options.min_orf:
-                    contig_length = Contigs[Contig_ID][1]
-                    sequence_info = [contig_length,URs[UR][1]]
-                    if UR.split('_')[0] == '0': # This is to account for the GFF base-1 system
-                        sequence_id = "1_" + UR.split('_')[1]
-                    else:
-                        sequence_id = UR # mockup sequence_id in correct format for later
-                    StORFs = STORF_Finder(options, sequence_info, sequence_id, None, None, None) # need to pass seq and original seq length
-                    if StORFs: #  Left out for now to allow for tracking of non-StORF URs
-                        for StORF in StORFs.values():
-                            StORF.append(URs[UR][0]) # True UR
-                            StORF.append(sequence_id) # Extended UR
-                        Reporter_StORFs[Contig_ID].append(StORFs)
-        except TypeError:
-            if options.verbose == True:
-                print("No URs in seq")
+        #try:
+        for UR in URs:
+            if len(URs[UR][1]) >= options.min_orf:
+                contig_length = Contigs[Contig_ID][1]
+                sequence_info = [contig_length,URs[UR][1]]
+                if UR.split('_')[0] == '0': # This is to account for the GFF base-1 system
+                    sequence_id = "1_" + UR.split('_')[1]
+                else:
+                    sequence_id = UR # mockup sequence_id in correct format for later
+                StORFs = STORF_Finder(options, sequence_info, sequence_id, None, None, None) # need to pass seq and original seq length
+                if StORFs: #  Left out for now to allow for tracking of non-StORF URs
+                    for StORF in StORFs.values():
+                        StORF.append(URs[UR][0]) # True UR
+                        StORF.append(sequence_id) # Extended UR
+                    Reporter_StORFs[Contig_ID].append(StORFs)
+        #except TypeError:
+        #    if options.verbose == True:
+        #        print("No URs in seq")
     return Reporter_StORFs
 
 

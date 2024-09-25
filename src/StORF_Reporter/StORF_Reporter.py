@@ -425,7 +425,7 @@ def find_prev_StORFs(StORF_options, Reporter_options, Contig_URs, track_current_
         return StORFs, Contig_URs
 
 
-def find_after_StORFs(StORF_options,Contig_URs,track_current_start,track_current_stop, track_contig):
+def find_after_StORFs(StORF_options,Contig_URs,track_current_stop, track_contig):
     StORFs = []
     is_break = False
     try:
@@ -530,22 +530,22 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             track_current_start = int(data[3])
             track_current_stop = int(data[4])
             track_contig = data[0]
+
+            # Detect when the current line is a region
             if data[2] == 'region':
                 Reporter_options.gff_outfile.write(line.strip() + '\n')
+
+                if first_region == True:
+                    track_prev_start, track_prev_stop = 0, 0
+                    track_prev_contig = track_contig
                 first_region = False
                 continue
-            if track_contig != track_prev_contig:  # End of current contig
-                # if track_prev_contig != '': # Get last StORF on Contig - If Present
-                #     StORFs = find_after_StORFs(StORF_options, Contig_URS, track_prev_start, track_prev_stop,track_prev_contig) # Changed to prev stop because we are switching from previous contig
-                #     if StORFs:
-                #         for StORF in StORFs:
-                #             GFF_StORF_write( Reporter_options, track_prev_contig, outfile, StORF,
-                #                             StORF_Num)  # To keep consistency
-                #             if StORF_options.path == True:
-                #                 FASTA_StORF_write(Reporter_options, track_contig, fasta_outfile, StORF)
-                #             StORF_Num += 1
-                track_prev_start, track_prev_stop = 0, 0
+
+            # Reset variables for the new contig
+            track_prev_start, track_prev_stop = 0, 0
             track_prev_contig = track_contig
+
+            # Handle duplicate entry in GFF (if needed)
             if track_current_start == track_prev_start and track_current_stop == track_prev_stop:  # `duplicate' entry in GFF
                 tracked = True
             else:
@@ -589,7 +589,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
                 written_line = line
             StORFs = None
         elif line.startswith('##sequence-region') and first_region != True:
-            StORFs = find_after_StORFs(Reporter_options, Contig_URS, track_prev_start, track_prev_stop, track_prev_contig)  # Changed to prev stop because we are switching from previous contig
+            StORFs = find_after_StORFs(Reporter_options, Contig_URS,  track_prev_stop, track_prev_contig)  # Changed to prev stop because we are switching from previous contig
             if StORFs:
                 for StORF in StORFs:
                     ###Compute hash/locus tag
@@ -603,7 +603,7 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
         elif line.startswith('##FASTA'):
             Reporter_options.gff_outfile.write(line.strip() + '\n')
             end = True
-            # StORFs = find_after_StORFs(StORF_options, Contig_URS, track_prev_start, track_prev_stop, track_prev_contig)  # Changed to prev stop because we are switching from previous contig
+            # StORFs = find_after_StORFs(StORF_options, Contig_URS, track_prev_stop, track_prev_contig)  # Changed to prev stop because we are switching from previous contig
             # if StORFs:
             #     for StORF in StORFs:
             #         GFF_StORF_write(Reporter_options, track_prev_contig, outfile, StORF)  # To keep consistency

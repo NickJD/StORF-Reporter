@@ -161,10 +161,19 @@ def extractor(options):
             for pos in posns: # Iterate over GFF loci and measure flanking regions for potential URs
                 start = int(pos.split('_')[0])
                 stop = int(pos.split('_')[1])
-                ###### This hack is to account for GFF errors which contain genome-long annotations
+                ###### This hack is to account for GFF 'errors' which contain genome-long annotations
                 if stop-start >= 100000:
                     if options.verbose == True:
                         print("UR " + pos + " is more than 100,000 kbs - Please Check Annotation")
+                    continue
+                if  stop-start+1 == seq_length and len(posns) == 1: # Catching regions without annotation - Return whole return as 'UR'
+                    original_UR = str(start) + '_' + str(stop)
+                    unannotated_seq = seq
+                    unannotated_loci = str(start) + '_' + str(stop) # We can't extend 50nt
+                    unannotated_regions.update({unannotated_loci: [original_UR, unannotated_seq]})
+                    dna_regions.update({key: (seq, seq_length, posns, unannotated_regions)})
+                    continue
+                elif stop-start+1 == seq_length:
                     continue
                 if start > unannotated_start:
                     length = start - unannotated_start
