@@ -1,0 +1,8 @@
+##gff-version	3
+#	Single_Genome - Stop ORF Predictions
+#	Run Date:2024-10-21
+##Single_Genome v1.4.1
+##sequence-region	Chromosome 1 4016947
+##Original File: Caul_UR.fasta
+
+Chromosome	Single_Genome	CDS	40	210	.	+	.	ID=Chromosome_UR_1_210_StORF_2:40-210;UR=Chromosome_UR_1_210;UR_Stop_Locations=35-209;Length=174;Strand=+;Frame=1;UR_Frame=3;Start_Stop=TGA;Mid_Stop=N/A;End_Stop=TAA;StORF_Type=StORF

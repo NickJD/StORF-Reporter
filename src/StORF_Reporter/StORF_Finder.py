@@ -11,10 +11,9 @@ from line_profiler_pycharm import profile
 
 
 try:
-    from ORForise.utils import sortORFs  # Calling from ORForise via pip
+    from .utils import sortORFs  # Calling from ORForise via pip
     from .Constants import *
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
-    sys.path.insert(0, '../../../ORForise/src/ORForise/') # Calling from ORForise locally (StORF_Reporter and ORForise in same dir)
     from utils import sortORFs
     from Constants import *
 
@@ -222,13 +221,13 @@ def prepare_out(options, storfs, seq_id):
                 gff_start = str(start + 1 + int(ur_name.split('_')[-2])) # + 1 to adjust the first stop codon loci
                 gff_stop = str(stop + int(ur_name.split('_')[-2]))
                 if options.stop_inclusive == False:  # To remove the start and stop codon positions.
-                    gff_start = gff_start + 3
+                    gff_start = str(int(gff_start) + 3)
                 frame = (int(gff_stop) % 3) + 1
             elif strand == '-':
                 gff_start = str(start - 2 + int(ur_name.split('_')[-2])) # -2 / -3 to adjust the first stop codon loci
                 gff_stop = str(stop - 3 + int(ur_name.split('_')[-2]))
                 if options.stop_inclusive == False:  # To remove the start and stop codon positions.
-                    gff_stop = gff_stop - 3
+                    gff_stop = str(int(gff_stop) - 3)
                 frame = (int(gff_stop) % 3) + 4
 
             storf_name = native_seq + '_' + storf_Type + '_' + str(idx) + ':' + gff_start + '-' + gff_stop
@@ -267,12 +266,13 @@ def write_gff(gff_entries,gff_out):
     for entry in gff_entries:
             gff_out.write(entry)
 
-def write_fasta(options, fasta_entries, fasta_out,aa_fasta_out):  # Some Lines commented out for BetaRun of ConStORF
+def write_fasta(options, fasta_entries, fasta_out,aa_fasta_out):
     ###FASTA Prepare
     storf_num = 0 # This requires a much more elegant solution.
     ###FASTA Out
     for fasta_id, sequence in fasta_entries.items(): # could be made more efficient
-        strand = fasta_id.split('Strand=')[1].split(';')
+        if options.stop_inclusive == False: # Remove first stop codon.
+            sequence = sequence[3:]
         if options.aa_only == False:# and options.translate == False:
             fasta_out.write(fasta_id)
             if options.line_wrap:
@@ -283,26 +283,15 @@ def write_fasta(options, fasta_entries, fasta_out,aa_fasta_out):  # Some Lines c
                 fasta_out.write(sequence + '\n')
         if options.translate == True or options.aa_only == True:
             aa_fasta_out.write(fasta_id)
-            if "+" in strand:
-                amino = translate_frame(sequence[0:])
-                if options.stop_ident == False:
-                    amino = amino.replace('*', '') # Remove * from sequences
-                if options.line_wrap:
-                    amino = textwrap.wrap(amino, width=60)
-                    for wrap in amino:
-                        aa_fasta_out.write(wrap + '\n')
-                else:
-                    aa_fasta_out.write(amino + '\n')
-            if "-" in strand:
-                amino = translate_frame(sequence[0:])
-                if options.stop_ident == False:
-                    amino = amino.replace('*', '') # Remove * from sequences
-                if options.line_wrap:
-                    amino = textwrap.wrap(amino, width=60)
-                    for wrap in amino:
-                        aa_fasta_out.write(wrap + '\n')
-                else:
-                    aa_fasta_out.write(amino + '\n')
+            amino = translate_frame(sequence[0:])
+            if options.stop_ident == False:
+                amino = amino.replace('*', '') # Remove * from sequences
+            if options.line_wrap:
+                amino = textwrap.wrap(amino, width=60)
+                for wrap in amino:
+                    aa_fasta_out.write(wrap + '\n')
+            else:
+                aa_fasta_out.write(amino + '\n')
         storf_num += 1
 
 @profile
@@ -499,7 +488,14 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
 
     return storfs, short_storfs, con_StORFs, frames_covered, counter, lengths, StORF_idx, Con_StORF_idx
 
-def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, gff_out): #Main Function
+def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, gff_out, split_index): #Main Function
+    ## If UR is the start of a sequence the 0/1 base position throws off the start of the StORF
+    if sequence_id.split('_')[split_index] == '1':
+        start_of_seq = True
+    else:
+        start_of_seq = False
+
+
     sequence = sequence_info[1]
     stops = []
     frames_covered = OrderedDict()
@@ -525,6 +521,16 @@ def STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, g
     stops.sort()
     counter = 0
     storfs, short_storfs, con_StORFs,frames_covered,counter,lengths,StORF_idx,Con_StORF_idx = find_storfs("negative",sequence_id,stops,sequence_rev,storfs,short_storfs,con_StORFs,frames_covered,counter,lengths,'-',StORF_idx,short_StORF_idx,Con_StORF_idx,options)
+
+    ## The correction for base 0/1 position in the UR
+    if start_of_seq == True:
+        for key in list(storfs.keys()):
+            if storfs[key][2] == '-':  # Check if the strand is '-'
+                positions = key.split(',')
+                new_positions = [str(int(pos) - 1) for pos in positions]
+                new_key = ','.join(new_positions)
+                storfs[new_key] = storfs.pop(key)
+
     #Potential run-through StORFs
     if options.whole_contig:
         for frame,present in frames_covered.items():
@@ -675,7 +681,7 @@ def StORF_Reported(options, Contigs):
                     sequence_id = "1_" + UR.split('_')[1]
                 else:
                     sequence_id = UR # mockup sequence_id in correct format for later
-                StORFs = STORF_Finder(options, sequence_info, sequence_id, None, None, None) # need to pass seq and original seq length
+                StORFs = STORF_Finder(options, sequence_info, sequence_id, None, None, None,0) # need to pass seq and original seq length
                 if StORFs: #  Left out for now to allow for tracking of non-StORF URs
                     for StORF in StORFs.values():
                         StORF.append(URs[UR][0]) # True UR
@@ -738,8 +744,7 @@ def main():
     optional.add_argument('-so', action="store", dest='storf_order', default='start_pos', nargs='?', choices=['start_pos','strand'],
                         required=False,
                         help='Default - Start Position: How should StORFs be ordered when >1 reported in a single UR.')
-    optional.add_argument('-spos', action="store", dest='stop_inclusive', default=True, type=eval, choices=[True, False],
-                        help='Default - False: Print out StORF positions inclusive of first stop codon')
+
 
 
     output = parser.add_argument_group('Output')
@@ -758,6 +763,9 @@ def main():
                         help='Default - False: Only output Amino Acid Fasta')
     output.add_argument('-lw', action="store", dest='line_wrap', default=True, type=eval, choices=[True, False],
                         help='Default - True: Line wrap FASTA sequence output at 60 chars')
+    output.add_argument('-spos', action="store", dest='stop_inclusive', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Output StORF sequences and GFF positions inclusive of first stop codon -'
+                             'This can break some downstream tools if changed to True.')
     output.add_argument('-stop_ident', action="store", dest='stop_ident', default=False, choices=[True, False],
                         help='Default - True: Identify Stop Codon positions with \'*\'')
     output.add_argument('-gff_fasta', action="store", dest='gff_fasta', default=False, type=eval, choices=[True, False],
@@ -852,7 +860,7 @@ def main():
 
     for sequence_id, sequence_info in sequences.items():
         if len(sequence_info[1]) >= options.min_orf:
-            STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, gff_out)
+            STORF_Finder(options, sequence_info, sequence_id, fasta_out, aa_fasta_out, gff_out,3)
 
 if __name__ == "__main__":
     main()

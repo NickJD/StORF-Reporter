@@ -170,13 +170,13 @@ def GFF_StORF_write(Reporter_options, track_contig, gff_out, StORF, StORF_Num, S
             gff_stop -= 1
 
         if Reporter_options.stop_inclusive == False:  # To remove the start and stop codon positions.
-            gff_start = gff_start + 3
+            gff_start = str(int(gff_start) + 3)
         frame = (int(gff_stop) % 3) + 1
     elif strand == '-':
         gff_start = max(start - 2 + UR_Start, 1)
         gff_stop = max(stop - 3 + UR_Start, 1)
         if Reporter_options.stop_inclusive == False:  # To remove the start and stop codon positions.
-            gff_stop = gff_stop - 3
+            gff_stop = str(int(gff_stop) - 3)
         frame = (int(gff_stop) % 3) + 4
 
     StORF_length = int(gff_stop) + 1 - int(gff_start) # +1 to adjust for base-1
@@ -193,6 +193,8 @@ def FASTA_StORF_write(Reporter_options, fasta_out, StORF, StORF_Hash):  # Consis
     ### Wrtie out new FASTA entry - Currently only write out as nt
     fasta_out.write('>'+StORF_Hash+'\n')
     sequence = StORF[-1]
+    if Reporter_options.stop_inclusive == False:  # Remove first stop codon.
+        sequence = sequence[3:]
     if Reporter_options.translate == True:
         sequence = translate_frame(sequence[0:])
         if Reporter_options.remove_stop == True:
@@ -704,9 +706,9 @@ def main():
                           help='Default - 50: UR Extension Length')
     ###
     StORF_Finder_args = parser.add_argument_group('StORF-Finder Options')
-    StORF_Finder_args.add_argument('-spos', action="store", dest='stop_inclusive', default=False, type=eval,
-                          choices=[True, False],
-                          help='Default - False: Output StORF positions inclusive of first stop codon')
+    StORF_Finder_args.add_argument('-spos', action="store", dest='stop_inclusive', default=False, type=eval, choices=[True, False],
+                        help='Default - False: Output StORF sequences and GFF positions inclusive of first stop codon -'
+                             'This can break some downstream tools if changed to True.')
     StORF_Finder_args.add_argument('-rs', action="store", dest='remove_stop', default=True, type=eval, choices=[True, False],
                         help='Default - True: Remove stop "*" from StORF amino acid sequences')
 
@@ -897,7 +899,7 @@ def main():
             if '_StORF-Reporter_Extended.gff' in gff and os.path.isfile(gff) and Reporter_options.overwrite == False:
                 gffs_to_filter.append(gff)
                 gffs_to_filter.append(gff.replace('_StORF-Reporter_Extended.gff','.gff'))
-                print('Prokka/Bakta GFF has already been processed and a StORF-Reporter output exists for ' + gff.split(os.sep)[-1] + '. Please delete or use "-overwrite True" and try again.')
+                print('GFF has already been processed and a StORF-Reporter output exists for ' + gff.split(os.sep)[-1] + '. Please delete or use "-overwrite True" and try again.')
             elif '_StORF-Reporter_Extended.gff' in gff and os.path.isfile(gff) and Reporter_options.overwrite == True:
                 os.remove(gff)
                 gffs_to_filter.append(gff)
@@ -947,7 +949,7 @@ def main():
             if '_StORF-Reporter_Extended.gff' in gff and os.path.isfile(gff) and Reporter_options.overwrite == False:
                 gffs_to_filter.append(gff)
                 gffs_to_filter.append(gff.replace('_StORF-Reporter_Extended.gff', '.gff'))
-                print('Prokka/Bakta GFF has already been processed and a StORF-Reporter output exists for ' +
+                print('GFF has already been processed and a StORF-Reporter output exists for ' +
                       gff.split(os.sep)[-1] + '. Please delete or use "-overwrite True" and try again.')
             elif '_StORF-Reporter_Extended.gff' in gff and os.path.isfile(gff) and Reporter_options.overwrite == True:
                 os.remove(gff)
