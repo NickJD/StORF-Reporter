@@ -115,7 +115,9 @@ def gff_load(options,gff_in,dna_regions):
                 dna_regions[line_data[0]][2].append(pos) # This will add to list
         else:
             try:
-                if line_data[0] in dna_regions:
+                if line_data[2] == 'region':
+                    continue
+                elif line_data[0] in dna_regions:
                     if any(gene_type in line_data[2] for gene_type in options.gene_ident): # line[2] for normal run
                         pos = line_data[3] + '_' + line_data[4]
                         if pos not in dna_regions[line_data[0]][2]:

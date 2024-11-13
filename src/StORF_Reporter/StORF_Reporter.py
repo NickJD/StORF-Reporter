@@ -471,18 +471,16 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
     if Reporter_options.annotation_type[0] == 'Pyrodigal':
         with open(Reporter_options.gff.name, "r") as gff:
             gff_in = gff.read()
-            gff_name = Reporter_options.path.split('.')[0]
     else:
         with open(Reporter_options.gff, 'r') as gff:
             gff_in = gff.read()
-            gff_name = Reporter_options.gff
     try:
         if Reporter_options.gz == False:
             Reporter_options.gff_outfile = open(Reporter_options.output_file + '.gff', 'w', newline='\n', encoding='utf-8')
         elif Reporter_options.gz == True:
             Reporter_options.gff_outfile = gzip.open(Reporter_options.output_file + '.gff.gz', 'wt', newline='\n', encoding='utf-8')
     except FileNotFoundError:
-        sys.exit('Out file location error - Try providing full path.')
+        sys.exit('Out file location error - Try providing full path and do not use "_StORF-Reporter" in dir names.')
 
     track_prev_contig, track_contig = '',''
     StORF_Num = 0
@@ -820,7 +818,8 @@ def main():
     if Reporter_options.annotation_type[1] != 'Multiple_Out_Dirs':
         output_file = get_outfile_name(Reporter_options)
 
-
+    if '_StORF-Reporter' in Reporter_options.path:
+        sys.exit("Having the substring '_StORF-Reporter' in the input path can cause issues - Please rename the directory and try again.")
 
 # ========================================================================================================================
 
@@ -916,7 +915,7 @@ def main():
                 file_counter += 1
             elif Reporter_options.annotation_type[1]  == "Multiple_GFFs":
                 tmp_filename = gff.split(os.sep)[-1].split('.gff')[0]  # could be .fa/.fasta etc
-                Reporter_options.output_file = output_file.replace('_StORF-Reporter',tmp_filename + '_StORF-Reporter')
+                Reporter_options.output_file = output_file.replace('_StORF-Reporter',tmp_filename + '_StORF-Reporter') # Can cause issues if in/out dir has this substring
             else:
                 Reporter_options.output_file = output_file
             if Reporter_options.verbose == True:
@@ -948,7 +947,7 @@ def main():
         for gff in gff_list:
             if '_StORF-Reporter_Extended.gff' in gff and os.path.isfile(gff) and Reporter_options.overwrite == False:
                 gffs_to_filter.append(gff)
-                gffs_to_filter.append(gff.replace('_StORF-Reporter_Extended.gff', '.gff'))
+                gffs_to_filter.append(gff.replace('_StORF-Reporter_Extended.gff', '.gff')) # Can cause issues if in/out dir has this substring
                 print('GFF has already been processed and a StORF-Reporter output exists for ' +
                       gff.split(os.sep)[-1] + '. Please delete or use "-overwrite True" and try again.')
             elif '_StORF-Reporter_Extended.gff' in gff and os.path.isfile(gff) and Reporter_options.overwrite == True:
@@ -966,7 +965,7 @@ def main():
                 file_counter += 1
             elif (Reporter_options.annotation_type[1]  == "Multiple_Combined_GFFs" or Reporter_options.annotation_type[1] == "Multiple_Genomes"):
                 tmp_filename = gff.split(os.sep)[-1].split('.gff')[0]  # could be .fa/.fasta etc
-                Reporter_options.output_file = output_file.replace('_StORF-Reporter',tmp_filename + '_StORF-Reporter')
+                Reporter_options.output_file = output_file.replace('_StORF-Reporter',tmp_filename + '_StORF-Reporter') # Can cause issues if in/out dir has this substring
             else:
                 Reporter_options.output_file = output_file
 

@@ -672,24 +672,24 @@ def StORF_Reported(options, Contigs):
     for Contig_ID, Contig_URs in Contigs.items():
         Reporter_StORFs.update({Contig_ID:[]})
         URs = Contig_URs[3]
-        #try:
-        for UR in URs:
-            if len(URs[UR][1]) >= options.min_orf:
-                contig_length = Contigs[Contig_ID][1]
-                sequence_info = [contig_length,URs[UR][1]]
-                if UR.split('_')[0] == '0': # This is to account for the GFF base-1 system
-                    sequence_id = "1_" + UR.split('_')[1]
-                else:
-                    sequence_id = UR # mockup sequence_id in correct format for later
-                StORFs = STORF_Finder(options, sequence_info, sequence_id, None, None, None,0) # need to pass seq and original seq length
-                if StORFs: #  Left out for now to allow for tracking of non-StORF URs
-                    for StORF in StORFs.values():
-                        StORF.append(URs[UR][0]) # True UR
-                        StORF.append(sequence_id) # Extended UR
-                    Reporter_StORFs[Contig_ID].append(StORFs)
-        #except TypeError:
+        try:
+            for UR in URs:
+                if len(URs[UR][1]) >= options.min_orf:
+                    contig_length = Contigs[Contig_ID][1]
+                    sequence_info = [contig_length,URs[UR][1]]
+                    if UR.split('_')[0] == '0': # This is to account for the GFF base-1 system
+                        sequence_id = "1_" + UR.split('_')[1]
+                    else:
+                        sequence_id = UR # mockup sequence_id in correct format for later
+                    StORFs = STORF_Finder(options, sequence_info, sequence_id, None, None, None,0) # need to pass seq and original seq length
+                    if StORFs: #  Left out for now to allow for tracking of non-StORF URs
+                        for StORF in StORFs.values():
+                            StORF.append(URs[UR][0]) # True UR
+                            StORF.append(sequence_id) # Extended UR
+                        Reporter_StORFs[Contig_ID].append(StORFs)
+        except TypeError:
         #    if options.verbose == True:
-        #        print("No URs in seq")
+            print("No URs in seq")
     return Reporter_StORFs
 
 
