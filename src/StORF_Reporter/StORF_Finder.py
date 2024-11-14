@@ -7,15 +7,15 @@ import textwrap
 import gzip
 import os
 import sys
-from line_profiler_pycharm import profile
+#from line_profiler_pycharm import profile
 
 
 try:
     from .utils import sortORFs  # Calling from ORForise via pip
-    from .Constants import *
+    from .constants import *
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
     from utils import sortORFs
-    from Constants import *
+    from constants import *
 
 
 
@@ -120,7 +120,7 @@ def start_filtering(storfs):
                 break
     return keep_storfs
 
-@profile
+#@profile
 def tile_filtering(storfs,options): #both-strand filtering
     ################ - Order largest first filtering
     storfs = sorted(storfs.items(), key=lambda storfs: storfs[1][3], reverse=True)
@@ -294,7 +294,7 @@ def write_fasta(options, fasta_entries, fasta_out,aa_fasta_out):
                 aa_fasta_out.write(amino + '\n')
         storf_num += 1
 
-@profile
+#@profile
 def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con_StORFs,frames_covered,counter,lengths,strand,StORF_idx,short_StORF_idx,Con_StORF_idx,options):
     first = True
     con_StORF_tracker = ''
@@ -694,7 +694,7 @@ def StORF_Reported(options, Contigs):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Single_Genome ' + StORF_Reporter_Version + ': StORF-Finder Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Finder Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')

@@ -3,7 +3,6 @@ requires = [
     "setuptools",
     "wheel",
     "numpy",
-    "ORForise",
     "pyrodigal"
 ]
 build-backend = "setuptools.build_meta"

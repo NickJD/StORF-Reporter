@@ -9,9 +9,9 @@ import textwrap
 
 
 try:
-    from .Constants import *
+    from .constants import *
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
-    from Constants import *
+    from constants import *
 
 ###################
 gencode = {
@@ -274,7 +274,7 @@ def storf_extractor(options, gff):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='StORF-Extractor ' + StORF_Reporter_Version + ': StORF-Extractor Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Extractor Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')

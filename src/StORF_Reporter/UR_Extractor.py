@@ -6,9 +6,18 @@ import sys,os
 
 
 try:
-    from .Constants import *
+    from .constants import *
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
-    from Constants import *
+    from constants import *
+
+def has_fasta_section(gff_file_path):
+    with open(gff_file_path, 'r') as file:
+        # Go to the end of the file and read backwards to search for '##FASTA'
+        for line in reversed(list(file)):
+            if line.strip() == "##FASTA":
+                return True
+    return False
+
 
 #Output FASTA and GFF separately using the same filename but with respective extensions - gz output optional
 def write_fasta(dna_regions, options, fasta_out):
@@ -16,10 +25,12 @@ def write_fasta(dna_regions, options, fasta_out):
         ur_ident = dna_region + options.ident # Add user ident onto name of dna regions
         if dna_region_ur[3]:
             for ex_ur, data in dna_region_ur[3].items():
-                original_ur = data[0]
+                #original_ur = data[0]
                 ur_seq = data[1]
                 fasta_out.write('>' + ur_ident + '_' + ex_ur + '\n' + ur_seq + '\n')
     fasta_out.close()
+
+
 
 def write_gff(dna_regions,options,gff_out):
     gff_out.write("##gff-version\t3\n#\tUR-Extractor \n#\tRun Date:" + str(date.today()) + '\n')
@@ -208,16 +219,16 @@ def extractor(options):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='Single_Genome ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
-    required.add_argument('-f', action='store', dest='fasta', required=True,
-                        help='FASTA file for Unannotated Region seq extraction')
-    required.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',
-                        required=True)
+    required.add_argument('-gff', action='store', dest='gff', required=True,
+                        help='GFF file containing genome annotation')
 
     optional = parser.add_argument_group('Optional Arguments')
+    optional.add_argument('-f', action='store', dest='fasta', required=False,
+                        help='Accompanying FASTA file if GFF file does not contain sequence data')
     optional.add_argument('-ident', action='store', dest='ident', default='_UR',
                         help='Identifier given for Unannotated Region output sequences - Do not modify if output is '
                              'to be used by StORF-Finder: Default "Sequence-ID"_UR')
@@ -227,9 +238,12 @@ def main():
                         help='Maximum UR Length: Default 100,000')
     optional.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
                         help='UR Extension Length on 5\' and 3\': Default 50')
-    optional.add_argument('-gene_ident', action='store', dest='gene_ident', default='ID=gene',
-                        help='Identifier used for extraction of Unannotated Regions "CDS,rRNA,tRNA": Default for Ensembl_Bacteria = '
-                             '"ID=gene" or "-gene_ident CDS" for "most" genome annotations')
+    optional.add_argument('-gene_ident', action='store', dest='gene_ident', default='CDS',
+                          help='Default: "CDS". Specifies feature types to exclude from Unannotated rRegion extraction. '
+                               'Provide a comma-separated list of feature types, e.g., "misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo", '
+                               'to identify annotated regions. "-gene_ident Prokka" will select "most" features present in Prokka/Bakta annotations'
+                               '- Providing "ID=gene" will check the attribute column for features assigned as genes (compatible with Ensembl annotations).'
+                               ' All regions without these feature types will be extracted as unannotated.')
 
     output = parser.add_argument_group('Output')
     output.add_argument('-oname', action="store", dest='o_name', required=False,
@@ -253,14 +267,21 @@ def main():
                         help=argparse.SUPPRESS)
 
     options = parser.parse_args()
-    if options.fasta == None or options.gff == None:
-        if options.version:
-            sys.exit(StORF_Reporter_Version)
-        else:
-            exit('UR-Extractor: error: the following arguments are required: -f, -gff')
 
-    print("Thank you for using UR-Extractor -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
-          "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
+    if options.fasta == None and has_fasta_section(options.gff):
+        print("Thank you for using UR-Extractor -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
+            "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
+        options.fasta = options.gff
+    elif options.fasta == None and not has_fasta_section(options.gff):
+        sys.exit("The GFF file does not contain a FASTA section - Please provide accomying FASTA file with -f.")
+    # elif options.fasta != None and options.gff != None:
+    #     continue
+
+
+    ## User selects Prokka 'standard' Features
+    if options.gene_ident == 'Prokka':
+        options.gene_ident = 'misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo'
+
 
     options.annotation_type = [None,None]
 

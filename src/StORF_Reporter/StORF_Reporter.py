@@ -13,11 +13,11 @@ import gzip
 try:
     from .UR_Extractor import extractor
     from .StORF_Finder import StORF_Reported
-    from .Constants import *
+    from .constants import *
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
     from UR_Extractor import extractor
     from StORF_Finder import StORF_Reported
-    from Constants import *
+    from constants import *
 
 
 class SmartFormatter(argparse.HelpFormatter):
@@ -694,8 +694,12 @@ def main():
     ###
     UR_Ex_args = parser.add_argument_group('UR-Extractor Options')
     UR_Ex_args.add_argument('-gene_ident', action='store', dest='gene_ident', default='CDS',
-                          help='Identifier used for extraction of Unannotated Regions such as "misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo"'
-                               ' - To be used with "-anno Feature_Types" - "-gene_ident Prokka" will select features present in Prokka annotations')
+                          help='Default: "CDS". Specifies feature types to exclude from Unannotated rRegion extraction. '
+                               'Provide a comma-separated list of feature types, e.g., "misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo", '
+                               'to identify annotated regions. - To be used with "-anno Feature_Types" - "-gene_ident Prokka" will select "most" features present in Prokka/Bakta annotations'
+                               '- Providing "ID=gene" will check the attribute column for features assigned as genes (compatible with Ensembl annotations).'
+                               ' All regions without these feature types will be extracted as unannotated.')
+
     UR_Ex_args.add_argument('-min_len', action='store', dest='minlen', default='30', type=int,
                           help='Default - 30: Minimum UR Length')
     UR_Ex_args.add_argument('-max_len', action='store', dest='maxlen', default='100000', type=int,

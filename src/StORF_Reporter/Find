@@ -1,0 +1,91 @@
+usage: StORF_Finder.py [-h] -f FASTA [-ua {True,False}] [-wc {True,False}]
+                       [-ps {True,False}]
+                       [-olap_filt [{none,single-strand,both-strand}]]
+                       [-start_filt {True,False}] [-con_storfs {True,False}]
+                       [-con_only {True,False}]
+                       [-short_storfs {False,Nolap,Olap}]
+                       [-short_storfs_only {True,False}]
+                       [-f_type [{StORF,CDS,ORF}]] [-minorf MIN_ORF]
+                       [-maxorf MAX_ORF] [-codons STOP_CODONS]
+                       [-non_standard NON_STANDARD] [-olap OVERLAP_NT]
+                       [-s SUFFIX] [-so [{start_pos,strand}]] [-oname O_NAME]
+                       [-odir O_DIR] [-gff {True,False}] [-aa {True,False}]
+                       [-aa_only {True,False}] [-lw {True,False}]
+                       [-spos {True,False}] [-stop_ident {True,False}]
+                       [-gff_fasta {True,False}] [-gz {True,False}]
+                       [-verbose {True,False}] [-v]
+
+StORF-Reporter v1.4.3: StORF-Finder Run Parameters.
+
+Required Arguments:
+  -f FASTA              Input FASTA File - (UR_Extractor output)
+
+Optional Arguments:
+  -ua {True,False}      Default - Treat input as Unannotated: Use "-ua False"
+                        for standard fasta
+  -wc {True,False}      Default - False: StORFs reported across entire
+                        sequence
+  -ps {True,False}      Default - False: Partial StORFs reported
+  -olap_filt [{none,single-strand,both-strand}]
+                        Default - "both-strand": Filtering level "none" is not
+                        recommended, "single-strand" for single strand
+                        filtering and both-strand for both-strand longest-
+                        first tiling
+  -start_filt {True,False}
+                        Default - False: Filter out StORFs without at least
+                        one of the 3 common start codons (best used for short-
+                        storfs).
+  -con_storfs {True,False}
+                        Default - False: Output Consecutive StORFs
+  -con_only {True,False}
+                        Default - False: Only output Consecutive StORFs
+  -short_storfs {False,Nolap,Olap}
+                        Default - False: Run StORF-Finder in "Short-StORF"
+                        mode. Will only return StORFs between 30 and 120 nt
+                        that do not overlap longer StORFs - Only works with
+                        StORFs for now. "Nolap" will filter Short-StORFs which
+                        areoverlapped by StORFs and Olap will report Short-
+                        StORFs which do overlap StORFs. Overlap is defined by
+                        "-olap".
+  -short_storfs_only {True,False}
+                        Default - True. Only report Short-StORFs?
+  -f_type [{StORF,CDS,ORF}]
+                        Default - "StORF": Which GFF feature type for StORFs
+                        to be reported as in GFF
+  -minorf MIN_ORF       Default - 99: Minimum StORF size in nt
+  -maxorf MAX_ORF       Default - 60kb: Maximum StORF size in nt
+  -codons STOP_CODONS   Default - ('TAG,TGA,TAA'): List Stop Codons to use
+  -non_standard NON_STANDARD
+                        Default - 0.20: Reject StORFs with >=20% non-standard
+                        nucleotides (A,T,G,C) - Provide % as decimal
+  -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which
+                        can overlap another StORF.
+  -s SUFFIX             Default - Do not append suffix to genome ID
+  -so [{start_pos,strand}]
+                        Default - Start Position: How should StORFs be ordered
+                        when >1 reported in a single UR.
+
+Output:
+  -oname O_NAME         Default - Appends '_StORF-Finder' to end of input
+                        FASTA filename
+  -odir O_DIR           Default - Same directory as input FASTA
+  -gff {True,False}     Default - True: Output a GFF file
+  -aa {True,False}      Default - False: Report StORFs as amino acid sequences
+  -aa_only {True,False}
+                        Default - False: Only output Amino Acid Fasta
+  -lw {True,False}      Default - True: Line wrap FASTA sequence output at 60
+                        chars
+  -spos {True,False}    Default - False: Output StORF sequences and GFF
+                        positions inclusive of first stop codon -This can
+                        break some downstream tools if changed to True.
+  -stop_ident {True,False}
+                        Default - True: Identify Stop Codon positions with '*'
+  -gff_fasta {True,False}
+                        Default - False: Report all gene sequences (nt) at the
+                        bottom of GFF files in Prokka output mode
+  -gz {True,False}      Default - False: Output as .gz
+
+Misc:
+  -verbose {True,False}
+                        Default - False: Print out runtime messages
+  -v                    Default - False: Print out version number and exit

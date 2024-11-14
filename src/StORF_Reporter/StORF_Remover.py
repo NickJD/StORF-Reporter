@@ -1,14 +1,13 @@
 import argparse
 import collections
-from datetime import date
 import gzip
 import sys
 
 
 try:
-    from .Constants import *
+    from .constants import *
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
-    from Constants import *
+    from constants import *
 
 def gff_load_and_write(options,gff_in,blast_hits):
     for line in gff_in: 
@@ -54,7 +53,7 @@ def remover(options):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': UR-Remover Run Parameters.')
+    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Remover Run Parameters.')
     parser._action_groups.pop()
 
     required = parser.add_argument_group('Required Arguments')
