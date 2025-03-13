@@ -137,7 +137,8 @@ def get_outfile_name(Reporter_options):
             split_path = Reporter_options.path.split(os.sep)
             filename = split_path[-1]
             output_file = Reporter_options.path.replace(filename,Reporter_options.o_name)
-
+    if not os.path.exists(Reporter_options.o_dir):
+        os.makedirs(Reporter_options.o_dir)
     return output_file
 
 ############################
