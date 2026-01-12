@@ -88,7 +88,7 @@ already_seen_PEP = []
 Combined_clusters = collections.OrderedDict()
 Combined_reps = collections.OrderedDict()
 first = True
-## We load in the combined PEP and StORF_Reporter data separately
+## We load in the combined PEP and StORF-Reporter data separately
 for line in StORF_In:
     if line.startswith('>'):
         if first == False:
@@ -148,7 +148,7 @@ for line in StORF_In:
                 Combined_pangenome_clusters_StORF_SEQS[cluster_id].append(clustered)
             else:
                 if cluster_id not in not_StORF_Only_Cluster_IDs:
-                    not_StORF_Only_Cluster_IDs.append(cluster_id)# Tell us which StORF_Reporter clustered are unmatched to a PEP
+                    not_StORF_Only_Cluster_IDs.append(cluster_id)# Tell us which StORF-Reporter clustered are unmatched to a PEP
                 if clustered_genome not in Combined_pangenome_clusters_PEP[cluster_id]:
                     Combined_pangenome_clusters_PEP[cluster_id].append(clustered_genome)
                 Combined_pangenome_clusters_PEP_SEQS[cluster_id].append(clustered)
@@ -335,7 +335,7 @@ def calc_single_pep_extended_StORF_only_core(cluster,pep_num,storf_num): # Count
         cores['extended_15'] +=1
         accessory_list.append(cluster)
 #####################################
-def calc_multi_pep_extended_StORF_only_core(pep_num,storf_num): # Count seperately those gene families extended with StORF_Reporter but combined >1 PEP
+def calc_multi_pep_extended_StORF_only_core(pep_num,storf_num): # Count seperately those gene families extended with StORF-Reporter but combined >1 PEP
     if pep_num < math.floor(core_99) and pep_num != 0 and pep_num+storf_num >= math.floor(core_99):
         cores['comb_extended_99'] +=1
     elif pep_num < math.floor(core_95) and pep_num != 0 and pep_num+storf_num >= math.floor(core_95) and pep_num+storf_num < math.floor(core_99):
@@ -390,7 +390,7 @@ for cluster, numbers in pangenome_clusters_Type.items(): # put limits here to ma
         for num in numbers[2]:
             multi_PEP_Combined_By_StORFs_num_of_PEP_Clusters +=1# ,numbers[3])
             multi_PEP_Combined_By_StORFs_1.update({cluster: numbers})
-############################# Calc PEP and StORF_Reporter - M
+############################# Calc PEP and StORF-Reporter - M
     if numbers[0] == 1 and numbers[3] >= 1: # If StORFs did not combine PEP reps
         calc_single_pep_extended_StORF_only_core(cluster,numbers[1],numbers[3])
     elif numbers[0] >1 and numbers[3] >= 1: # IF unique StORFs combined multiple PEP
@@ -414,7 +414,7 @@ for cluster, numbers in pangenome_clusters_Type.items(): # put limits here to ma
 # print(str(c))
 
 
-############## Typing for the StORF_Reporter-Data
+############## Typing for the StORF-Reporter-Data
 Combined_pangenome_clusters_ONLY_StORF_Type = collections.defaultdict(list)
 Combined_pangenome_clusters_StORF_Type = collections.defaultdict(list)
 for cluster, genomes in Combined_pangenome_clusters_StORF.items():

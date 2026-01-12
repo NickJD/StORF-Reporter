@@ -4,7 +4,7 @@ import argparse
 try:
     from ORForise.GFF_Adder import gff_adder  # Calling from ORForise via pip
 except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
-    from ORForise.src.ORForise.GFF_Adder import gff_adder  # Calling from ORForise locally (StORF_Reporter and ORForise in same dir)
+    from ORForise.src.ORForise.GFF_Adder import gff_adder  # Calling from ORForise locally (StORF-Reporter and ORForise in same dir)
 
 
 
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     parser.add_argument('-gi', '--gene_ident',  default='CDS', required=False,
                         help='Identifier used for extraction of "genic" regions from reference annotation '
                              '"CDS,rRNA,tRNA": Default for is "CDS"')
-    parser.add_argument('-at', '--additional_tool', default='StORF_Reporter', required=False, # needs cleaner fix
+    parser.add_argument('-at', '--additional_tool', default='StORF-Reporter', required=False, # needs cleaner fix
                         help='Which format to use for additional annotation?')
     parser.add_argument('-add', '--additional_annotation', required=True,
                         help='Which annotation file to add to reference annotation?')

@@ -1,13 +1,12 @@
 import argparse
 import collections
 import re
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 from datetime import date
 import textwrap
 import gzip
 import os
 import sys
-#from line_profiler_pycharm import profile
 
 
 try:
@@ -129,7 +128,7 @@ def tile_filtering(storfs,options): #both-strand filtering
     for tup in storfs:
         ordered_by_length.update({tup[0]:tup[1]})
 
-    ############## - For each StORF_Reporter, remove all smaller overlapping STORFs according to filtering rules
+    ############## - For each StORF-Reporter, remove all smaller overlapping STORFs according to filtering rules
     # Convert to a list for easier index-based manipulation
     ordered_by_length = list(ordered_by_length.items())
     num_storfs = len(ordered_by_length)
@@ -251,7 +250,7 @@ def prepare_out(options, storfs, seq_id):
                 frame = (int(stop) % 3) + 1
             storf_name = native_seq + '_' + storf_Type + '_' + str(idx) + ':' + str(start) + '-' + str(stop)
 
-            gff_entries.append(native_seq + '\tStORF_Reporter\t' + options.feature_type + '\t' + str(start) + '\t' + str(stop) + '\t.\t' + data[2] +
+            gff_entries.append(native_seq + '\tStORF-Reporter\t' + options.feature_type + '\t' + str(start) + '\t' + str(stop) + '\t.\t' + data[2] +
                 '\t.\tID=' + storf_name + ';=' + native_seq + ';UR_Stop_Locations=' + '-'.join(pos_) + ';Length=' + str(length) +
                                ';Frame=' + str(frame) + ';Start_Stop=' + start_stop + ';End_Stop=' + end_stop + ';StORF_Type=' + storf_Type + '\n')
 
@@ -430,7 +429,7 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                                 start_stops.append(stop)
                                 prevlength = prev_next_stop - prev_stop
                         elif first:
-                            if options.partial_storf: # upstream partial StORF_Reporter
+                            if options.partial_storf: # upstream partial StORF-Reporter
                                 if stop > options.min_orf and frames_covered[frame] != 1:
                                     seq = sequence[0:stop + 3] #Start of seq to first stop identified
                                     #ps_seq = cut_seq(seq, '-')
@@ -476,7 +475,7 @@ def find_storfs(working_frame,sequence_id,stops,sequence,storfs,short_storfs,con
                     else:
                         break
         counter +=1
-    if options.partial_storf:  # downstream partial StORF_Reporter - Last Stop to end of sequence
+    if options.partial_storf:  # downstream partial StORF-Reporter - Last Stop to end of sequence
         try:
             if (len(sequence) - stop) > options.min_orf:
                 seq = sequence[stop:len(sequence)]  # Start of seq to first stop identified - not working
@@ -688,8 +687,8 @@ def StORF_Reported(options, Contigs):
                             StORF.append(sequence_id) # Extended UR
                         Reporter_StORFs[Contig_ID].append(StORFs)
         except TypeError:
-        #    if options.verbose == True:
-            print("No URs in seq")
+            if options.verbose == True:
+                print("No URs in seq")
     return Reporter_StORFs
 
 

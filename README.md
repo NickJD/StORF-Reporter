@@ -56,29 +56,7 @@ StORF-Reporter -anno Pyrodigal Single_FASTA -p .../Test_Datasets/Pyrodigal/E-col
 StORF-Reporter -anno Ensembl Single_Genome -p .../Test_Datasets/Matching_GFF_FASTA/E-coli.gff
 ```
 ```bash
-usage: StORF_Reporter.py [-h]
-                         [-anno [{Prokka,Bakta,Out_Dir,Multiple_Out_Dirs,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]]
-                         [-p PATH] [-af ALT_FILENAME] [-oname O_NAME]
-                         [-odir O_DIR] [-sout {True,False}] [-lw {True,False}]
-                         [-aa {True,False}] [-gz {True,False}]
-                         [-py_train [{longest,individual,meta}]]
-                         [-py_fasta {True,False}] [-py_unstorfed {True,False}]
-                         [-gene_ident GENE_IDENT] [-min_len MINLEN]
-                         [-max_len MAXLEN] [-ex_len EXLEN]
-                         [-spos {True,False}] [-rs {True,False}]
-                         [-con_storfs {True,False}] [-con_only {True,False}]
-                         [-ps {True,False}] [-wc {True,False}]
-                         [-short_storfs {False,Nolap,Olap}]
-                         [-short_storfs_only {True,False}] [-minorf MIN_ORF]
-                         [-maxorf MAX_ORF] [-codons STOP_CODONS]
-                         [-olap_filt [{none,single-strand,both-strand}]]
-                         [-start_filt {True,False}] [-so [{start_pos,strand}]]
-                         [-f_type [{StORF,CDS,ORF}]]
-                         [-non_standard NON_STANDARD] [-olap OVERLAP_NT]
-                         [-ao ALLOWED_OVERLAP] [-overwrite {True,False}]
-                         [-verbose {True,False}] [-v]
-
-StORF-Reporter v1.4.3: StORF-Reporter Run Parameters.
+StORF-Reporter v1.4.6: StORF-Reporter Run Parameters.
 
 Required Options:
   -anno [{Prokka,Bakta,Out_Dir,Multiple_Out_Dirs,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]
@@ -110,113 +88,74 @@ Required Options:
   -p PATH               Provide input file or directory path
 
 StORF-Reporter Options:
-  -af ALT_FILENAME      Default - Prokka/Bakta output directory share the same
-                        prefix with their gff/fna files - Use this option when
-                        Prokka/Bakta output directory name is different from
-                        the gff/fna files within and StORF-Reporter will
-                        search for the gff/fna with the given prefix
-                        (MyProkkaDir/"altname".gff) - Does not work with
-                        "Multiple_Out_Dirs" option
-  -oname O_NAME         Default - Appends '_StORF-Reporter_Extended' to end of
-                        input filename - Takes the directory name of
-                        Prokka/Bakta output if given as input or the input for
-                        -af if given - Multiple_* runs will be numbered
+  -af ALT_FILENAME      Default - Prokka/Bakta output directory share the same prefix with their gff/fna files - Use this option when Prokka/Bakta output
+                        directory name is different from the gff/fna files within and StORF-Reporter will search for the gff/fna with the given prefix
+                        (MyProkkaDir/"altname".gff) - Does not work with "Multiple_Out_Dirs" option
+  -oname O_NAME         Default - Appends '_StORF-Reporter_Extended' to end of input filename - Takes the directory name of Prokka/Bakta output if given as
+                        input or the input for -af if given - Multiple_* runs will be numbered
   -odir O_DIR           Default - Same directory as input
-  -sout {True,False}    Default - False: Print out StORF sequences separately
-                        from Prokka/Bakta annotations
-  -lw {True,False}      Default - True: Line wrap FASTA sequence output at 60
-                        chars
-  -aa {True,False}      Default - False: Report StORFs as amino acid sequences
+  -sout {True,False}    Default - False: Print out StORF sequences separately from Prokka/Bakta annotations
+  -lw {True,False}      Default - True: Line wrap FASTA sequence output at 60 chars
+  -aa                   Default - False: Report StORFs as amino acid sequences
   -gz {True,False}      Default - False: Output as .gz
 
 Pyrodigal Options:
   -py_train [{longest,individual,meta}]
-                        Default - longest: Type of model training to be done
-                        for Pyrodigal CDS prediction: Options: longest =
-                        Trains on longest contig; individual = Trains on each
-                        contig separately - runs in meta mode if contig is <
-                        20KB; meta = Runs in meta mode for all sequences
+                        Default - longest: Type of model training to be done for Pyrodigal CDS prediction: Options: longest = Trains on longest contig;
+                        individual = Trains on each contig separately - runs in meta mode if contig is < 20KB; meta = Runs in meta mode for all sequences
   -py_fasta {True,False}
-                        Default - False: Output Pyrodigal+StORF predictions in
-                        FASTA format
+                        Default - False: Output Pyrodigal+StORF predictions in FASTA format
   -py_unstorfed {True,False}
-                        Default - False: Provide GFF containing original
-                        Pyrodigal predictions
+                        Default - False: Provide GFF containing original Pyrodigal predictions
 
 UR-Extractor Options:
   -gene_ident GENE_IDENT
-                        Default: "CDS". Specifies feature types to exclude
-                        from Unannotated rRegion extraction. Provide a comma-
-                        separated list of feature types, e.g., "misc_RNA,gene,
-                        mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_regio
-                        n,oriC,pseudo", to identify annotated regions. - To be
-                        used with "-anno Feature_Types" - "-gene_ident Prokka"
-                        will select "most" features present in Prokka/Bakta
-                        annotations- Providing "ID=gene" will check the
-                        attribute column for features assigned as genes
-                        (compatible with Ensembl annotations). All regions
-                        without these feature types will be extracted as
-                        unannotated.
+                        Default: "CDS". Specifies feature types to exclude from Unannotated rRegion extraction. Provide a comma-separated list of feature
+                        types, e.g., "misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo", to identify annotated regions. -
+                        To be used with "-anno Feature_Types" - "-gene_ident Prokka" will select "most" features present in Prokka/Bakta annotations-
+                        Providing "ID=gene" will check the attribute column for features assigned as genes (compatible with Ensembl annotations). All
+                        regions without these feature types will be extracted as unannotated.
   -min_len MINLEN       Default - 30: Minimum UR Length
   -max_len MAXLEN       Default - 100,000: Maximum UR Length
   -ex_len EXLEN         Default - 50: UR Extension Length
 
 StORF-Finder Options:
-  -spos {True,False}    Default - False: Output StORF sequences and GFF
-                        positions inclusive of first stop codon -This can
-                        break some downstream tools if changed to True.
-  -rs {True,False}      Default - True: Remove stop "*" from StORF amino acid
-                        sequences
+  -spos {True,False}    Default - False: Output StORF sequences and GFF positions inclusive of first stop codon -This can break some downstream tools if
+                        changed to True.
+  -rs {True,False}      Default - True: Remove stop "*" from StORF amino acid sequences
   -con_storfs {True,False}
                         Default - False: Output Consecutive StORFs
   -con_only {True,False}
                         Default - False: Only output Consecutive StORFs
   -ps {True,False}      Default - False: Partial StORFs reported
-  -wc {True,False}      Default - False: StORFs reported across entire
-                        sequence
+  -wc {True,False}      Default - False: StORFs reported across entire sequence
   -short_storfs {False,Nolap,Olap}
-                        Default - False: Run StORF-Finder in "Short-StORF"
-                        mode. Will only return StORFs between 30 and 120 nt
-                        that do not overlap longer StORFs - Only works with
-                        StORFs for now. "Nolap" will filter Short-StORFs which
-                        areoverlapped by StORFs and Olap will report Short-
-                        StORFs which do overlap StORFs. Overlap is defined by
-                        "-olap".
+                        Default - False: Run StORF-Finder in "Short-StORF" mode. Will only return StORFs between 30 and 120 nt that do not overlap longer
+                        StORFs - Only works with StORFs for now. "Nolap" will filter Short-StORFs which areoverlapped by StORFs and Olap will report Short-
+                        StORFs which do overlap StORFs. Overlap is defined by "-olap".
   -short_storfs_only {True,False}
                         Default - True. Only report Short-StORFs?
   -minorf MIN_ORF       Default - 99: Minimum StORF size in nt
   -maxorf MAX_ORF       Default - 60kb: Maximum StORF size in nt
   -codons STOP_CODONS   Default - ('TAG,TGA,TAA'): List Stop Codons to use
   -olap_filt [{none,single-strand,both-strand}]
-                        Default - "both-strand": Filtering level "none" is not
-                        recommended, "single-strand" for single strand
-                        filtering and both-strand for both-strand longest-
-                        first tiling
+                        Default - "both-strand": Filtering level "none" is not recommended, "single-strand" for single strand filtering and both-strand for
+                        both-strand longest-first tiling
   -start_filt {True,False}
-                        Default - False: Filter out StORFs without at least
-                        one of the 3 common start codons (best used for short-
-                        storfs).
+                        Default - False: Filter out StORFs without at least one of the 3 common start codons (best used for short-storfs).
   -so [{start_pos,strand}]
-                        Default - Start Position: How should StORFs be ordered
-                        when >1 reported in a single UR.
+                        Default - Start Position: How should StORFs be ordered when >1 reported in a single UR.
   -f_type [{StORF,CDS,ORF}]
-                        Default - "CDS": Which GFF feature type for StORFs to
-                        be reported as in GFF - "CDS" is probably needed for
-                        use in tools such as Roary and Panaroo
+                        Default - "CDS": Which GFF feature type for StORFs to be reported as in GFF - "CDS" is probably needed for use in tools such as
+                        Roary and Panaroo
   -non_standard NON_STANDARD
-                        Default - 0.20: Reject StORFs with >=20% non-standard
-                        nucleotides (A,T,G,C) - Provide % as decimal
-  -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which
-                        can overlap another StORF.
-  -ao ALLOWED_OVERLAP   Default - 50 nt: Maximum overlap between a StORF and
-                        an original gene.
+                        Default - 0.20: Reject StORFs with >=20% non-standard nucleotides (A,T,G,C) - Provide % as decimal
+  -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which can overlap another StORF.
+  -ao ALLOWED_OVERLAP   Default - 50 nt: Maximum overlap between a StORF and an original gene.
 
 Misc:
-  -overwrite {True,False}
-                        Default - False: Overwrite StORF-Reporter output if
-                        already present
-  -verbose {True,False}
-                        Default - False: Print out runtime messages
+  -overwrite            Default - False: Overwrite StORF-Reporter output if already present
+  -verbose              Default - False: Print out runtime messages
   -v                    Print out version number and exit
 
 ```
@@ -237,7 +176,7 @@ usage: UR_Extractor.py [-h] -gff GFF [-f FASTA] [-ident IDENT]
                        [-gene_ident GENE_IDENT] [-oname O_NAME] [-odir O_DIR]
                        [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.4.3: UR-Extractor Run Parameters.
+StORF-Reporter v1.4.6: UR-Extractor Run Parameters.
 
 Required Arguments:
   -gff GFF              GFF file containing genome annotation
@@ -301,7 +240,7 @@ usage: StORF_Finder.py [-h] -f FASTA [-ua {True,False}] [-wc {True,False}]
                        [-gff_fasta {True,False}] [-gz {True,False}]
                        [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.4.3: StORF-Finder Run Parameters.
+StORF-Reporter v1.4.6: StORF-Finder Run Parameters.
 
 Required Arguments:
   -f FASTA              Input FASTA File - (UR_Extractor output)
@@ -388,7 +327,7 @@ StORF-Extractor -storf_input Combined -p .../Test_Datasets/Combined_GFFs/E-coli_
 ```bash
 usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gff_out {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.4.3: StORF-Extractor Run Parameters.
+StORF-Reporter v1.4.6: StORF-Extractor Run Parameters.
 
 Required Arguments:
   -storf_input {Combined,Separate}
