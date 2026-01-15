@@ -83,6 +83,7 @@ def get_outfile_name(Reporter_options):
             split_path = output_file.split(os.sep)
             directory_name = split_path[-1]
             output_file = os.path.join(output_file, f"{directory_name}_StORF-Reporter_Extended")
+            Reporter_options.o_dir = directory_name
         else:
             if os.path.isdir(Reporter_options.path):
                 output_file = Reporter_options.path
@@ -576,9 +577,12 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
                 first_region = False
                 continue
 
-            # Reset variables for the new contig
-            track_prev_start, track_prev_stop = 0, 0
-            track_prev_contig = track_contig
+            # If we've moved to a new contig, reset prev trackers; otherwise keep previous values.
+            # This preserves the true "previous" coordinates used for duplicate detection and
+            # for deciding when to flush StORFs (fixes missing original features).
+            if track_contig != track_prev_contig:
+                track_prev_start, track_prev_stop = 0, 0
+                track_prev_contig = track_contig
 
             # Handle duplicate entry in GFF (if needed)
             if track_current_start == track_prev_start and track_current_stop == track_prev_stop:  # `duplicate' entry in GFF
@@ -589,28 +593,30 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
             track_prev_start = track_current_start
             track_prev_stop = track_current_stop
             ##### Print out Prokka/Bakta Gene
-            if tracked == False and (Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs'] or Reporter_options.storfs_out == True):
-                if ('gene' in data[2] or 'ID=' in data[8]) and Reporter_options.annotation_type[0] in ('Prokka', 'Bakta') and Reporter_options.annotation_type[1] == 'Out_Dir':
+            if tracked == False:
+                # If user requested separate FASTA output (Out_Dir / storfs_out), attempt to write the original gene sequence.
+                # Importantly: do NOT `continue` if the sequence is missing — we must still emit the original GFF line below.
+                if (Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs'] or Reporter_options.storfs_out == True) and \
+                        ('gene' in data[2] or 'ID=' in data[8]) and Reporter_options.annotation_type[0] in ('Prokka', 'Bakta') and Reporter_options.annotation_type[1] == 'Out_Dir':
                     Original_ID = data[8].split(';')[0].replace('ID=','').replace('_gene','')
                     Original_Seq = Original_NT.get(Original_ID)
                     if Original_Seq is None:
                         if Reporter_options.verbose:
                             print("Warning: Original seq " + Original_ID + " not found; skipping original FASTA output for this gene.")
-                        # skip writing this original sequence
-                        continue
-                    # used to be AA but changed for to NT. CHECK
-                    # Original_Seq available below
-                    fasta_outfile.write('>'+Original_ID+'\n')
-                    if Reporter_options.translate == True:
-                        Original_Seq = translate_frame(Original_Seq[0:])
-                        if Reporter_options.remove_stop == True:
-                            Original_Seq = Original_Seq.replace('*','')
-                    if Reporter_options.line_wrap == True:
-                        wrapped = textwrap.wrap(Original_Seq, width=60)
-                        for wrap in wrapped:
-                            fasta_outfile.write(wrap + '\n')
                     else:
-                        fasta_outfile.write(Original_Seq+'\n')
+                        # Write original sequence to FASTA output (NT or AA depending on options)
+                        fasta_outfile.write('>' + Original_ID + '\n')
+                        seq_to_write = Original_Seq
+                        if Reporter_options.translate == True:
+                            seq_to_write = translate_frame(seq_to_write[0:])
+                            if Reporter_options.remove_stop == True:
+                                seq_to_write = seq_to_write.replace('*', '')
+                        if Reporter_options.line_wrap == True:
+                            wrapped = textwrap.wrap(seq_to_write, width=60)
+                            for wrap in wrapped:
+                                fasta_outfile.write(wrap + '\n')
+                        else:
+                            fasta_outfile.write(seq_to_write + '\n')
             if StORFs:
                 for StORF in StORFs:
                     ###Compute hash/locus tag
@@ -624,15 +630,31 @@ def StORF_Filler(Reporter_options, Reported_StORFs):
                 written_line = line
             StORFs = None
         elif line.startswith('##sequence-region') and first_region != True:
-            StORFs = find_after_StORFs(Reporter_options, Contig_URS,  track_prev_stop, track_prev_contig)  # Changed to prev stop because we are switching from previous contig
+            StORFs = find_after_StORFs(Reporter_options, Contig_URS, track_prev_stop, track_prev_contig)  # Changed to prev stop because we are switching from previous contig
             if StORFs:
+                # Emit StORFs that belong to the previous contig
+                emitted_ur_positions = set()
                 for StORF in StORFs:
-                    ###Compute hash/locus tag
-                    StORF_Hash, ID = compute_hash(StORF,Reporter_options, track_contig)
-                    GFF_StORF_write(Reporter_options, track_prev_contig, Reporter_options.gff_outfile, StORF, StORF_Num, StORF_Hash, ID)  # To keep consistency
+                    emitted_ur_positions.add(StORF[0])
+                    ### Compute hash/locus tag (use previous contig — these StORFs belong to it)
+                    StORF_Hash, ID = compute_hash(StORF, Reporter_options, track_prev_contig)
+                    GFF_StORF_write(Reporter_options, track_prev_contig, Reporter_options.gff_outfile, StORF, StORF_Num, StORF_Hash, ID)
                     if Reporter_options.annotation_type[1] in ['Out_Dir', 'Multiple_Out_Dirs'] or Reporter_options.storfs_out == True:
                         FASTA_StORF_write(Reporter_options, fasta_outfile, StORF, StORF_Hash)
                     StORF_Num += 1
+
+                # Remove emitted StORFs from Contig_URS so they won't be emitted again later
+                try:
+                    current_prev = Contig_URS.get(track_prev_contig, {})
+                    keys_to_remove = [k for k, v in list(current_prev.items()) if v and len(v) > 8 and v[8] in emitted_ur_positions]
+                    for k in keys_to_remove:
+                        del current_prev[k]
+                    Contig_URS[track_prev_contig] = current_prev
+                except Exception:
+                    # Non-fatal: if removal fails, we still wrote the entries; verbose mode can log this.
+                    if Reporter_options.verbose:
+                        print("Warning: could not remove emitted StORFs for contig " + str(track_prev_contig))
+
             Reporter_options.gff_outfile.write(line.strip() + '\n')
 
         elif line.startswith('##FASTA'):
@@ -799,15 +821,15 @@ def main():
     misc = parser.add_argument_group('Misc')
 
 
-    misc.add_argument('-overwrite',  dest='overwrite', action="store_true",
+    misc.add_argument('-overwrite','--overwrite',  dest='overwrite', action="store_true",
                         help='Default - False: Overwrite StORF-Reporter output if already present')
-    misc.add_argument('-verbose',  dest='verbose', action="store_true",
+    misc.add_argument('-verbose', '--verbose',  dest='verbose', action="store_true",
                         help='Default - False: Print out runtime messages')
-    misc.add_argument('-v', action='store_true', dest='version',
+    misc.add_argument('-v', '--version', action='store_true', dest='version',
                         help='Print out version number and exit')
-    misc.add_argument('-nout',  dest='nout', action="store_true",
+    misc.add_argument('-nout', '--nout',  dest='nout', action="store_true",
                         help=argparse.SUPPRESS)
-    misc.add_argument('-nout_pyrodigal', dest='nout_pyrodigal', action="store_true",
+    misc.add_argument('-nout_pyrodigal', '--nout_pyrodigal', dest='nout_pyrodigal', action="store_true",
                         help=argparse.SUPPRESS)
 
     Reporter_options = parser.parse_args()

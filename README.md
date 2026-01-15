@@ -56,7 +56,7 @@ StORF-Reporter -anno Pyrodigal Single_FASTA -p .../Test_Datasets/Pyrodigal/E-col
 StORF-Reporter -anno Ensembl Single_Genome -p .../Test_Datasets/Matching_GFF_FASTA/E-coli.gff
 ```
 ```bash
-StORF-Reporter v1.4.6: StORF-Reporter Run Parameters.
+StORF-Reporter v1.4.7: StORF-Reporter Run Parameters.
 
 Required Options:
   -anno [{Prokka,Bakta,Out_Dir,Multiple_Out_Dirs,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]
@@ -154,9 +154,10 @@ StORF-Finder Options:
   -ao ALLOWED_OVERLAP   Default - 50 nt: Maximum overlap between a StORF and an original gene.
 
 Misc:
-  -overwrite            Default - False: Overwrite StORF-Reporter output if already present
-  -verbose              Default - False: Print out runtime messages
-  -v                    Print out version number and exit
+  -overwrite, --overwrite
+                        Default - False: Overwrite StORF-Reporter output if already present
+  -verbose, --verbose   Default - False: Print out runtime messages
+  -v, --version         Print out version number and exit
 
 ```
 
@@ -176,7 +177,7 @@ usage: UR_Extractor.py [-h] -gff GFF [-f FASTA] [-ident IDENT]
                        [-gene_ident GENE_IDENT] [-oname O_NAME] [-odir O_DIR]
                        [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.4.6: UR-Extractor Run Parameters.
+StORF-Reporter v1.4.7: UR-Extractor Run Parameters.
 
 Required Arguments:
   -gff GFF              GFF file containing genome annotation
@@ -240,7 +241,7 @@ usage: StORF_Finder.py [-h] -f FASTA [-ua {True,False}] [-wc {True,False}]
                        [-gff_fasta {True,False}] [-gz {True,False}]
                        [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.4.6: StORF-Finder Run Parameters.
+StORF-Reporter v1.4.7: StORF-Finder Run Parameters.
 
 Required Arguments:
   -f FASTA              Input FASTA File - (UR_Extractor output)
@@ -327,7 +328,7 @@ StORF-Extractor -storf_input Combined -p .../Test_Datasets/Combined_GFFs/E-coli_
 ```bash
 usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gff_out {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}] [-verbose {True,False}] [-v]
 
-StORF-Reporter v1.4.6: StORF-Extractor Run Parameters.
+StORF-Reporter v1.4.7: StORF-Extractor Run Parameters.
 
 Required Arguments:
   -storf_input {Combined,Separate}
