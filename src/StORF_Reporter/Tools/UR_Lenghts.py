@@ -1,40 +1,50 @@
+"""Summarise FASTA sequence lengths without NumPy."""
+
+from __future__ import annotations
+
 import argparse
-import numpy as np
+import statistics
+import sys
+from pathlib import Path
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-ur', '--URs', required= True, help='Which URs to analyse?')
-args = parser.parse_args()
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    __package__ = "StORF_Reporter.Tools"
 
-def seq_Lengths(seqs):
-    seq = ""
-    lengths = []
-    prev_ID = ""
-    with open(seqs, 'r') as seqs:
-        for line in seqs:
-            line = line.replace("\n","")
-            if line.startswith('>'):
-                # if len(seq) >= 100000:
-                #     print(prev_ID)
-                if len(seq) != 0:
-                    lengths.append(len(seq))
-                    if len(seq) <=50:
-                        print("")
-                seq = ""
-                prev_ID = line
-            if not line.startswith('>'):
-                seq += str(line)
+from ..io import read_fasta
 
 
+def _percentile(values: list[int], fraction: float) -> float:
+    ordered = sorted(values)
+    position = fraction * (len(ordered) - 1)
+    lower = int(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    weight = position - lower
+    return ordered[lower] * (1 - weight) + ordered[upper] * weight
 
-    print("Number of Seqs: " + str(len(lengths)))
-    print("Longest Seq: " + str(max(lengths)))
-    print("Shortest Seq: " + str(min(lengths)))
-    print("Median of Seqs: " + str(np.median(lengths)))
-    print("Mean of Seqs: " + format(np.mean(lengths), '.2f'))
-    print("Std: " + format(np.std(lengths),'.2f'))
-    print("25th Percentile " + format(np.percentile(lengths, 25), '.2f'))
-    print("75th Percentile " + format(np.percentile(lengths,75),'.2f'))
+
+def seq_Lengths(URs: str) -> dict[str, float]:
+    lengths = [len(sequence) for sequence in read_fasta(URs).values()]
+    return {
+        "count": float(len(lengths)),
+        "longest": float(max(lengths)),
+        "shortest": float(min(lengths)),
+        "median": float(statistics.median(lengths)),
+        "mean": float(statistics.mean(lengths)),
+        "std": float(statistics.pstdev(lengths)),
+        "p25": _percentile(lengths, 0.25),
+        "p75": _percentile(lengths, 0.75),
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Summarise UR FASTA lengths")
+    parser.add_argument("-ur", "--URs", required=True)
+    args = parser.parse_args(argv)
+    for name, value in seq_Lengths(args.URs).items():
+        print(f"{name}\t{value:.2f}")
+    return 0
 
 
 if __name__ == "__main__":
-    seq_Lengths(**vars(args))
+    raise SystemExit(main())

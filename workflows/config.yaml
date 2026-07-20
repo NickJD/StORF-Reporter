@@ -1,0 +1,5 @@
+samples:
+  genome:
+    gff: ../examples/quickstart/genome.gff3
+    fasta: ../examples/quickstart/genome.fna
+    genetic_code: 11

@@ -1,0 +1,11 @@
+include CHANGELOG.md
+include CITATION.cff
+include LICENSE
+include README.md
+include RELEASE_2.0.0.md
+recursive-include aux_tools *.md
+recursive-include docs *.md
+recursive-include examples *.md *.fna *.gff3 *.sh
+recursive-include metadata *.json
+recursive-include packaging *.yaml *.xml
+recursive-include workflows *.nf *.yaml *.tsv

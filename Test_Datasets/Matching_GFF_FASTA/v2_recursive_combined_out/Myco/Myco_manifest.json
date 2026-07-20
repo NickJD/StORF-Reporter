@@ -1,0 +1,63 @@
+{
+  "configuration": {
+    "ambiguous_threshold": 0.2,
+    "consecutive_only": false,
+    "excluded_types": [],
+    "extension": 50,
+    "feature_type": "ORF",
+    "gene_ident": "ID=gene",
+    "genetic_code": 11,
+    "include_consecutive": false,
+    "include_short": false,
+    "max_orf": 60000,
+    "max_ur": 100000,
+    "maximum_annotation_overlap": 50,
+    "maximum_overlap": 50,
+    "min_orf": 99,
+    "min_ur": 30,
+    "overlap_mode": "all",
+    "primary_tier": "exploratory",
+    "promote_tier": "high",
+    "require_start": false,
+    "short_max": 120,
+    "short_min": 30
+  },
+  "inputs": {
+    "fasta": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/Myco.fa",
+    "fasta_sha256": "a1b6beb868d67f84dea90a7ad340ee7f9eb09ae3e17fcd15c2ba95fbe85fbe93",
+    "gff": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/Myco.gff",
+    "gff_sha256": "96a35c31c5d50da5f8f75b001e125350b65aaf765a18dc442e3d62d564f7eda5"
+  },
+  "outputs": {
+    "augmented_gff": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/Myco/Myco_StORF-Reporter.gff",
+    "evidence_tsv": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/Myco/Myco_StORFs.tsv",
+    "html_report": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/Myco/Myco_report.html",
+    "manifest": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/Myco/Myco_manifest.json",
+    "nucleotide_fasta": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/Myco/Myco_StORFs.fasta",
+    "protein_fasta": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/Myco/Myco_StORFs_aa.fasta",
+    "ur_fasta": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/Myco/Myco_UR.fasta",
+    "ur_gff": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/Myco/Myco_UR.gff",
+    "validation": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/Myco/Myco_validation.json"
+  },
+  "sample": "Myco",
+  "schema_version": 1,
+  "scientific_notice": "EvidenceScore is an interpretable prioritisation heuristic and is not a calibrated probability of a protein-coding gene.",
+  "summary": {
+    "annotations": 2201,
+    "candidates": 189,
+    "candidates_before_filtering": 551,
+    "filtered_annotation_overlap": 7,
+    "filtered_overlap": 355,
+    "rejected_ambiguous": 0,
+    "sequences": 1,
+    "tiers": {
+      "exploratory": 72,
+      "high": 1,
+      "medium": 116
+    },
+    "unannotated_regions": 155,
+    "warnings": []
+  },
+  "tool": "StORF-Reporter",
+  "version": "v2.0.0-rc1"
+}

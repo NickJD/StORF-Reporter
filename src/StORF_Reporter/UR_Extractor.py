@@ -1,326 +1,136 @@
+"""Legacy ``UR-Extractor`` compatibility command backed by the v2 core."""
+
+from __future__ import annotations
+
 import argparse
 import collections
-from datetime import date
-import gzip
-import sys,os
+import sys
+from pathlib import Path
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    __package__ = "StORF_Reporter"
+
+from .constants import StORF_Reporter_Version
+from .core import extract_unannotated_regions, feature_matches_gene_ident
+from .io import InputFormatError
+from .models import RunSummary
+from .utils import parse_bool as _bool
+from .workflow import AnalysisResult, load_annotated_genome, logical_stem, write_region_outputs
 
 
-try:
-    from .constants import *
-except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
-    from constants import *
-
-def has_fasta_section(gff_file_path):
-    with open(gff_file_path, 'r') as file:
-        # Go to the end of the file and read backwards to search for '##FASTA'
-        for line in reversed(list(file)):
-            if line.strip() == "##FASTA":
-                return True
-    return False
-
-
-#Output FASTA and GFF separately using the same filename but with respective extensions - gz output optional
-def write_fasta(dna_regions, options, fasta_out):
-    for dna_region, dna_region_ur in dna_regions.items():
-        ur_ident = dna_region + options.ident # Add user ident onto name of dna regions
-        if dna_region_ur[3]:
-            for ex_ur, data in dna_region_ur[3].items():
-                #original_ur = data[0]
-                ur_seq = data[1]
-                fasta_out.write('>' + ur_ident + '_' + ex_ur + '\n' + ur_seq + '\n')
-    fasta_out.close()
-
-
-
-def write_gff(dna_regions,options,gff_out):
-    gff_out.write("##gff-version\t3\n#\tUR-Extractor \n#\tRun Date:" + str(date.today()) + '\n')
-    gff_out.write('##Single_Genome ' + StORF_Reporter_Version + '\n')
-    gff_out.write("##Original Files: " + options.fasta.split('/')[-1] + ' | ' + options.gff.split('/')[-1] + '\n')
-    for seq_reg in dna_regions:
-        gff_out.write('##sequence-region\t' + seq_reg + ' 1 ' + str(dna_regions[seq_reg][1]) + '\n')
-
-    for dna_region, dna_region_ur in dna_regions.items():
-        gff_out.write('###\n' + dna_region + '\t' + options.fasta.split('/')[-1].split('.')[0] + '\tregion\t1\t' + str(dna_region_ur[1]) + '\t.\t.\t.\tID=region:' + dna_region + '\n###\n')
-        ur_ident = dna_region + options.ident
-        if dna_region_ur[3]:
-            for ex_ur, data in dna_region_ur[3].items():
-                length = len(data[1])
-                ex_ur_pos = ex_ur.replace('_','\t')
-                entry = (dna_region + '\tUR_Extractor\tunannotated_region\t' + ex_ur_pos + '\t.\t.\t.\tID='+ur_ident+'_'+ex_ur+';' + 'Original_UR=' + str(data[0]) + ';Note=UR_Length(Extended):' + str(length) + '\n')
-                gff_out.write(entry)
-    gff_out.close()
-
-def fasta_load(fasta_in):
-    dna_regions = collections.OrderedDict()
-    first = True
-    if '>' in fasta_in.readline().rstrip():
-        fasta_in.seek(0)
-        #### Default for when presented with standard fasta file
-        for line in fasta_in:
-            line = line.strip()
-            if line.startswith('>') and first == False:  # Check if first seq in file
-                dna_region_length = len(seq)
-                dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
-                seq = ''
-                dna_region_id = line.split()[0].replace('>', '')
-            elif line.startswith('>'):
-                seq = ''
-                dna_region_id = line.split()[0].replace('>', '')
-            else:
-                seq += str(line)
-                first = False
-        dna_region_length = len(seq)
-        dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
-    elif '##' in  fasta_in.readline().rstrip(): # Clunky and may fall over
-        fasta_in.seek(0)
-        #### Called when presented with Prokka GFF file so must get fasta from inside it
-        ### Get to genome seq
-        at_FASTA = False
-        for line in fasta_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
-            if line.startswith('##FASTA'):  # Not to crash on empty lines in GFF
-                at_FASTA = True
-            elif at_FASTA == True:
-                line = line.strip()
-                if line.startswith('>') and first == False:  # Check if first seq in file
-                    dna_region_length = len(seq)
-                    dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
-                    seq = ''
-                    dna_region_id = line.split()[0].replace('>', '')
-                elif line.startswith('>'):
-                    seq = ''
-                    dna_region_id = line.split()[0].replace('>', '')
-                else:
-                    seq += str(line)
-                    first = False
-        dna_region_length = len(seq)
-        dna_regions.update({dna_region_id: (seq, dna_region_length, list(), None)})
-
-    return dna_regions
-
-def pyrodigal_virtual_gff_load(gff_in,dna_regions):
-    with open(gff_in.name, "r") as gff:
-        tmp = gff.read()
-        for line in tmp.splitlines():
-            line_data = line.split()
-            if line.startswith('\n') or line.startswith('#'):  # Not to crash on empty lines in GFF
-                continue
-            else:
-                try:
-                    if line_data[0] in dna_regions:
-                        if 'CDS' in line_data[2]: # line[2] for normal run
-                            pos = line_data[3] + '_' + line_data[4]
-                            if pos not in dna_regions[line_data[0]][2]:
-                                dna_regions[line_data[0]][2].append(pos) # This will add to list
-                except IndexError:
-                    continue
-    return dna_regions
-
-def gff_load(options,gff_in,dna_regions):
-    for line in gff_in:  # Get gene loci from GFF - ID=Gene will also classify Pseudogenes as genes
-        line_data = line.split('\t')
-        if line.startswith('\n') or line.startswith('#') or 'European Nucleotide Archive' in line:  # Not to crash on empty lines in GFF
-            continue
-        elif options.gene_ident[0] == 'ID=gene':
-            if line_data[0] in dna_regions and options.gene_ident[0] in line_data[8]:
-                pos = line_data[3] + '_' + line_data[4]
-                dna_regions[line_data[0]][2].append(pos) # This will add to list
-        else:
-            try:
-                if line_data[2] == 'region':
-                    continue
-                elif line_data[0] in dna_regions:
-                    if any(gene_type in line_data[2] for gene_type in options.gene_ident): # line[2] for normal run
-                        pos = line_data[3] + '_' + line_data[4]
-                        if pos not in dna_regions[line_data[0]][2]:
-                            dna_regions[line_data[0]][2].append(pos) # This will add to list
-            except IndexError:
-                continue
-    return dna_regions
-
-def extractor(options):
-    if options.annotation_type[0] == 'Pyrodigal':
-        try:  # Detect whether fasta/gff files are .gz or text and read accordingly
-            fasta_in = gzip.open(options.fasta, 'rt')
-            dna_regions = fasta_load(fasta_in)
-        except:
-            fasta_in = open(options.fasta, 'r', encoding='unicode_escape')
-            dna_regions = fasta_load(fasta_in)
-        dna_regions = pyrodigal_virtual_gff_load(options.gff, dna_regions)
-    else:
-        try:
-            try: # Detect whether fasta/gff files are .gz or text and read accordingly
-                fasta_in = gzip.open(options.fasta,'rt')
-                dna_regions = fasta_load(fasta_in)
-            except:
-                fasta_in = open(options.fasta,'r',encoding='unicode_escape')
-                dna_regions = fasta_load(fasta_in)
-            try:
-                gff_in = gzip.open(options.gff,'rt')
-                dna_regions = gff_load(options,gff_in,dna_regions)
-            except:
-                gff_in = open(options.gff,'r',encoding='unicode_escape')
-                dna_regions = gff_load(options,gff_in,dna_regions)
-        except AttributeError:
-            sys.exit("Attribute Error:\nStORF'ed GFF probably already exists - Must be deleted before running (-overwrite)")
-        except FileNotFoundError:
-            split_path = options.gff.split(os.sep)
-            sys.exit("Directory '" + split_path[-2] + "' missing fna/gff files")
+def _result(options: argparse.Namespace) -> AnalysisResult:
+    document, sequences = load_annotated_genome(options.gff, getattr(options, "fasta", None))
+    regions = extract_unannotated_regions(
+        sequences,
+        document.features,
+        min_length=int(options.minlen),
+        max_length=int(options.maxlen),
+        extension=int(options.exlen),
+        gene_ident=options.gene_ident,
+    )
+    return AnalysisResult(
+        sequences=sequences,
+        features=document.features,
+        regions=regions,
+        candidates=[],
+        summary=RunSummary(
+            sequences=len(sequences),
+            annotations=len(document.features),
+            unannotated_regions=len(regions),
+        ),
+        document=document,
+        input_gff=Path(options.gff).resolve(),
+        input_fasta=Path(options.fasta).resolve() if getattr(options, "fasta", None) else None,
+        sample=logical_stem(options.gff),
+    )
 
 
-    for (key,(seq,seq_length,posns,URs))  in dna_regions.items(): #Extract URs from 1 dna_region at a time
-        unannotated_regions = collections.OrderedDict()
-        unannotated_start = 0
-        if posns: # If UR has a pos
-            for pos in posns: # Iterate over GFF loci and measure flanking regions for potential URs
-                start = int(pos.split('_')[0])
-                stop = int(pos.split('_')[1])
-                ###### This hack is to account for GFF 'errors' which contain genome-long annotations
-                if stop-start >= 100000:
-                    if options.verbose == True:
-                        print("UR " + pos + " is more than 100,000 kbs - Please Check Annotation")
-                    continue
-                if  stop-start+1 == seq_length and len(posns) == 1: # Catching regions without annotation - Return whole return as 'UR'
-                    original_UR = str(start) + '_' + str(stop)
-                    unannotated_seq = seq
-                    unannotated_loci = str(start) + '_' + str(stop) # We can't extend 50nt
-                    unannotated_regions.update({unannotated_loci: [original_UR, unannotated_seq]})
-                    dna_regions.update({key: (seq, seq_length, posns, unannotated_regions)})
-                    continue
-                elif stop-start+1 == seq_length:
-                    continue
-                if start > unannotated_start:
-                    length = start - unannotated_start
-                    if length >= options.minlen and length <= options.maxlen: #default between 30 - 100,000
-                        original_UR = str(max(unannotated_start,1)) + '_' + str(start)
-                        unannotated_start = max(unannotated_start - options.exlen, 0) # 0 here for pythons base-o here is for the GFF base-1 reporting format
-                        start += options.exlen
-                        unannotated_seq = seq[unannotated_start:start]
-                        unannotated_loci = str(max(unannotated_start,1)) + '_' + str(start)
-                        unannotated_regions.update({unannotated_loci: [original_UR,unannotated_seq]})
-                if stop > unannotated_start:
-                    unannotated_start = stop
-            try:
-                if (seq_length - stop) >= options.minlen and (seq_length - stop) <= options.maxlen: #default between 30 - 100,000: # Get UR at end of dna_region if longer than minlen
-                    original_UR = str(max(unannotated_start, 1)) + '_' + str(start)
-                    stop -= options.exlen
-                    unannotated_seq = seq[stop:seq_length]
-                    unannotated_loci = str(stop) + '_' + str(seq_length)
-                    unannotated_regions.update({unannotated_loci: [original_UR,unannotated_seq]})
-            except UnboundLocalError:
-                pass
-            dna_regions.update({key: (seq, seq_length, posns, unannotated_regions)})
+def extractor(options: argparse.Namespace):
+    """Compatibility API used by older StORF-Reporter releases.
 
-    if options.nout == False:
-        write_fasta(dna_regions, options, options.fasta_out)
-        write_gff(dna_regions, options, options.gff_out)
-    else:
-        return dna_regions
+    When ``options.nout`` is true, return the historical dictionary structure;
+    otherwise write standards-compliant UR FASTA and GFF3 outputs.
+    """
+
+    result = _result(options)
+    if bool(getattr(options, "nout", False)):
+        legacy = collections.OrderedDict()
+        by_seqid: dict[str, collections.OrderedDict[str, list[str]]] = {}
+        for seqid in result.sequences:
+            by_seqid[seqid] = collections.OrderedDict()
+        for region in result.regions:
+            ext_start, ext_end = region.extended.to_gff()
+            core_start, core_end = region.core.to_gff()
+            by_seqid[region.seqid][f"{ext_start}_{ext_end}"] = [
+                f"{core_start}_{core_end}",
+                region.sequence,
+            ]
+        positions: dict[str, list[str]] = {seqid: [] for seqid in result.sequences}
+        for feature in result.features:
+            if feature_matches_gene_ident(feature, options.gene_ident):
+                positions[feature.seqid].append(f"{feature.interval.start + 1}_{feature.interval.end}")
+        for seqid, sequence in result.sequences.items():
+            legacy[seqid] = (sequence, len(sequence), sorted(positions[seqid]), by_seqid[seqid])
+        return legacy
+
+    prefix = getattr(options, "output_prefix", None)
+    if prefix is None:
+        output_dir = Path(getattr(options, "o_dir", None) or Path(options.gff).parent)
+        name = getattr(options, "o_name", None) or logical_stem(options.gff)
+        prefix = output_dir / name
+    paths = write_region_outputs(
+        result,
+        prefix,
+        gzip_output=bool(getattr(options, "gz", False)),
+        overwrite=bool(getattr(options, "overwrite", False)),
+        gene_ident=str(options.gene_ident),
+    )
+    return paths
 
 
-def main():
-
-    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': UR-Extractor Run Parameters.')
-    parser._action_groups.pop()
-
-    required = parser.add_argument_group('Required Arguments')
-    required.add_argument('-gff', action='store', dest='gff', required=True,
-                        help='GFF file containing genome annotation')
-
-    optional = parser.add_argument_group('Optional Arguments')
-    optional.add_argument('-f', action='store', dest='fasta', required=False,
-                        help='Accompanying FASTA file if GFF file does not contain sequence data')
-    optional.add_argument('-ident', action='store', dest='ident', default='_UR',
-                        help='Identifier given for Unannotated Region output sequences - Do not modify if output is '
-                             'to be used by StORF-Finder: Default "Sequence-ID"_UR')
-    optional.add_argument('-min_len', action='store', dest='minlen', default='30', type=int,
-                        help='Minimum UR Length: Default 30')
-    optional.add_argument('-max_len', action='store', dest='maxlen', default='100000', type=int,
-                        help='Maximum UR Length: Default 100,000')
-    optional.add_argument('-ex_len', action='store', dest='exlen', default='50', type=int,
-                        help='UR Extension Length on 5\' and 3\': Default 50')
-    optional.add_argument('-gene_ident', action='store', dest='gene_ident', default='CDS',
-                          help='Default: "CDS". Specifies feature types to exclude from Unannotated rRegion extraction. '
-                               'Provide a comma-separated list of feature types, e.g., "misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo", '
-                               'to identify annotated regions. "-gene_ident Prokka" will select "most" features present in Prokka/Bakta annotations'
-                               '- Providing "ID=gene" will check the attribute column for features assigned as genes (compatible with Ensembl annotations).'
-                               ' All regions without these feature types will be extracted as unannotated.')
-
-    output = parser.add_argument_group('Output')
-    output.add_argument('-oname', action="store", dest='o_name', required=False,
-                        help='Default - Appends \'_UR\' to end of input GFF filename')
-    output.add_argument('-odir', action="store", dest='o_dir', required=False,
-                        help='Default -  Same directory as input GFF')
-    output.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
-                        help='Default - False: Output as .gz')
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="UR-Extractor",
+        description=f"StORF-Reporter {StORF_Reporter_Version}: extract unannotated regions",
+    )
+    parser.add_argument("-gff", required=True, help="GFF3 genome annotation")
+    parser.add_argument("-f", dest="fasta", help="matching FASTA; optional for embedded FASTA GFF3")
+    parser.add_argument("-ident", default="_UR", help=argparse.SUPPRESS)
+    parser.add_argument("-min_len", dest="minlen", type=int, default=30)
+    parser.add_argument("-max_len", dest="maxlen", type=int, default=100_000)
+    parser.add_argument("-ex_len", dest="exlen", type=int, default=50)
+    parser.add_argument(
+        "-gene_ident",
+        dest="gene_ident",
+        default="CDS",
+        help=(
+            "feature types that occupy annotated regions: CDS by default; provide an exact "
+            "comma-separated list, Prokka/Bakta, or ID=gene for attribute-prefix matching"
+        ),
+    )
+    parser.add_argument("-oname", dest="o_name")
+    parser.add_argument("-odir", dest="o_dir")
+    parser.add_argument("-gz", dest="gz", type=_bool, default=False)
+    parser.add_argument("-verbose", dest="verbose", type=_bool, default=False)
+    parser.add_argument("-nout", dest="nout", type=_bool, default=False, help=argparse.SUPPRESS)
+    parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("-v", "--version", action="version", version=StORF_Reporter_Version)
+    return parser
 
 
-    misc = parser.add_argument_group('Misc')
-    misc.add_argument('-verbose', action='store', dest='verbose', default=False, type=eval, choices=[True, False],
-                        help='Default - False: Print out runtime messages')
-    misc.add_argument('-v', action='store_true', dest='version',
-                        help='Default - False: Print out version number and exit')
-    misc.add_argument('-nout', action='store', dest='nout', default='False', type=eval, choices=[True, False],
-                        help=argparse.SUPPRESS)
-    misc.add_argument('-pyrodigal', action='store', dest='pyrodigal', default='False', type=eval, choices=[True, False],
-                        help=argparse.SUPPRESS)
-    misc.add_argument('-nout_pyrodigal', action='store', dest='nout_pyrodigal', default='True', type=eval, choices=[True, False],
-                        help=argparse.SUPPRESS)
-
-    options = parser.parse_args()
-
-    if options.fasta == None and has_fasta_section(options.gff):
-        print("Thank you for using UR-Extractor -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
-            "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
-        options.fasta = options.gff
-    elif options.fasta == None and not has_fasta_section(options.gff):
-        sys.exit("The GFF file does not contain a FASTA section - Please provide accomying FASTA file with -f.")
-    # elif options.fasta != None and options.gff != None:
-    #     continue
-
-
-    ## User selects Prokka 'standard' Features
-    if options.gene_ident == 'Prokka':
-        options.gene_ident = 'misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo'
-
-
-    options.annotation_type = [None,None]
-
-    #### Output Directory and Filename handling
-    if options.o_dir == None and options.o_name == None:
-        tmp_extension = options.gff.split('.')[-1]
-        output_file = options.gff.replace('.' + tmp_extension, '')
-        output_file = output_file + '_UR'
-    elif options.o_dir != None and options.o_name != None:
-        output_file = options.o_dir
-        output_file = output_file + '/' if not output_file.endswith('/') else output_file
-        output_file = output_file + options.o_name
-    elif options.o_dir != None:
-        tmp_extension = options.gff.split('.')[-1]
-        output_file = options.gff.replace('.' + tmp_extension, '').split('/')[-1]
-        output_file = options.o_dir + output_file + '_UR'
-    elif options.o_name != None:
-        tmp_filename = options.gff.split('/')[-1]
-        output_file = options.gff.replace(tmp_filename, '')
-        output_file = output_file + options.o_name
-
-    output_file = os.path.normpath(output_file)
-    output_file = os.path.realpath(output_file)
-
-    if options.gz == False:
-        options.fasta_out = open(output_file + '.fasta','w', newline='\n', encoding='utf-8')
-        options.gff_out =  open(output_file + '.gff','w', newline='\n', encoding='utf-8')
-    elif options.gz == True:
-        options.fasta_out = gzip.open(output_file + '.fasta.gz','wt', newline='\n', encoding='utf-8')
-        options.gff_out =  gzip.open(output_file + '.gff.gz','wt', newline='\n', encoding='utf-8')
-
-    options.gene_ident = options.gene_ident.split(',')
-    extractor(options)
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    options = parser.parse_args(argv)
+    try:
+        paths = extractor(options)
+        if options.verbose and paths:
+            print(f"UR FASTA: {paths[0]}\nUR GFF3: {paths[1]}")
+        return 0
+    except (FileExistsError, FileNotFoundError, InputFormatError, OSError, ValueError) as error:
+        parser.error(str(error))
+    return 2
 
 
 if __name__ == "__main__":
-    main()
-    print("Complete")
-
-
-
-
+    raise SystemExit(main())

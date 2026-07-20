@@ -1,0 +1,96 @@
+<tool id="storf_augment" name="StORF-Reporter augment" version="2.0.0+galaxy0" profile="23.0">
+  <description>discover and prioritise stop-to-stop ORFs</description>
+  <requirements>
+    <requirement type="package" version="2.0.0">storf-reporter</requirement>
+  </requirements>
+  <command detect_errors="exit_code"><![CDATA[
+    mkdir -p results &amp;&amp;
+    storf augment
+      --input '$gff'
+      --fasta '$fasta'
+      --outdir results
+      --genetic-code '$genetic_code'
+      --min-orf '$min_orf'
+      --max-orf '$max_orf'
+      --gene-ident '$gene_ident'
+      --primary-tier '$primary_tier'
+      --gff-coordinate-mode '$gff_coordinate_mode'
+      --overlap-coordinate-basis '$overlap_coordinate_basis'
+    #if $include_consecutive
+      --include-consecutive
+    #end if
+    #if $include_first_stop
+      --include-first-stop
+    #end if
+    #if $remove_inframe_stops
+      --remove-inframe-stops
+    #end if
+      --protein-coordinate-mode '$protein_coordinate_mode'
+    #if str($promote) != 'none'
+      --promote-cds '$promote'
+    #else
+      --no-promote-cds
+    #end if
+      --overwrite
+  ]]></command>
+  <inputs>
+    <param name="gff" type="data" format="gff3" label="Genome annotation" />
+    <param name="fasta" type="data" format="fasta" label="Genome FASTA" />
+    <param name="genetic_code" type="select" label="NCBI genetic code">
+      <option value="11" selected="true">11 — bacterial</option>
+      <option value="4">4 — Mycoplasma/Spiroplasma</option>
+      <option value="1">1 — standard</option>
+    </param>
+    <param name="min_orf" type="integer" value="99" min="6" label="Minimum StORF length" />
+    <param name="max_orf" type="integer" value="60000" min="6" label="Maximum StORF length" />
+    <param name="gene_ident" type="text" value="CDS" label="Annotated-region selector">
+      <help>Use exact comma-separated feature types, Prokka/Bakta, or ID=gene for Ensembl attribute matching.</help>
+    </param>
+    <param name="primary_tier" type="select" label="Lowest tier included in primary outputs">
+      <option value="exploratory" selected="true">all retained candidates</option>
+      <option value="medium">medium and high; exploratory in review files</option>
+      <option value="high">high only; lower tiers in review files</option>
+    </param>
+    <param name="gff_coordinate_mode" type="select" label="Candidate coordinates in GFF3">
+      <option value="stop-to-stop" selected="true">stop-derived locus; omit upstream stop</option>
+      <option value="start-to-stop">ranked start to terminal stop</option>
+    </param>
+    <param name="include_first_stop" type="boolean" checked="false"
+           label="Include upstream delimiting stop" help="Include the first stop codon in candidate GFF3 columns and nucleotide FASTA." />
+    <param name="remove_inframe_stops" type="boolean" checked="false"
+           label="Remove internal stop symbols from protein FASTA" help="Removes * from protein output only; nucleotide loci are unchanged." />
+    <param name="protein_coordinate_mode" type="select" label="Protein FASTA coordinates">
+      <option value="candidate" selected="true">reported stop-derived candidate locus</option>
+      <option value="coding">ranked CodingCoordinates (explicit)</option>
+    </param>
+    <param name="overlap_coordinate_basis" type="select" label="Coordinates used for overlap filtering">
+      <option value="coding" selected="true">ranked coding interval</option>
+      <option value="candidate">full stop-to-stop candidate</option>
+    </param>
+    <param name="include_consecutive" type="boolean" checked="false"
+           label="Enable competing Con-StORFs" help="Maximal multi-stop Con-StORFs enter the same overlap ranking and can replace ordinary StORFs." />
+    <param name="promote" type="select" label="Minimum tier promoted to CDS">
+      <option value="none" selected="true">do not promote; retain candidates as ORFs</option>
+      <option value="high">high</option>
+      <option value="medium">medium</option>
+      <option value="exploratory">exploratory</option>
+    </param>
+  </inputs>
+  <outputs>
+    <collection name="results" type="list" label="StORF-Reporter results">
+      <discover_datasets pattern="__name_and_ext__" directory="results" recurse="true" />
+    </collection>
+  </outputs>
+  <help><![CDATA[
+Evidence scores are prioritisation heuristics, not calibrated gene probabilities.
+CDS promotion additionally requires complete-ORF structural validation. The output
+collection includes augmented and UR GFF3/FASTA, TSV, HTML, validation JSON, and
+manifest files. Candidates are coordinate-interleaved in the augmented GFF3; calls
+below the selected primary tier are preserved in separate review files.
+The annotated-region selector accepts exact feature types, the Prokka/Bakta alias,
+or an attribute-prefix query such as ID=gene.
+  ]]></help>
+  <citations>
+    <citation type="doi">10.1093/nar/gkad814</citation>
+  </citations>
+</tool>

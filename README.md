@@ -1,387 +1,350 @@
-# StORF-Reporter has now been published in NAR: https://doi.org/10.1093/nar/gkad814
+# StORF-Reporter
 
-### StORF-Reporter, a toolkit that returns missed CDS genes from the Unannotated Regions (URs) of prokaryotic genomes.
+StORF-Reporter discovers and prioritises stop-to-stop open reading frame
+(StORF) candidates in unannotated regions of prokaryotic genomes. It augments
+an existing annotation without replacing the original gene caller.
 
-# Please use `pip install StORF-Reporter' to install StORF-Reporter.
-### This will also install the python-standard library numpy (>=1.22.0,<1.24.0) and Pyrodigal (https://github.com/althonos/pyrodigal).
-### Consider using '--no-cache-dir' with pip to ensure the download of the newest version of StORF-Reporter.
+> **v2 release:** predictions are candidates, not automatically
+> proven genes. Unpromoted candidates use the Sequence Ontology-compatible
+> `ORF` type. The default high-tier policy changes structurally valid candidates
+> to `CDS`; use `--promote-cds` to select another tier or `--no-promote-cds` to
+> retain every feature as `ORF`/`StORF`. Promotion changes the feature type, not
+> the reported stop-derived locus.
 
-<!---
-## Please Note: To report Con-StORFs (Pseudogenes and genes that have alternative use of stop codons), use "-con_storfs True". To disable the reporting of StORFs use "-con_only". 
---->
-### The directory "Test_Datasets" is provided to confirm functionality of StORF-Reporter.
+[![CI](https://github.com/NickJD/StORF-Reporter/actions/workflows/ci.yml/badge.svg)](https://github.com/NickJD/StORF-Reporter/actions/workflows/ci.yml)
+[![DOI](https://img.shields.io/badge/DOI-10.1093%2Fnar%2Fgkad814-blue)](https://doi.org/10.1093/nar/gkad814)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-#############################################################
-# StORF-Reporter:
-<img src="./Visual_Abstract.jpg"  width="75%" height="50%"/>
+![StORF-Reporter visual abstract](Visual_Abstract.jpg)
 
-## Most common use cases - 
-### Supplement a current annotation from a tool such as Prokka or Bakta. A new GFF file will be created compatible with downstream pangenome analysis tools such as Roary and Panaroo.
+## Install
 
-#### For use on a single Prokka/Bakta output directory - Will also create a new fasta file with Prokka/Bakta genes and StORF sequences.
-```console
-StORF-Reporter -anno Prokka Out_Dir -p .../Test_Datasets/Prokka_E-coli/
-```
-#### For use on multiple Prokka/Bakta output directies - Will also create a new fasta file with Prokka/Bakta genes and StORF sequences.
-```console
-StORF-Reporter -anno Prokka Multiple_Out_Dirs -p ../Test_Datasets/Multi_Prokka_Outs
-```
-#### For use on a directory containing multiple Prokka/Bakta output gffs - Only produces new GFF files. 
-```console
-StORF-Reporter -anno Prokka Multiple_GFFs -p .../Test_Datasets/Prokka_Outputs/
-```
+The release can be installed from a checkout:
 
-#### For use on a GFF file from a CDS prediction tool such as Prodigal - Provide a GFF file and StORF-Reporter will find the matching .fa/.fasta/.fna (must have the same name). 
-```console
-StORF-Reporter -anno Feature_Types Single_Genome -p .../Test_Datasets/Matching_GFF_FASTA/Myco.gff
-```
-
-#### For use on a directory containing multiple GFF files from a CDS prediction tool such as Prodigal - StORF-Reporter will find the matching .fa/.fasta/.fna (must have the same name). 
-```console
-StORF-Reporter -anno Feature_Types Multiple_Genomes -p .../Test_Datasets/Matching_GFF_FASTA/
-```
-
-#### For use on a directory containing multiple GFF files with embedded FASTA. 
-```console
-StORF-Reporter -anno Feature_Types Multiple_Combined_GFFs -p .../Test_Datasets/Combined_GFFs/
-```
-
-#### To perform a fresh end-to-end annotation of a genome without an annotation, StORF-Reporter will use Pyrodigal to predict CDS genes and then supplement with StORFs. 
-```console
-StORF-Reporter -anno Pyrodigal Single_FASTA -p .../Test_Datasets/Pyrodigal/E-coli.fa
-```
-
-### Menu - (StORF-Reporter -h):
-```console
-StORF-Reporter -anno Ensembl Single_Genome -p .../Test_Datasets/Matching_GFF_FASTA/E-coli.gff
-```
 ```bash
-StORF-Reporter v1.4.7: StORF-Reporter Run Parameters.
-
-Required Options:
-  -anno [{Prokka,Bakta,Out_Dir,Multiple_Out_Dirs,Single_GFF,Multiple_GFFs,Ensembl,Feature_Types,Single_Genome,Multiple_Genomes,Single_Combined_GFF,Multiple_Combined_GFFs,Pyrodigal,Single_FASTA,Multiple_FASTA} ...]
-                        Select Annotation and Input options for one of the 3 options listed below
-                        ### Prokka/Bakta Annotation Option 1: 
-                        	Prokka = Report StORFs for a Prokka annotation; 
-                        	Bakta = Report StORFs for a Bakta annotation; 
-                        --- Prokka/Bakta Input Options: 
-                        	Out_Dir = To provide the output directory of either a Prokka or Bakta run (will produce a new GFF and FASTA file containing original and extended annotations); 
-                        	Multiple_Out_Dirs = To provide a directory containing multiple Prokka/Bakta standard output directories - Will run on each sequentially; 
-                        	Single_GFF = To provide a single Prokka or Bakta GFF - searches for accompanying ".fna" file (will provide a new extended GFF); 
-                        	Multiple_GFFs = To provide a directory containing multiple Prokka or Bakta GFF files - searches for accompanying ".fna" files (will provide a new extended GFF); 
-                        
-                        ### Standard GFF Annotation Option 2: 
-                        	Ensembl = Report StORFs for an Ensembl Bacteria annotation (ID=gene); 
-                        	Feature_Types = Used in conjunction with -gene_ident to define features such as CDS,rRNA,tRNA for UR extraction (default CDS); 
-                        --- Standard GFF Input Options: 
-                        	Single_Genome = To provide a single Genome - accompanying FASTA must share same name as given gff file (can be .fna, .fa or .fasta); 
-                        	Multiple_Genomes = To provide a directory containing multiple accompanying GFF and FASTA files - files must share the same name (fasta can be .fna, .fa or .fasta); 
-                        	Single_Combined_GFF = To provide a GFF file with embedded FASTA at the bottom; 
-                        	Multiple_Combined_GFFs = To provide a directory containing multiple GFF files with embedded FASTA at the bottom; 
-                        
-                        ### Complete Annotation Option 3: 
-                        	Pyrodigal = Run Pyrodigal then Report StORFs (provide path to single FASTA or directory of multiple FASTA files ;
-                        --- Complete Annotation Input Options: 
-                        	Single_FASTA = To provide a single FASTA file; 
-                        	Multiple_FASTA = To provide a directory containing multiple FASTA files (will detect .fna,.fa,.fasta); 
-                        
-  -p PATH               Provide input file or directory path
-
-StORF-Reporter Options:
-  -af ALT_FILENAME      Default - Prokka/Bakta output directory share the same prefix with their gff/fna files - Use this option when Prokka/Bakta output
-                        directory name is different from the gff/fna files within and StORF-Reporter will search for the gff/fna with the given prefix
-                        (MyProkkaDir/"altname".gff) - Does not work with "Multiple_Out_Dirs" option
-  -oname O_NAME         Default - Appends '_StORF-Reporter_Extended' to end of input filename - Takes the directory name of Prokka/Bakta output if given as
-                        input or the input for -af if given - Multiple_* runs will be numbered
-  -odir O_DIR           Default - Same directory as input
-  -sout {True,False}    Default - False: Print out StORF sequences separately from Prokka/Bakta annotations
-  -lw {True,False}      Default - True: Line wrap FASTA sequence output at 60 chars
-  -aa                   Default - False: Report StORFs as amino acid sequences
-  -gz {True,False}      Default - False: Output as .gz
-
-Pyrodigal Options:
-  -py_train [{longest,individual,meta}]
-                        Default - longest: Type of model training to be done for Pyrodigal CDS prediction: Options: longest = Trains on longest contig;
-                        individual = Trains on each contig separately - runs in meta mode if contig is < 20KB; meta = Runs in meta mode for all sequences
-  -py_fasta {True,False}
-                        Default - False: Output Pyrodigal+StORF predictions in FASTA format
-  -py_unstorfed {True,False}
-                        Default - False: Provide GFF containing original Pyrodigal predictions
-
-UR-Extractor Options:
-  -gene_ident GENE_IDENT
-                        Default: "CDS". Specifies feature types to exclude from Unannotated rRegion extraction. Provide a comma-separated list of feature
-                        types, e.g., "misc_RNA,gene,mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_region,oriC,pseudo", to identify annotated regions. -
-                        To be used with "-anno Feature_Types" - "-gene_ident Prokka" will select "most" features present in Prokka/Bakta annotations-
-                        Providing "ID=gene" will check the attribute column for features assigned as genes (compatible with Ensembl annotations). All
-                        regions without these feature types will be extracted as unannotated.
-  -min_len MINLEN       Default - 30: Minimum UR Length
-  -max_len MAXLEN       Default - 100,000: Maximum UR Length
-  -ex_len EXLEN         Default - 50: UR Extension Length
-
-StORF-Finder Options:
-  -spos {True,False}    Default - False: Output StORF sequences and GFF positions inclusive of first stop codon -This can break some downstream tools if
-                        changed to True.
-  -rs {True,False}      Default - True: Remove stop "*" from StORF amino acid sequences
-  -con_storfs {True,False}
-                        Default - False: Output Consecutive StORFs
-  -con_only {True,False}
-                        Default - False: Only output Consecutive StORFs
-  -ps {True,False}      Default - False: Partial StORFs reported
-  -wc {True,False}      Default - False: StORFs reported across entire sequence
-  -short_storfs {False,Nolap,Olap}
-                        Default - False: Run StORF-Finder in "Short-StORF" mode. Will only return StORFs between 30 and 120 nt that do not overlap longer
-                        StORFs - Only works with StORFs for now. "Nolap" will filter Short-StORFs which areoverlapped by StORFs and Olap will report Short-
-                        StORFs which do overlap StORFs. Overlap is defined by "-olap".
-  -short_storfs_only {True,False}
-                        Default - True. Only report Short-StORFs?
-  -minorf MIN_ORF       Default - 99: Minimum StORF size in nt
-  -maxorf MAX_ORF       Default - 60kb: Maximum StORF size in nt
-  -codons STOP_CODONS   Default - ('TAG,TGA,TAA'): List Stop Codons to use
-  -olap_filt [{none,single-strand,both-strand}]
-                        Default - "both-strand": Filtering level "none" is not recommended, "single-strand" for single strand filtering and both-strand for
-                        both-strand longest-first tiling
-  -start_filt {True,False}
-                        Default - False: Filter out StORFs without at least one of the 3 common start codons (best used for short-storfs).
-  -so [{start_pos,strand}]
-                        Default - Start Position: How should StORFs be ordered when >1 reported in a single UR.
-  -f_type [{StORF,CDS,ORF}]
-                        Default - "CDS": Which GFF feature type for StORFs to be reported as in GFF - "CDS" is probably needed for use in tools such as
-                        Roary and Panaroo
-  -non_standard NON_STANDARD
-                        Default - 0.20: Reject StORFs with >=20% non-standard nucleotides (A,T,G,C) - Provide % as decimal
-  -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which can overlap another StORF.
-  -ao ALLOWED_OVERLAP   Default - 50 nt: Maximum overlap between a StORF and an original gene.
-
-Misc:
-  -overwrite, --overwrite
-                        Default - False: Overwrite StORF-Reporter output if already present
-  -verbose, --verbose   Default - False: Print out runtime messages
-  -v, --version         Print out version number and exit
-
+python -m pip install .
+storf install-check
 ```
 
-###################################
+Python 3.9 or newer is required. Pyrodigal is installed for de novo annotation
+mode; NumPy is no longer a runtime dependency.
 
-# UR-Extractor:
-### Subpackage to extract Unannotated Regions from DNA sequences using FASTA and GFF files as input.
+Commands can also be run directly from an unpacked source tree without an
+editable install or `PYTHONPATH`:
 
-### Menu - (UR-Extractor -h):  
-```console
-UR-Extractor -f .../Test_Datasets/Matching_GFF_FASTA/E-coli.fa -gff .../Test_Datasets/Matching_GFF_FASTA/E-coli.gff
+```bash
+cd src/StORF_Reporter
+python cli.py --help
+python StORF_Finder.py --help
+```
+
+Installed console commands, `python -m StORF_Reporter.cli`, and these direct
+source-script forms all use the same package implementation.
+
+## Ten-minute workflow
+
+Run the self-contained example:
+
+```bash
+storf augment \
+  --input examples/quickstart/genome.gff3 \
+  --fasta examples/quickstart/genome.fna \
+  --outdir quickstart-results \
+  --overlap-mode none
+```
+
+The sample output directory contains:
+
+- a validated augmented GFF3;
+- unannotated-region GFF3 and FASTA files;
+- nucleotide and amino-acid candidate FASTA files;
+- a TSV explaining every evidence-score component;
+- an HTML candidate-review report;
+- a validation JSON report; and
+- a JSON run manifest with parameters, input hashes, counts, and provenance.
+
+`augment` always validates each GFF3/FASTA pair before analysis and validates
+the generated annotation again before reporting success. Input errors stop the
+sample before analysis; non-fatal warnings are shown on standard error.
+
+Validate an output independently:
+
+```bash
+storf validate \
+  --gff quickstart-results/genome/genome_StORF-Reporter.gff \
+  --fasta examples/quickstart/genome.fna
+```
+
+## Main commands
+
+```text
+storf augment       augment GFF3 annotations, files, directories, or manifests
+storf find          search ordinary FASTA sequences
+storf extract-urs   write unannotated-region GFF3 and FASTA
+storf extract       extract reported candidate sequences
+storf filter        retain candidates with BLAST/DIAMOND evidence
+storf validate      validate format/coordinates and StORF CDS structure
+storf install-check report runtime and installed-command health
+storf citation      print the preferred citation
+```
+
+Run `storf COMMAND --help` for all options.
+
+The three installed auxiliary commands are `storf-add` (coordinate-aware GFF3
+merge), `storf-uncovered` (sequence left outside selected annotations and
+reported StORFs), and `storf-lengths` (FASTA length statistics).
+
+### Batch directories
+
+```bash
+storf augment --input bakta-results/ --recursive --outdir results/
+```
+
+`--input` accepts one GFF3, one combined GFF3 containing a `##FASTA`
+section, or a directory of samples. Supply `--fasta` only when processing one
+separate GFF3/FASTA pair. Use a manifest when annotation and sequence files do
+not share a stem or are stored in different directories.
+
+Pairing is deterministic. A matching stem is preferred; ambiguous FASTA
+pairings fail with an actionable error instead of silently selecting a file.
+Use `--profile prokka`, `--profile bakta`, `--profile ensembl`, or
+`--profile cds-only` to select an annotated-region policy. `--gene-ident`
+overrides the profile and restores the original selector syntax:
+
+```bash
+# Exact, case-sensitive feature types
+storf augment ... --gene-ident CDS,rRNA,tRNA
+
+# The historical broad Prokka/Bakta feature list
+storf augment ... --gene-ident Prokka
+
+# Match the GFF3 attribute ID=gene... regardless of feature type
+storf augment ... --gene-ident ID=gene
+```
+
+The default selector is `CDS`. The `ensembl` profile maps to `ID=gene`, so
+`gene`, `ncRNA_gene`, `rRNA_gene`, `tRNA_gene`, and `pseudogene` records whose
+IDs begin with `gene` all occupy annotated sequence. `--exclude-types` remains
+as a compatibility alias for exact comma-separated feature types.
+
+### Sample manifests
+
+```tsv
+sample	gff	fasta
+isolate_1	annotations/isolate_1.gff3	genomes/isolate_1.fna
+isolate_2	annotations/isolate_2.gff3	genomes/isolate_2.fna
 ```
 
 ```bash
-usage: UR_Extractor.py [-h] -gff GFF [-f FASTA] [-ident IDENT]
-                       [-min_len MINLEN] [-max_len MAXLEN] [-ex_len EXLEN]
-                       [-gene_ident GENE_IDENT] [-oname O_NAME] [-odir O_DIR]
-                       [-gz {True,False}] [-verbose {True,False}] [-v]
-
-StORF-Reporter v1.4.7: UR-Extractor Run Parameters.
-
-Required Arguments:
-  -gff GFF              GFF file containing genome annotation
-
-Optional Arguments:
-  -f FASTA              Accompanying FASTA file if GFF file does not contain
-                        sequence data
-  -ident IDENT          Identifier given for Unannotated Region output
-                        sequences - Do not modify if output is to be used by
-                        StORF-Finder: Default "Sequence-ID"_UR
-  -min_len MINLEN       Minimum UR Length: Default 30
-  -max_len MAXLEN       Maximum UR Length: Default 100,000
-  -ex_len EXLEN         UR Extension Length on 5' and 3': Default 50
-  -gene_ident GENE_IDENT
-                        Default: "CDS". Specifies feature types to exclude
-                        from Unannotated rRegion extraction. Provide a comma-
-                        separated list of feature types, e.g., "misc_RNA,gene,
-                        mRNA,CDS,rRNA,tRNA,tmRNA,CRISPR,ncRNA,regulatory_regio
-                        n,oriC,pseudo", to identify annotated regions.
-                        "-gene_ident Prokka" will select "most" features
-                        present in Prokka/Bakta annotations- Providing
-                        "ID=gene" will check the attribute column for features
-                        assigned as genes (compatible with Ensembl
-                        annotations). All regions without these feature types
-                        will be extracted as unannotated.
-
-Output:
-  -oname O_NAME         Default - Appends '_UR' to end of input GFF filename
-  -odir O_DIR           Default - Same directory as input GFF
-  -gz {True,False}      Default - False: Output as .gz
-
-Misc:
-  -verbose {True,False}
-                        Default - False: Print out runtime messages
-  -v                    Default - False: Print out version number and exit
-
+storf augment --manifest samples.tsv --outdir results/
 ```
-## StORF-Finder:
-### Subpackage to extract StORFs from Fasta sequences - Works directly with the output of UR-Extractor.  
 
-### Menu - (StORF-Finder -h):   
-```console
-StORF-Finder -f .../Test_Datasets/Matching_GFF_FASTA/E-coli_UR.fa 
-```
+### Evidence tiers and CDS promotion
+
+Evidence scores combine candidate length, an in-frame start codon, a simple
+Shine–Dalgarno motif search, ambiguous-base burden, UR-core coverage, and any
+user-supplied external evidence. They are transparent prioritisation
+heuristics, **not calibrated probabilities**.
 
 ```bash
-usage: StORF_Finder.py [-h] -f FASTA [-ua {True,False}] [-wc {True,False}]
-                       [-ps {True,False}]
-                       [-olap_filt [{none,single-strand,both-strand}]]
-                       [-start_filt {True,False}] [-con_storfs {True,False}]
-                       [-con_only {True,False}]
-                       [-short_storfs {False,Nolap,Olap}]
-                       [-short_storfs_only {True,False}]
-                       [-f_type [{StORF,CDS,ORF}]] [-minorf MIN_ORF]
-                       [-maxorf MAX_ORF] [-codons STOP_CODONS]
-                       [-non_standard NON_STANDARD] [-olap OVERLAP_NT]
-                       [-s SUFFIX] [-so [{start_pos,strand}]] [-oname O_NAME]
-                       [-odir O_DIR] [-gff {True,False}] [-aa {True,False}]
-                       [-aa_only {True,False}] [-lw {True,False}]
-                       [-spos {True,False}] [-stop_ident {True,False}]
-                       [-gff_fasta {True,False}] [-gz {True,False}]
-                       [-verbose {True,False}] [-v]
+# Keep every retained candidate as ORF/StORF
+storf augment --input annotation.gff3 --fasta genome.fna --no-promote-cds
 
-StORF-Reporter v1.4.7: StORF-Finder Run Parameters.
-
-Required Arguments:
-  -f FASTA              Input FASTA File - (UR_Extractor output)
-
-Optional Arguments:
-  -ua {True,False}      Default - Treat input as Unannotated: Use "-ua False"
-                        for standard fasta
-  -wc {True,False}      Default - False: StORFs reported across entire
-                        sequence
-  -ps {True,False}      Default - False: Partial StORFs reported
-  -olap_filt [{none,single-strand,both-strand}]
-                        Default - "both-strand": Filtering level "none" is not
-                        recommended, "single-strand" for single strand
-                        filtering and both-strand for both-strand longest-
-                        first tiling
-  -start_filt {True,False}
-                        Default - False: Filter out StORFs without at least
-                        one of the 3 common start codons (best used for short-
-                        storfs).
-  -con_storfs {True,False}
-                        Default - False: Output Consecutive StORFs
-  -con_only {True,False}
-                        Default - False: Only output Consecutive StORFs
-  -short_storfs {False,Nolap,Olap}
-                        Default - False: Run StORF-Finder in "Short-StORF"
-                        mode. Will only return StORFs between 30 and 120 nt
-                        that do not overlap longer StORFs - Only works with
-                        StORFs for now. "Nolap" will filter Short-StORFs which
-                        areoverlapped by StORFs and Olap will report Short-
-                        StORFs which do overlap StORFs. Overlap is defined by
-                        "-olap".
-  -short_storfs_only {True,False}
-                        Default - True. Only report Short-StORFs?
-  -f_type [{StORF,CDS,ORF}]
-                        Default - "StORF": Which GFF feature type for StORFs
-                        to be reported as in GFF
-  -minorf MIN_ORF       Default - 99: Minimum StORF size in nt
-  -maxorf MAX_ORF       Default - 60kb: Maximum StORF size in nt
-  -codons STOP_CODONS   Default - ('TAG,TGA,TAA'): List Stop Codons to use
-  -non_standard NON_STANDARD
-                        Default - 0.20: Reject StORFs with >=20% non-standard
-                        nucleotides (A,T,G,C) - Provide % as decimal
-  -olap OVERLAP_NT      Default - 50: Maximum number of nt of a StORF which
-                        can overlap another StORF.
-  -s SUFFIX             Default - Do not append suffix to genome ID
-  -so [{start_pos,strand}]
-                        Default - Start Position: How should StORFs be ordered
-                        when >1 reported in a single UR.
-
-Output:
-  -oname O_NAME         Default - Appends '_StORF-Finder' to end of input
-                        FASTA filename
-  -odir O_DIR           Default - Same directory as input FASTA
-  -gff {True,False}     Default - True: Output a GFF file
-  -aa {True,False}      Default - False: Report StORFs as amino acid sequences
-  -aa_only {True,False}
-                        Default - False: Only output Amino Acid Fasta
-  -lw {True,False}      Default - True: Line wrap FASTA sequence output at 60
-                        chars
-  -spos {True,False}    Default - False: Output StORF sequences and GFF
-                        positions inclusive of first stop codon -This can
-                        break some downstream tools if changed to True.
-  -stop_ident {True,False}
-                        Default - True: Identify Stop Codon positions with '*'
-  -gff_fasta {True,False}
-                        Default - False: Report all gene sequences (nt) at the
-                        bottom of GFF files in Prokka output mode
-  -gz {True,False}      Default - False: Output as .gz
-
-Misc:
-  -verbose {True,False}
-                        Default - False: Print out runtime messages
-  -v                    Default - False: Print out version number and exit
-
+# Produce a mixed GFF3: promote structurally valid high-tier calls to CDS and
+# retain all other calls as ORF/StORF (the default promotion threshold)
+storf augment --input annotation.gff3 --fasta genome.fna --promote-cds high
 ```
-## StORF-Extractor
-Subpackage to extract sequences reported by StORF-Reporter from a genome annotation.
 
-### Menu - (StORF-Extractor -h):   
-```console
-StORF-Extractor -storf_input Combined -p .../Test_Datasets/Combined_GFFs/E-coli_Combined_StORF-Reporter_Extended.gff 
-```
+CDS promotion requires all of the following under the selected genetic code:
+
+- a supported in-frame start codon;
+- a length divisible by three and adequate for the selected StORF size class;
+- a valid terminal stop codon;
+- no internal in-frame stop codon; and
+- no ambiguous nucleotide in the proposed coding sequence.
+
+These are structural checks, not proof that a candidate is expressed or
+functional. Con-StORFs contain one or more expected middle stops and are
+readthrough candidates, not conventional complete CDS features. They are never
+automatically promoted by either `augment` or homology filtering.
+
+Start selection evaluates every supported in-frame start that leaves an
+adequate coding length. It ranks local Shine–Dalgarno-like motif support and
+spacing, start-codon strength, and retained coding length; it does not simply
+take the first start. The search can use sequence immediately before the
+stop-to-stop boundary. For Con-StORFs, only starts before the first middle stop
+are eligible.
+
+Use `--evidence-tsv` to add 0–1 homology, proteomics, transcriptomics, or other
+evidence values keyed by stable candidate ID.
+
+### Con-StORF replacement semantics
+
+`--include-consecutive` enables maximal Con-StORFs formed from runs of at least
+two adjacent qualifying ordinary StORFs. A run may contain one or several
+middle in-frame stops. Con-StORFs and ordinary StORFs then enter the same
+overlap ranking, so this option is not a promise to add Con-StORFs to an
+otherwise unchanged result: a stronger Con-StORF can take over and replace
+overlapping ordinary StORFs. Use `--consecutive-only` when only the maximal
+multi-stop candidates are wanted.
+
+`CandidateValidationPolicy=con-storf-readthrough-v1` passes only when the
+selected start is before the first middle stop and the first translated segment
+meets the size-class minimum. `MiddleStopCount`, `MiddleStops`, and
+`MiddleStopCoordinates` make the expected internal stops explicit. Passing
+this structural candidate check does not demonstrate biological stop-codon
+readthrough.
+
+### GFF3 coordinates and overlap coordinates
+
+Every retained call remains a stop-delimited StORF candidate. The literal full
+stop-to-stop interval is preserved in `CandidateCoordinates`. Following the
+historical `-spos False` convention, default GFF3 columns 4–5 and candidate
+nucleotide FASTA omit the upstream delimiting stop codon (three nucleotides)
+but retain the rest of that stop-derived locus. Use `--include-first-stop` to
+include that codon and display the literal full interval. Select
+`--gff-coordinate-mode start-to-stop` to put the ranked start through terminal
+stop in columns 4–5 when a supported start exists. Promotion changes column 3
+to `CDS` but does not independently change columns 4–5. `CodingCoordinates`
+continues to identify the structurally validated coding sequence.
+
+Every record retains both `CandidateCoordinates` and `CodingCoordinates`, plus
+the unambiguous `CandidateLength` and `CodingLength` attributes.
+Candidate-candidate overlap is measured on ranked coding intervals by default,
+preventing long non-coding prefixes from suppressing compatible ORFs. Use
+`--overlap-coordinate-basis candidate` for historical full stop-to-stop overlap
+filtering.
+
+### Primary annotation versus lower-tier review calls
+
+Reported StORFs are inserted into the augmented GFF3 beside neighbouring
+features on the same contig, ordered by genomic coordinate. They are no longer
+appended as one block after all original annotations.
+
+By default, `--primary-tier exploratory` keeps every retained candidate in the
+primary augmented GFF3 and its `_StORFs.fasta`, `_StORFs_aa.fasta`, and
+`_StORFs.tsv` files. To make the primary annotation more conservative:
 
 ```bash
-usage: StORF_Extractor.py [-h] [-storf_input {Combined,Separate}] [-p PATH] [-gff_out {True,False}] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}] [-verbose {True,False}] [-v]
-
-StORF-Reporter v1.4.7: StORF-Extractor Run Parameters.
-
-Required Arguments:
-  -storf_input {Combined,Separate}
-                        Are StORFs to be extracted from Combined GFF/FASTA or Separate GFF/FASTA files?
-  -p PATH               Provide input file or directory path
-
-Output:
-  -gff_out {True,False}
-                        Default - False: Output StORFs in GFF format
-  -oname O_NAME         Default - Appends '_Extracted_StORFs' to end of input GFF filename
-  -odir O_DIR           Default - Same directory as input FASTA
-  -gz {True,False}      Default - False: Output as .gz
-
-Misc:
-  -verbose {True,False}
-                        Default - False: Print out runtime messages
-  -v                    Default - False: Print out version number and exit
-
+# Primary GFF/FASTA/TSV: high tier only.
+# Medium and exploratory calls: separate below-high review files.
+storf augment \
+  --input annotation.gff3 \
+  --fasta genome.fna \
+  --primary-tier high \
+  --promote-cds high
 ```
 
-## StORF-Remover
-Subpackage to remove sequences reported by StORF-Reporter without a Blast/Diamond hit (any alignment in BLAST 6 format).
+`--primary-tier medium` includes high and medium candidates in the primary
+outputs and places exploratory candidates in files such as
+`sample_StORFs_below-medium.gff` and
+`sample_StORFs_below-medium.fasta`. Lower-tier candidates are preserved rather
+than silently discarded. The HTML report still lists every retained candidate
+and identifies its destination.
 
-### Menu - (StORF-Remover -h):   
-```console
-StORF-Remover -gff .../Test_Datasets/StORF_Extractor_And_Remover/Myco_UR_StORF-R.gff -blast .../Test_Datasets/StORF_Extractor_And_Remover/Myco_URs_StORFs_aa_Swiss.tab 
+### Independent BLAST/DIAMOND evidence filtering
+
+The protein FASTA produced by `augment` can be searched against a curated or
+taxonomically appropriate known-protein database. Standard BLAST/DIAMOND
+format 6 (the normal 12 columns) can then be applied independently:
+
+```bash
+storf filter \
+  --gff results/sample/sample_StORF-Reporter.gff \
+  --fasta genome.fna \
+  --alignments known-protein-hits.tsv \
+  --min-bitscore 50 \
+  --max-evalue 1e-10 \
+  --min-identity 30 \
+  --min-alignment-length 30 \
+  --keep-unmatched \
+  --promote-cds \
+  --out sample_homology-reviewed.gff
+
+storf validate --gff sample_homology-reviewed.gff --fasta genome.fna
 ```
 
-```python
-usage: StORF_Remover.py [-h] [-gff GFF] [-blast BLAST] [-min_score MINSCORE] [-oname O_NAME] [-odir O_DIR] [-gz {True,False}]
-                        [-verbose {True,False}] [-v]
+With `--keep-unmatched`, candidates lacking qualifying hits remain at their
+existing type, so the result can contain both `ORF`/`StORF` and `CDS`
+features. Without it, unsupported StORFs are removed. `--promote-cds` requires
+the matching FASTA (unless embedded), rechecks the proposed coding sequence,
+and promotes only structurally valid hits. Homology is supporting evidence; it
+does not by itself experimentally confirm translation or function.
 
-StORF-Reporter v1.4.1: UR-Remover Run Parameters.
+Historical StORF FASTA query names containing semicolon-suffixed attributes are
+normalized to the corresponding GFF3 `ID`, so old BLAST format-6 files remain
+usable.
 
-Required Arguments:
-  -gff GFF              GFF annotation file for the FASTA
-  -blast BLAST          BLAST format 6 annotation file
+### Sequence extraction coordinates
 
-Optional Arguments:
-  -min_score MINSCORE   Minimum BitScore to keep StORF: Default 30
+`augment`, `find`, and `extract` default to the same stop-derived candidate
+locus for both nucleotide and amino-acid FASTA, omitting the upstream
+delimiting stop. Amino-acid output is therefore a translation of the reported
+candidate locus, even when column 3 is `CDS`; promotion never silently switches
+FASTA to `CodingCoordinates`. Use `--protein-coordinate-mode coding` during
+discovery or `storf extract --sequence-region coding` afterward only when a
+ranked coding-sequence FASTA is explicitly wanted. In discovery output,
+candidates without `CodingCoordinates` remain candidate-locus records rather
+than being dropped. `--include-first-stop`
+retains the upstream stop in candidate-locus output.
+This is independent of whether the displayed GFF3 interval is stop-to-stop,
+start-to-stop, or a promoted CDS. Use `--sequence-region candidate`, `coding`,
+or `feature` only when an explicit alternative representation is required.
 
-Output:
-  -oname O_NAME         Default - Appends '_UR' to end of input GFF filename
-  -odir O_DIR           Default - Same directory as input GFF
-  -gz {True,False}      Default - False: Output as .gz
+Con-StORF protein records preserve internal `*` symbols by default so expected
+middle stops remain visible. `--remove-inframe-stops` removes those symbols
+from protein FASTA only; it never edits nucleotide sequence or genomic
+coordinates. Historical commands retain the equivalent `-rs` control.
 
-Misc:
-  -verbose {True,False}
-                        Default - False: Print out runtime messages
-  -v                    Default - False: Print out version number and exit
+### Alternative genetic codes
+
+Translation tables 1, 4, and 11 are supported. Code 4 correctly treats `TGA`
+as tryptophan rather than a stop:
+
+```bash
+storf augment --input mycoplasma.gff3 --fasta mycoplasma.fna --genetic-code 4
 ```
 
+## Legacy commands
 
+`StORF-Reporter`, `StORF-Finder`, `UR-Extractor`, `StORF-Extractor`, and
+`StORF-Remover` remain installed. They now call the same v2 core and use safe
+Boolean parsing. See [RELEASE_2.0.0.md](RELEASE_2.0.0.md) for deliberate
+compatibility changes.
 
-## Test Datasets: 
-### The directory 'Test_Datasets' contains GFF and FASTA files to test the installation and use of StORF-Reporter - Example output files are also provided for comparison. 
+## Scientific interpretation
+
+StORF-Reporter enumerates biologically interesting candidates that conventional
+annotation may miss. A stop-to-stop ORF is not by itself proof of a gene.
+High-value follow-up includes conservation, protein homology, coding-potential,
+Ribo-seq, transcriptomics, or proteomics evidence. The evidence TSV and HTML
+report are designed to make that review explicit.
+
+## Publication and citation
+
+Dimonaco NJ, Aubrey W, Kenobi K, Clare A. StORF-Reporter: finding genes missed
+by gene finders. *Nucleic Acids Research*. 2023;51(21):11504–11517.
+[doi:10.1093/nar/gkad814](https://doi.org/10.1093/nar/gkad814)
+
+Machine-readable citation metadata is in [CITATION.cff](CITATION.cff).
+
+## Development
+
+```bash
+python -m pip install -e '.[dev]'
+ruff check src tests
+pytest -q
+python -m build
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the complete
+[v2 release notes](RELEASE_2.0.0.md).
+
+To execute and inspect every unified, legacy, Pyrodigal, and auxiliary subtool
+against the bundled datasets, use
+[docs/SUBTOOL_INSPECTION_RUNS.md](docs/SUBTOOL_INSPECTION_RUNS.md) and
+`examples/run_all_subtools.sh`.
+
+Scientific interpretation and v1 migration guidance are in
+[docs/SCIENTIFIC_INTERPRETATION.md](docs/SCIENTIFIC_INTERPRETATION.md) and
+[docs/MIGRATION_V2.md](docs/MIGRATION_V2.md).

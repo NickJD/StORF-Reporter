@@ -1,0 +1,63 @@
+{
+  "configuration": {
+    "ambiguous_threshold": 0.2,
+    "consecutive_only": false,
+    "excluded_types": [],
+    "extension": 50,
+    "feature_type": "ORF",
+    "gene_ident": "ID=gene",
+    "genetic_code": 11,
+    "include_consecutive": false,
+    "include_short": false,
+    "max_orf": 60000,
+    "max_ur": 100000,
+    "maximum_annotation_overlap": 50,
+    "maximum_overlap": 50,
+    "min_orf": 99,
+    "min_ur": 30,
+    "overlap_mode": "all",
+    "primary_tier": "exploratory",
+    "promote_tier": "high",
+    "require_start": false,
+    "short_max": 120,
+    "short_min": 30
+  },
+  "inputs": {
+    "fasta": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/E-coli.fa",
+    "fasta_sha256": "f8a172551166328160763c78a7f3af864e1799b2638cd6de6fd2709ac7c3daca",
+    "gff": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/E-coli.gff",
+    "gff_sha256": "6fb3271b37d7bc74b339f07b0779d6cac1884212288b5931167a4a4f60776edb"
+  },
+  "outputs": {
+    "augmented_gff": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/E-coli/E-coli_StORF-Reporter.gff",
+    "evidence_tsv": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/E-coli/E-coli_StORFs.tsv",
+    "html_report": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/E-coli/E-coli_report.html",
+    "manifest": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/E-coli/E-coli_manifest.json",
+    "nucleotide_fasta": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/E-coli/E-coli_StORFs.fasta",
+    "protein_fasta": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/E-coli/E-coli_StORFs_aa.fasta",
+    "ur_fasta": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/E-coli/E-coli_UR.fasta",
+    "ur_gff": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/E-coli/E-coli_UR.gff",
+    "validation": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Matching_GFF_FASTA/v2_recursive_combined_out/E-coli/E-coli_validation.json"
+  },
+  "sample": "E-coli",
+  "schema_version": 1,
+  "scientific_notice": "EvidenceScore is an interpretable prioritisation heuristic and is not a calibrated probability of a protein-coding gene.",
+  "summary": {
+    "annotations": 16825,
+    "candidates": 3201,
+    "candidates_before_filtering": 8663,
+    "filtered_annotation_overlap": 189,
+    "filtered_overlap": 5273,
+    "rejected_ambiguous": 0,
+    "sequences": 1,
+    "tiers": {
+      "exploratory": 1331,
+      "high": 85,
+      "medium": 1785
+    },
+    "unannotated_regions": 2733,
+    "warnings": []
+  },
+  "tool": "StORF-Reporter",
+  "version": "v2.0.0-rc1"
+}

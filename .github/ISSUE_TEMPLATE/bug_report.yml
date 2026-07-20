@@ -1,0 +1,43 @@
+name: Bug report
+description: Report a reproducible software or output defect
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Please remove sensitive sample names and provide the smallest reproducible fixture."
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output from `storf --version`
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Minimal FASTA/GFF3 fixture or public link
+  - type: textarea
+    id: doctor
+    attributes:
+      label: "storf doctor output"
+      render: text

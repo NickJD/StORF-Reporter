@@ -1,0 +1,3 @@
+##gff-version 3
+##sequence-region ctg 1 229
+ctg	quickstart	CDS	1	100	.	+	0	ID=known_gene;Name=known_gene

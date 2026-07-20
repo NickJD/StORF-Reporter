@@ -1,0 +1,68 @@
+{
+  "biotoolsID": "storf-reporter",
+  "name": "StORF-Reporter",
+  "description": "Discover and prioritise stop-to-stop open reading frame candidates in unannotated regions of prokaryotic genomes.",
+  "homepage": "https://github.com/NickJD/StORF-Reporter",
+  "license": "GPL-3.0-or-later",
+  "version": [
+    "2.0.0"
+  ],
+  "publication": [
+    {
+      "doi": "10.1093/nar/gkad814",
+      "type": [
+        "Primary"
+      ]
+    }
+  ],
+  "function": [
+    {
+      "operation": [
+        {
+          "uri": "http://edamontology.org/operation_0362",
+          "term": "Genome annotation"
+        }
+      ],
+      "input": [
+        {
+          "data": {
+            "uri": "http://edamontology.org/data_2340",
+            "term": "Genome sequence"
+          },
+          "format": [
+            {
+              "uri": "http://edamontology.org/format_1929",
+              "term": "FASTA"
+            }
+          ]
+        },
+        {
+          "data": {
+            "uri": "http://edamontology.org/data_3002",
+            "term": "Annotation"
+          },
+          "format": [
+            {
+              "uri": "http://edamontology.org/format_2306",
+              "term": "GFF3"
+            }
+          ]
+        }
+      ],
+      "output": [
+        {
+          "data": {
+            "uri": "http://edamontology.org/data_3002",
+            "term": "Annotation"
+          },
+          "format": [
+            {
+              "uri": "http://edamontology.org/format_2306",
+              "term": "GFF3"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

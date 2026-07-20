@@ -1,0 +1,30 @@
+name: Scientific result question
+description: Discuss candidate interpretation, calibration, or biological edge cases
+title: "[science] "
+labels: [scientific-review]
+body:
+  - type: markdown
+    attributes:
+      value: "A stop-to-stop ORF and EvidenceScore are candidate evidence, not proof of a gene."
+  - type: input
+    id: version
+    attributes:
+      label: Version and genetic code
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Scientific question
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Independent evidence
+      description: Homology, conservation, proteomics, Ribo-seq, transcriptomics, or curation
+  - type: textarea
+    id: record
+    attributes:
+      label: Candidate TSV/GFF3 record and relevant sequence
+      render: text

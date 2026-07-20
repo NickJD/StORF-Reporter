@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use StORF-Reporter, please cite the Nucleic Acids Research paper."
+title: "StORF-Reporter"
+type: software
+version: "2.0.0"
+date-released: 2026-07-20
+license: GPL-3.0-or-later
+repository-code: "https://github.com/NickJD/StORF-Reporter"
+url: "https://github.com/NickJD/StORF-Reporter"
+authors:
+  - family-names: Dimonaco
+    given-names: Nicholas J.
+    email: nicholas@dimonaco.co.uk
+preferred-citation:
+  type: article
+  title: "StORF-Reporter: finding genes missed by gene finders"
+  authors:
+    - family-names: Dimonaco
+      given-names: Nicholas J.
+    - family-names: Aubrey
+      given-names: Wayne
+    - family-names: Kenobi
+      given-names: Kim
+    - family-names: Clare
+      given-names: Amanda
+  journal: "Nucleic Acids Research"
+  year: 2023
+  volume: 51
+  issue: 21
+  start: 11504
+  end: 11517
+  doi: "10.1093/nar/gkad814"

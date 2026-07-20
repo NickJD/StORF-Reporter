@@ -1,11 +1,18 @@
-import collections
+"""Small compatibility helpers shared by command adapters."""
 
-def sortORFs(tool_ORFs):  # Will only sort by given start position
-    tool_ORFs_Sorted = sorted(tool_ORFs.items(), key=lambda v: int(v[0].split(",")[0]))
-    tool_ORFs_Sorted = collections.OrderedDict(tool_ORFs_Sorted)
-    return tool_ORFs_Sorted
+from __future__ import annotations
 
+import argparse
 
 
+def parse_bool(value: str | bool) -> bool:
+    """Parse strict legacy CLI Boolean values without using ``eval``."""
 
-
+    if isinstance(value, bool):
+        return value
+    lowered = value.casefold()
+    if lowered in {"true", "1", "yes", "y"}:
+        return True
+    if lowered in {"false", "0", "no", "n"}:
+        return False
+    raise argparse.ArgumentTypeError("expected True or False")

@@ -1,0 +1,23 @@
+{
+  "below_primary_tier_output": [],
+  "candidate_cds_validation": {
+    "below_primary_tier_output": 0,
+    "not_structurally_valid_for_cds": 1521,
+    "primary_minimum_tier": "exploratory",
+    "primary_output": 3201,
+    "promoted_to_cds": 85,
+    "structurally_valid_for_cds": 1680,
+    "total": 3201
+  },
+  "input": [
+    {
+      "code": "gff_version",
+      "message": "first non-empty line should be exactly '##gff-version 3'",
+      "severity": "warning"
+    }
+  ],
+  "output": [],
+  "primary_output": [],
+  "scientific_scope": "Structural validation checks format, coordinates, sequence agreement, and complete-ORF properties for promoted StORF CDS features; it does not prove translation or function.",
+  "status": "passed"
+}

@@ -1,0 +1,48 @@
+{% set name = "storf-reporter" %}
+{% set version = "2.0.0" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  git_url: https://github.com/NickJD/StORF-Reporter.git
+  git_rev: v{{ version }}
+
+build:
+  number: 0
+  noarch: python
+  script: {{ PYTHON }} -m pip install . --no-deps --ignore-installed -vv
+
+requirements:
+  host:
+    - python >=3.12
+    - pip
+    - setuptools >=68
+    - wheel
+  run:
+    - python >=3.12
+    - pyrodigal >=3.7
+
+test:
+  imports:
+    - StORF_Reporter
+  commands:
+    - storf --version
+    - StORF-Reporter --version
+    - StORF-Finder --version
+    - UR-Extractor --version
+    - StORF-Extractor --version
+    - StORF-Remover --version
+
+about:
+  home: https://github.com/NickJD/StORF-Reporter
+  license: GPL-3.0-or-later
+  license_file: LICENSE
+  summary: Discover and prioritise stop-to-stop ORFs in unannotated prokaryotic regions
+  dev_url: https://github.com/NickJD/StORF-Reporter
+  doc_url: https://github.com/NickJD/StORF-Reporter#readme
+
+extra:
+  recipe-maintainers:
+    - NickJD

@@ -1,0 +1,2 @@
+sample	gff	fasta	genetic_code
+genome	../examples/quickstart/genome.gff3	../examples/quickstart/genome.fna	11

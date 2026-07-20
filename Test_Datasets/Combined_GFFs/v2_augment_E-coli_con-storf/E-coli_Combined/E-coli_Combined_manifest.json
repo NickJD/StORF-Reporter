@@ -1,0 +1,65 @@
+{
+  "configuration": {
+    "ambiguous_threshold": 0.2,
+    "consecutive_only": false,
+    "excluded_types": [],
+    "extension": 50,
+    "feature_type": "ORF",
+    "gene_ident": "ID=gene",
+    "genetic_code": 11,
+    "gff_coordinate_mode": "stop-to-stop",
+    "include_consecutive": true,
+    "include_short": false,
+    "max_orf": 60000,
+    "max_ur": 100000,
+    "maximum_annotation_overlap": 50,
+    "maximum_overlap": 50,
+    "min_orf": 99,
+    "min_ur": 30,
+    "overlap_coordinate_basis": "coding",
+    "overlap_mode": "all",
+    "primary_tier": "exploratory",
+    "promote_tier": "high",
+    "require_start": false,
+    "short_max": 120,
+    "short_min": 30
+  },
+  "inputs": {
+    "fasta": null,
+    "fasta_sha256": null,
+    "gff": "/Users/nicholas/Git/StORF-Reporter/Test_Datasets/Combined_GFFs/E-coli_Combined.gff",
+    "gff_sha256": "afa2f0b7795ca9d4cb52b41b9b1a639831cb1e30d286b3db41a950115322402e"
+  },
+  "outputs": {
+    "augmented_gff": "Test_Datasets/Combined_GFFs/v2_augment_E-coli_con-storf/E-coli_Combined/E-coli_Combined_StORF-Reporter.gff",
+    "evidence_tsv": "Test_Datasets/Combined_GFFs/v2_augment_E-coli_con-storf/E-coli_Combined/E-coli_Combined_StORFs.tsv",
+    "html_report": "Test_Datasets/Combined_GFFs/v2_augment_E-coli_con-storf/E-coli_Combined/E-coli_Combined_report.html",
+    "manifest": "Test_Datasets/Combined_GFFs/v2_augment_E-coli_con-storf/E-coli_Combined/E-coli_Combined_manifest.json",
+    "nucleotide_fasta": "Test_Datasets/Combined_GFFs/v2_augment_E-coli_con-storf/E-coli_Combined/E-coli_Combined_StORFs.fasta",
+    "protein_fasta": "Test_Datasets/Combined_GFFs/v2_augment_E-coli_con-storf/E-coli_Combined/E-coli_Combined_StORFs_aa.fasta",
+    "ur_fasta": "Test_Datasets/Combined_GFFs/v2_augment_E-coli_con-storf/E-coli_Combined/E-coli_Combined_UR.fasta",
+    "ur_gff": "Test_Datasets/Combined_GFFs/v2_augment_E-coli_con-storf/E-coli_Combined/E-coli_Combined_UR.gff",
+    "validation": "Test_Datasets/Combined_GFFs/v2_augment_E-coli_con-storf/E-coli_Combined/E-coli_Combined_validation.json"
+  },
+  "sample": "E-coli_Combined",
+  "schema_version": 1,
+  "scientific_notice": "EvidenceScore is an interpretable prioritisation heuristic and is not a calibrated probability of a protein-coding gene.",
+  "summary": {
+    "annotations": 16825,
+    "candidates": 3231,
+    "candidates_before_filtering": 9466,
+    "filtered_annotation_overlap": 209,
+    "filtered_overlap": 6026,
+    "rejected_ambiguous": 0,
+    "sequences": 1,
+    "tiers": {
+      "exploratory": 1708,
+      "high": 158,
+      "medium": 1365
+    },
+    "unannotated_regions": 2733,
+    "warnings": []
+  },
+  "tool": "StORF-Reporter",
+  "version": "v2.0.0-rc1"
+}

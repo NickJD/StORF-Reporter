@@ -1,128 +1,98 @@
+"""Legacy ``StORF-Remover`` command for evidence-based GFF3 filtering."""
+
+from __future__ import annotations
+
 import argparse
-import collections
-import gzip
 import sys
+from pathlib import Path
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    __package__ = "StORF_Reporter"
+
+from .constants import StORF_Reporter_Version
+from .io import InputFormatError, open_text, read_gff, write_fasta_records
+from .utils import parse_bool as _bool
+from .workflow import atomic_output, logical_stem, storf_query_id
 
 
-try:
-    from .constants import *
-except (ModuleNotFoundError, ImportError, NameError, TypeError) as error:
-    from constants import *
+def _load_hits(path: str | Path, minimum: float) -> set[str]:
+    hits: set[str] = set()
+    with open_text(path) as handle:
+        for line_number, line in enumerate(handle, 1):
+            if not line.strip() or line.startswith("#"):
+                continue
+            fields = line.rstrip("\n").split("\t")
+            if len(fields) < 12:
+                raise InputFormatError(f"BLAST/DIAMOND row {line_number} has fewer than 12 columns")
+            try:
+                bitscore = float(fields[11])
+            except ValueError as error:
+                raise InputFormatError(f"invalid bitscore at row {line_number}: {fields[11]!r}") from error
+            if bitscore >= minimum:
+                hits.add(storf_query_id(fields[0]))
+    return hits
 
-def gff_load_and_write(options,gff_in,blast_hits):
-    for line in gff_in: 
-        line_data = line.split()
-        if line.startswith('\n') or line.startswith('#'):  # Not to crash on empty lines in GFF
-            options.gff_out.write(line)
-        else:
-            if 'StORF-Reporter' in line:
-                StORF = line_data[8].split('ID=')[1].split(';')[0]
-                if StORF in blast_hits:
-                    options.gff_out.write(line)
+
+def remover(options: argparse.Namespace) -> tuple[int, int]:
+    hits = _load_hits(options.blast, float(options.minscore))
+    document = read_gff(options.gff)
+    kept = removed = 0
+    with atomic_output(options.output, options.overwrite) as handle:
+        for raw in document.pre_fasta_lines:
+            if raw.startswith("#") or not raw.strip():
+                handle.write(raw)
+                continue
+            fields = raw.rstrip("\n").split("\t")
+            identifier = next((item[3:] for item in fields[8].split(";") if item.startswith("ID=")), "")
+            is_storf = (
+                fields[1] == "StORF-Reporter" or identifier.startswith("StORF_") or "_StORF_" in identifier
+            )
+            if not is_storf or identifier in hits:
+                handle.write(raw)
+                kept += int(is_storf)
             else:
-                options.gff_out.write(line)
+                removed += 1
+        if document.embedded_fasta:
+            handle.write("##FASTA\n")
+            write_fasta_records(handle, document.embedded_fasta.items())
+    return kept, removed
 
 
-def load_blast_6(options, blast_in):
-    blast_hits = collections.OrderedDict()
-    for line in blast_in:
-        line_data = line.split('\t')
-        if 'StORF' in line_data[0]:
-            if int(line_data[11].split('.')[0]) >= options.minscore:
-                blast_hits.update({line_data[0]:[]})
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="StORF-Remover",
+        description=f"StORF-Reporter {StORF_Reporter_Version}: retain candidates with alignment evidence",
+    )
+    parser.add_argument("-gff", required=True)
+    parser.add_argument("-blast", required=True, help="BLAST/DIAMOND tabular format 6")
+    parser.add_argument("-min_score", dest="minscore", type=float, default=30.0)
+    parser.add_argument("-oname", dest="o_name")
+    parser.add_argument("-odir", dest="o_dir")
+    parser.add_argument("-gz", dest="gz", type=_bool, default=False)
+    parser.add_argument("-verbose", dest="verbose", type=_bool, default=False)
+    parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("-v", "--version", action="version", version=StORF_Reporter_Version)
+    return parser
 
-    return blast_hits
 
-def remover(options):
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    options = parser.parse_args(argv)
     try:
-        try:
-            blast_in = gzip.open(options.blast,'rt')
-            blast_hits = load_blast_6(options,blast_in)
-        except:
-            blast_in = open(options.blast,'r')#,encoding='unicode_escape')
-            blast_hits = load_blast_6(options,blast_in)
-        try:
-            gff_in = gzip.open(options.gff,'rt')
-            gff_load_and_write(options,gff_in,blast_hits)
-        except:
-            gff_in = open(options.gff,'r')#,encoding='unicode_escape')
-            gff_load_and_write(options,gff_in,blast_hits)
-    except AttributeError:
-        sys.exit("Attribute Error")
-
-
-def main():
-
-    parser = argparse.ArgumentParser(description='StORF-Reporter ' + StORF_Reporter_Version + ': StORF-Remover Run Parameters.')
-    parser._action_groups.pop()
-
-    required = parser.add_argument_group('Required Arguments')
-    required.add_argument('-gff', action='store', dest='gff', help='GFF annotation file for the FASTA',
-                        required=False)
-    required.add_argument('-blast', action='store', dest='blast', help='BLAST format 6 annotation file',
-                        required=False)
-
-    optional = parser.add_argument_group('Optional Arguments')
-    optional.add_argument('-min_score', action='store', dest='minscore', default='30', type=int,
-                        help='Minimum BitScore to keep StORF: Default 30')
-
-    output = parser.add_argument_group('Output')
-    output.add_argument('-oname', action="store", dest='o_name', required=False,
-                        help='Default - Appends \'_UR\' to end of input GFF filename')
-    output.add_argument('-odir', action="store", dest='o_dir', required=False,
-                        help='Default -  Same directory as input GFF')
-    output.add_argument('-gz', action='store', dest='gz', default='False', type=eval, choices=[True, False],
-                        help='Default - False: Output as .gz')
-
-
-    misc = parser.add_argument_group('Misc')
-    misc.add_argument('-verbose', action='store', dest='verbose', default=False, type=eval, choices=[True, False],
-                        help='Default - False: Print out runtime messages')
-    misc.add_argument('-v', action='store_true', dest='version',
-                        help='Default - False: Print out version number and exit')
-
-
-    options = parser.parse_args()
-    if options.gff == None or options.blast == None:
-        if options.version:
-            sys.exit(StORF_Reporter_Version)
-        else:
-            exit('StORF-Remover: error: the following arguments are required: -f, -gff, -blast')
-
-    print("Thank you for using StORF-Reporter -- A detailed user manual can be found at https://github.com/NickJD/StORF-Reporter\n"
-          "Please report any issues to: https://github.com/NickJD/StORF-Reporter/issues\n#####")
-
-    options.annotation_type = [None,None]
-
-    #### Output Directory and Filename handling
-    if options.o_dir == None and options.o_name == None:
-        tmp_extension = options.gff.split('.')[-1]
-        output_file = options.gff.replace('.' + tmp_extension, '')
-        output_file = output_file + '_NoHit_StORFs_Removed'
-    elif options.o_dir != None and options.o_name != None:
-        output_file = options.o_dir
-        output_file = output_file + '/' if not output_file.endswith('/') else output_file
-        output_file = output_file + options.o_name
-    elif options.o_dir != None:
-        tmp_extension = options.gff.split('.')[-1]
-        output_file = options.gff.replace('.' + tmp_extension, '').split('/')[-1]
-        output_file = options.o_dir + output_file + '_NoHit_StORFs_Removed'
-    elif options.o_name != None:
-        tmp_filename = options.gff.split('/')[-1]
-        output_file = options.gff.replace(tmp_filename, '')
-        output_file = output_file + options.o_name
-
-    if options.gz == False:
-        options.gff_out =  open(output_file + '.gff','w', newline='\n', encoding='utf-8')
-    elif options.gz == True:
-        options.gff_out =  gzip.open(output_file + '.gff.gz','wt', newline='\n', encoding='utf-8')
-
-    remover(options)
+        gff = Path(options.gff).resolve()
+        output_dir = Path(options.o_dir).resolve() if options.o_dir else gff.parent
+        output_dir.mkdir(parents=True, exist_ok=True)
+        stem = options.o_name or f"{logical_stem(gff)}_NoHit_StORFs_Removed"
+        options.output = output_dir / f"{stem}.gff{'.gz' if options.gz else ''}"
+        kept, removed = remover(options)
+        if options.verbose:
+            print(f"kept {kept}; removed {removed}; output: {options.output}")
+        return 0
+    except (FileExistsError, FileNotFoundError, InputFormatError, OSError, ValueError) as error:
+        parser.error(str(error))
+    return 2
 
 
 if __name__ == "__main__":
-    main()
-    print("Complete")
-
-
-
+    raise SystemExit(main())

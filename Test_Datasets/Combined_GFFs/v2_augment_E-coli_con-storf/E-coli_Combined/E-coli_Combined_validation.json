@@ -1,0 +1,31 @@
+{
+  "below_primary_tier_output": [],
+  "candidate_cds_validation": {
+    "below_primary_tier_output": 0,
+    "candidate_validation_failed": 1309,
+    "candidate_validation_passed": 1922,
+    "con_storf": {
+      "invalid_readthrough_candidate": 32,
+      "promoted_to_cds": 0,
+      "total": 212,
+      "valid_readthrough_candidate": 180
+    },
+    "not_structurally_valid_for_cds": 1489,
+    "primary_minimum_tier": "exploratory",
+    "primary_output": 3231,
+    "promoted_to_cds": 109,
+    "structurally_valid_for_cds": 1742,
+    "total": 3231
+  },
+  "input": [
+    {
+      "code": "gff_version",
+      "message": "first non-empty line should be exactly '##gff-version 3'",
+      "severity": "warning"
+    }
+  ],
+  "output": [],
+  "primary_output": [],
+  "scientific_scope": "Structural validation checks format, coordinates, sequence agreement, complete-ORF properties for CDS candidates, and Con-StORF start-before-middle-stop structure; it does not prove translation, readthrough, or function.",
+  "status": "passed"
+}
